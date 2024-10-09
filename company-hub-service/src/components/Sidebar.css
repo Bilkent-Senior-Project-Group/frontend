@@ -1,0 +1,92 @@
+.sidebar {
+  width: 200px; /* Set the width of the sidebar */
+  background-color: #f8f9fa; /* Light background color */
+  padding: 20px; /* Padding for the sidebar */
+  border-right: 1px solid #dee2e6; /* Border to separate from main content */
+  height: 100vh; /* Full height */
+  position: fixed; /* Fix the sidebar to the left */
+  overflow-y: auto; /* Scroll if the content overflows */ /* Smooth transition for width change */
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 60px; /* Collapsed width */
+}
+
+.sidebar h2 {
+  margin-bottom: 20px; /* Margin for the heading */
+  font-size: 1.5rem; /* Adjust font size */
+  transition: font-size 0.3s ease; /* Smooth font size change */
+}
+
+.sidebar.collapsed h2 {
+  font-size: 1.5rem;
+  justify-content: center;
+  display: flex;
+}
+
+.sidebar ul {
+  list-style-type: none; /* Remove bullet points */
+  padding: 0; /* Remove default padding */
+}
+
+.sidebar ul li {
+  margin: 10px 0; /* Space between links */
+  display: flex; /* Flex to align icon and text */
+  align-items: center; /* Center items vertically */
+  justify-content: start; /* Align items to start */
+}
+
+.sidebar ul li a {
+  text-decoration: none; /* Remove underline from links */
+  color: #333; /* Text color */
+  display: flex; /* Flex to align icon and text */
+  align-items: center; /* Center items vertically */
+  transition: color 0.2s ease; /* Smooth color transition */
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.sidebar ul li a svg {
+  margin-right: 10px; /* Space between icon and text */
+  font-size: 1.2rem; /* Adjust icon size */
+  transition: margin-right 0.3s ease, font-size 0.3s ease; /* Smooth transition */
+}
+
+/* Add styles for when the sidebar is collapsed */
+.sidebar.collapsed ul li {
+  justify-content: center; /* Center items when collapsed */
+}
+
+.sidebar.collapsed ul li a {
+  justify-content: center; /* Center the icon */
+}
+
+.sidebar.collapsed ul li a svg {
+  margin-right: 0; /* Remove space between icon and text */
+  font-size: 1.2rem; /* Increase icon size for better visibility */
+}
+
+.sidebar-button {
+  position: absolute; /* Absolute position to overlap */
+  left: 230px; /* Initial position to align with sidebar */
+  top: 20px; /* Adjust for vertical positioning */
+  z-index: 10; /* Make sure it overlaps correctly */
+  transition: left 0.3s ease;  /* Smooth transition for left change */
+}
+
+.sidebar-button.collapsed {
+  left: 90px; /* Move the button left when sidebar is collapsed */
+}
+
+main {
+  margin-left: 240px; /* Margin for main content to avoid sidebar */
+  padding: 20px; /* Padding for main content */
+  background-color: #f8f9fa; /* Main content background */
+  height: 100vh; /* Full height */
+  overflow-y: auto; /* Scroll if the content overflows */
+  transition: margin-left 0.3s ease; /* Smooth transition for margin change */
+}
+
+main.expanded {
+  margin-left: 100px; /* Adjust for the collapsed sidebar width */
+}

@@ -1,0 +1,92 @@
+/* Container for the entire signup page */
+.signup-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Adjust if you want the form higher or lower */
+    min-height: 90vh; /* Ensures it covers most of the viewport */
+    padding: 40px;
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    overflow: hidden; /* Prevents scrolling */
+  }
+  
+  /* Form container */
+  .signup-form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Styling for input fields */
+  .signup-form input {
+    width: 94.5%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+  
+  /* Styling for the signup button */
+  .signup-form button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .signup-form button[type="submit"]:hover {
+    background-color: #218838;
+  }
+  
+  /* Error message styling */
+  .signup-error {
+    color: red;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  
+  /* Additional link styling for login redirection */
+  .additional-links {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .additional-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .additional-links a:hover {
+    text-decoration: underline;
+  }
+
+  /* Additional link styling for "Already have an account?" */
+.additional-links {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .additional-links a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .additional-links a:hover {
+    text-decoration: underline;
+  }
+  
