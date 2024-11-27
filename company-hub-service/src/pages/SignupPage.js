@@ -10,7 +10,7 @@ const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -23,17 +23,23 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await AuthService.signup({ 
+      const response = await AuthService.signup({ 
         firstName, 
         lastName, 
-        username,
         email,
         password,
-        phoneNumber
+        phone,
+        username
       });
+  
+      if (!response.status || response.status !== 200) {
+        setError(response);
+        return;
+      }
+  
       navigate('/login'); // Redirect to login page on successful signup
     } catch (err) {
-      setError('Error signing up. Please try again.');
+      setError(err.message);
     }
   };
 
@@ -85,8 +91,8 @@ const SignupPage = () => {
         />
         <input
           type="text"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           placeholder="Phone Number"
           required
         />

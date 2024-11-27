@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuth();
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,11 +22,15 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await AuthService.login(email, password);
+      const response = await AuthService.login({email, password});
+      if (!response.status || response.status !== 200) {
+        setError(response);
+        return;
+      }
       login(response.data.user);  // Assuming the response contains user info
       navigate('/homepage'); // Redirect to protected page
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -56,6 +61,7 @@ const LoginPage = () => {
         />
         <button type="submit">Login</button>
       </form>
+      {error && <p className="login-error">{error}</p>}
       <div className="additional-links">
         <a href="/forgot-password">Forgot Password?</a><br />
         <a href="/signup">Sign Up</a>

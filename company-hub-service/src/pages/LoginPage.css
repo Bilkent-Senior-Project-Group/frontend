@@ -49,6 +49,13 @@
   .login-form button[type="submit"]:hover {
     background-color: #0056b3;
   }
+
+  /* Error message styling */
+  .login-error {
+    color: red;
+    margin-top: 10px;
+    font-size: 14px;
+  }
   
   /* Additional link styling for forgot password or signup links */
   .additional-links {

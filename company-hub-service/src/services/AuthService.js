@@ -1,49 +1,25 @@
-//import axios from 'axios';
+import axios from 'axios';
 
-// const API_URL = process.env.REACT_APP_API_URL;  // Base URL for the API
+const API_URL = "https://localhost:7181";  // Base URL for the API
 
 const signup = async (userData) => {
-  // return axios.post(`${API_URL}/auth/signup`, userData);
-  return {
-    status: 200,
-    data: {
-      message: "Signup successful!",
-      user: {
-        id: 1,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        username: userData.username,
-        email: userData.email,
-        phoneNumber: userData.phoneNumber
-      }
-    }
-  };
-
-  // return {
-  //   status: 400,
-  //   data: {
-  //     message: "User already exists"
-  //   }
-  // };
-
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/Register`, userData);
+    return response; // Return the response on success
+  } catch (error) {
+    const message = error.response?.data?.message || "Connection Error Occured.";
+    throw new Error(message);
+  }
 };
 
 const login = async (userData) => {
-  // return axios.post(`${API_URL}/auth/login`, { email, password });
-  return {
-    status: 200,
-    data: {
-      message: "Login successful!",
-      user: {
-        id: 1,
-        firstName: "John",
-        lastName: "Doe",
-        username: "JohnDoe1234",
-        email: userData.email,
-        phoneNumber: "123-456-7890"
-      }
-    }
-  };
+  try{
+    const response = await axios.post(`${API_URL}/api/Account/Login`, userData);
+    return response;
+  } catch (error) {
+    const message = error.response?.data?.message || "Connection Error Occured.";
+    throw new Error(message);
+  } 
 };
 
 const checkEmailExistence = async (email) => {
