@@ -62,7 +62,7 @@ const MainPage = () => {
 
   return (
     <div className="main-container">
-      <h1 style={h1style}>Enter to Company Hub</h1>
+      <p style={h1style}>Welcome to COMPEDIA</p>
       <p style={pStyle}>We suggest using the email address that you use at work.</p>
       <div className="form-container">
         <form onSubmit={handleSubmit}>

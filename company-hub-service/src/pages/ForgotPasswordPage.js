@@ -31,7 +31,7 @@ const ForgotPasswordPage = () => {
 
   return (
     <div className="forgot-password-container">
-      <h1 style={h1Style}>Forgot Password</h1>
+      <p style={h1Style}>Forgot Password</p>
       <form className="forgot-password-form" onSubmit={handleSubmit}>
         <input
           type="email"

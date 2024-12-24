@@ -7,7 +7,7 @@
     min-height: 90vh; /* Ensures it doesn't scroll but covers most of the viewport */
     padding: 40px;
     font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
+    /* background-color: #f7f7f7; */
     overflow: hidden; /* Prevents scrolling */
   }
   

@@ -6,7 +6,8 @@ import Sidebar from '../components/Sidebar';
 const PrivateRoute = ({ children }) => {
   const { currentUser } = useAuth();  // Assume AuthContext provides this
 
-  return currentUser ? <Sidebar>{children}</Sidebar> : <Navigate to="/" />;
+  // return currentUser ? <Sidebar>{children}</Sidebar> : <Navigate to="/" />;  //düzeltilecekk
+  return <Sidebar>{children}</Sidebar>;
 };
 
 export default PrivateRoute;

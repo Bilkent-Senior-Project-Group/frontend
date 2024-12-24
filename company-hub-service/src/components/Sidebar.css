@@ -1,6 +1,6 @@
 .sidebar {
   width: 200px; /* Set the width of the sidebar */
-  background-color: #f8f9fa; /* Light background color */
+  background-color: #faf8f8; /* Light background color */
   padding: 20px; /* Padding for the sidebar */
   border-right: 1px solid #dee2e6; /* Border to separate from main content */
   height: 100vh; /* Full height */
@@ -33,7 +33,7 @@
 .sidebar ul li {
   margin: 10px 0; /* Space between links */
   display: flex; /* Flex to align icon and text */
-  align-items: center; /* Center items vertically */
+  align-items: flex-start;
   justify-content: start; /* Align items to start */
 }
 
@@ -70,7 +70,7 @@
 .sidebar-button {
   position: absolute; /* Absolute position to overlap */
   left: 230px; /* Initial position to align with sidebar */
-  top: 20px; /* Adjust for vertical positioning */
+  top: 80px; /* Adjust for vertical positioning */
   z-index: 10; /* Make sure it overlaps correctly */
   transition: left 0.3s ease;  /* Smooth transition for left change */
   padding-top: 5px;
@@ -81,6 +81,7 @@
 }
 
 main {
+  flex-grow: 1;
   margin-left: 240px; /* Margin for main content to avoid sidebar */
   padding: 20px; /* Padding for main content */
   background-color: #f8f9fa; /* Main content background */
@@ -91,4 +92,47 @@ main {
 
 main.expanded {
   margin-left: 100px; /* Adjust for the collapsed sidebar width */
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebar-layout {
+  display: flex;
+  margin-top: 70px; /* Adjust for topbar height */
+  overflow: hidden;
+}
+
+.expandable {
+  /* position: relative; */
+  cursor: pointer;
+  flex-direction: column;
+}
+
+.expandable div {
+  display: flex;
+  /* align-items: center; */
+}
+
+.submenu {
+  list-style-type: none;
+  padding: 5px 0;
+  align-items: center;
+}
+
+.submenu li {
+  margin: 5px 0;
+}
+
+.submenu a {
+  color: #ccc; /* Adjust based on your theme */
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.submenu a:hover {
+  color: #fff; /* Highlight on hover */
 }

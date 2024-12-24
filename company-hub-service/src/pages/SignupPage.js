@@ -52,7 +52,7 @@ const SignupPage = () => {
 
   return (
     <div className="signup-container">
-      <h1 style={h1Style}>Sign Up</h1>
+      <p style={h1Style}>Sign Up</p>
       <form className="signup-form" onSubmit={handleSubmit}>
         <input
           type="text"

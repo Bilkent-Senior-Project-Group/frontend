@@ -1,0 +1,23 @@
+import React from 'react';
+import './Topbar.css'; // Add custom styles for the topbar
+import { FaBell, FaUser, FaSearch } from 'react-icons/fa'; // Example icons
+
+const Topbar = () => {
+  return (
+    <div className="topbar">
+      <div className="topbar-left">
+        <h2>COMPEDIA</h2> {/* Add your app title */}
+      </div>
+      <div className="topbar-center">
+        <input type="text" placeholder="Search..." />
+        <button><FaSearch /></button>
+      </div>
+      <div className="topbar-right">
+        <FaBell className="topbar-icon" title="Notifications" />
+        <FaUser className="topbar-icon" title="Profile" />
+      </div>
+    </div>
+  );
+};
+
+export default Topbar;
