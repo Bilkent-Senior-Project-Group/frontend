@@ -9,7 +9,7 @@ const Topbar = () => {
         <h2>COMPEDIA</h2> {/* Add your app title */}
       </div>
       <div className="topbar-center">
-        <input type="text" placeholder="Search..." />
+        <input type="text" placeholder="Enter some description" />
         <button><FaSearch /></button>
       </div>
       <div className="topbar-right">

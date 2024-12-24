@@ -1,16 +1,17 @@
 .sidebar {
   width: 200px; /* Set the width of the sidebar */
-  background-color: #faf8f8; /* Light background color */
+  background-color: #ffffff; /* Light background color */
   padding: 20px; /* Padding for the sidebar */
-  border-right: 1px solid #dee2e6; /* Border to separate from main content */
+  /* border-right: 1px solid #000000; */
   height: 100vh; /* Full height */
   position: fixed; /* Fix the sidebar to the left */
   overflow-y: auto; /* Scroll if the content overflows */ /* Smooth transition for width change */
   transition: width 0.3s ease, padding 0.3s ease;
+  border: 1px solid #000000; /* Add border here */
 }
 
 .sidebar.collapsed {
-  width: 60px; /* Collapsed width */
+  width: 80px; /* Collapsed width */
 }
 
 .sidebar h2 {
@@ -31,9 +32,10 @@
 }
 
 .sidebar ul li {
-  margin: 10px 0; /* Space between links */
+  margin: 40px 0; /* Space between links */
   display: flex; /* Flex to align icon and text */
-  align-items: flex-start;
+  /* align-items: flex-start; */
+  align-items: center;
   justify-content: start; /* Align items to start */
 }
 
@@ -48,13 +50,14 @@
 
 .sidebar ul li a svg {
   margin-right: 10px; /* Space between icon and text */
-  font-size: 1.2rem; /* Adjust icon size */
+  font-size: 1.6rem; /* Adjust icon size */
   transition: margin-right 0.3s ease, font-size 0.3s ease; /* Smooth transition */
 }
 
 /* Add styles for when the sidebar is collapsed */
 .sidebar.collapsed ul li {
   justify-content: center; /* Center items when collapsed */
+  margin: 40px 0;
 }
 
 .sidebar.collapsed ul li a {
@@ -64,7 +67,7 @@
 
 .sidebar.collapsed ul li a svg {
   margin-right: 0; /* Remove space between icon and text */
-  font-size: 1.2rem; /* Increase icon size for better visibility */
+  font-size: 1.4rem; /* Increase icon size for better visibility */
 }
 
 .sidebar-button {
@@ -74,24 +77,27 @@
   z-index: 10; /* Make sure it overlaps correctly */
   transition: left 0.3s ease;  /* Smooth transition for left change */
   padding-top: 5px;
+  background-color: #ffffff;
+  border-style: solid;
+  border-width: 0.8px;
 }
 
 .sidebar-button.collapsed {
-  left: 90px; /* Move the button left when sidebar is collapsed */
+  left: 110px; /* Move the button left when sidebar is collapsed */
 }
 
 main {
   flex-grow: 1;
   margin-left: 240px; /* Margin for main content to avoid sidebar */
   padding: 20px; /* Padding for main content */
-  background-color: #f8f9fa; /* Main content background */
+  background-color: #ffffff; /* Main content background */
   height: 100vh; /* Full height */
   overflow-y: auto; /* Scroll if the content overflows */
   transition: margin-left 0.3s ease; /* Smooth transition for margin change */
 }
 
 main.expanded {
-  margin-left: 100px; /* Adjust for the collapsed sidebar width */
+  margin-left: 120px; /* Adjust for the collapsed sidebar width */
 }
 
 .app-layout {
@@ -107,14 +113,7 @@ main.expanded {
 }
 
 .expandable {
-  /* position: relative; */
   cursor: pointer;
-  flex-direction: column;
-}
-
-.expandable div {
-  display: flex;
-  /* align-items: center; */
 }
 
 .submenu {
@@ -128,7 +127,7 @@ main.expanded {
 }
 
 .submenu a {
-  color: #ccc; /* Adjust based on your theme */
+  color: #ffffff; /* Adjust based on your theme */
   text-decoration: none;
   font-size: 0.9rem;
 }

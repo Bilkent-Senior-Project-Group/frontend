@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
-import { FaHome, FaCompass, FaCog, FaSignOutAlt, FaGreaterThan, FaLessThan, FaBuilding, FaAngleDown, FaAngleRight } from 'react-icons/fa'; // Example icons
+import { FaHome, FaCompass, FaCog, FaSignOutAlt, FaGreaterThan, FaLessThan, FaBuilding, FaAngleDown, FaAngleRight, FaBars } from 'react-icons/fa'; // Example icons
 // import {useQuery} from '@tanstack/react-query';
 import Topbar from './Topbar';
 
@@ -25,7 +25,8 @@ const Sidebar = ({ children }) => {
       <Topbar/>
       <div className='sidebar-layout'>
         <button className={`sidebar-button ${isCollapsed ? 'collapsed' : ''}`} onClick={toggleSidebar}>
-        {isCollapsed ? <FaGreaterThan/> : <FaLessThan/>}
+        {/* {isCollapsed ? <FaGreaterThan/> : <FaLessThan/>} */}
+        <FaBars/>
           {/* {isCollapsed ? '>' : '<'} */}
         </button>
         <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -35,13 +36,10 @@ const Sidebar = ({ children }) => {
             <li><Link to="/another"><FaCompass /><span className={isCollapsed ? 'collapsed-text' : ''}>Discover</span></Link></li>
             <li><Link to="/settings"><FaCog /><span className={isCollapsed ? 'collapsed-text' : ''}>Settings</span></Link></li>
             {/* <li><Link to="/another"><FaBuilding /><span className={isCollapsed ? 'collapsed-text' : ''}>My Companies</span></Link></li> */}
-            <li onClick={toggleCompanies} className="expandable">
-              <div>
-                <FaBuilding />
-                <span className={isCollapsed ? 'collapsed-text' : ''}>My Companies</span>
-                {isCollapsed ? null : isCompaniesExpanded ? <FaAngleDown /> : <FaAngleRight />}
-              </div>
-              {isCompaniesExpanded && (
+            <li onClick={toggleCompanies}><a style={{ cursor: 'pointer' }}><FaBuilding /><span className={isCollapsed ? 'collapsed-text' : ''}>My Companies</span>
+                {isCollapsed ? null : isCompaniesExpanded ? <FaAngleDown /> : <FaAngleRight />}</a>
+            </li>
+            {isCompaniesExpanded && (
                 <ul className="submenu">
                   <li>
                     <Link to="/companies/company1">Company 1</Link>
@@ -54,7 +52,6 @@ const Sidebar = ({ children }) => {
                   </li>
                 </ul>
               )}
-            </li>
             <li><Link to="/logout"><FaSignOutAlt /><span className={isCollapsed ? 'collapsed-text' : ''}>Logout</span></Link></li>
           </ul>
         </div>
