@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AuthService from '../services/AuthService';
-import './SignupPage.css';
+import AuthService from '../../services/AuthService';
+import '../../assets/SignupPage.css';
 
 const SignupPage = () => {
   const location = useLocation();

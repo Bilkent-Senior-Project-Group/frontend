@@ -1,6 +1,7 @@
 import React from 'react';
-import './Topbar.css'; // Add custom styles for the topbar
+import '../assets/Topbar.css'; // Add custom styles for the topbar
 import { FaBell, FaUser, FaSearch } from 'react-icons/fa'; // Example icons
+import { Link } from 'react-router-dom';
 
 const Topbar = () => {
   return (
@@ -14,7 +15,9 @@ const Topbar = () => {
       </div>
       <div className="topbar-right">
         <FaBell className="topbar-icon" title="Notifications" />
-        <FaUser className="topbar-icon" title="Profile" />
+        <Link to="/profile">
+          <FaUser className="topbar-icon" title="Profile" />
+        </Link>
       </div>
     </div>
   );

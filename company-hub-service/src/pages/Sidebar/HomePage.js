@@ -1,10 +1,10 @@
 // src/pages/HomePage.jsx
 
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa'; // Import search icon
-import './HomePage.css'; // Import HomePage styles if needed
+import '../../assets/HomePage.css';
 
 const HomePage = () => {
   const { currentUser, logout } = useAuth(); // Getting current user from AuthContext

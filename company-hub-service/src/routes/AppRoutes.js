@@ -1,13 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import MainPage from '../pages/MainPage';
-import HomePage from '../pages/HomePage';
-import LoginPage from '../pages/LoginPage';
-import SignupPage from '../pages/SignupPage';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import MainPage from '../pages/Auth/MainPage';
+import HomePage from '../pages/Sidebar/HomePage';
+import LoginPage from '../pages/Auth/LoginPage';
+import SignupPage from '../pages/Auth/SignupPage';
+import ForgotPasswordPage from '../pages/Auth/ForgotPasswordPage';
 import PrivateRoute from './PrivateRoute'; // For authenticated routes
 
-import AnotherPage from '../pages/AnotherPage'; // Example new page under sidebar
+import DiscoverPage from '../pages/Sidebar/DiscoverPage';
+import SettingsPage from '../pages/Sidebar/SettingsPage';
+import CompanyPage from '../pages/Sidebar/CompanyPage';
+import ProfilePage from '../pages/Topbar/ProfilePage';
+import Sidebar from '../layouts/Sidebar';
 
 const AppRoutes = () => {
   return (
@@ -20,8 +24,12 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Protected routes*/}
-        <Route path="/homepage" element={<PrivateRoute> <HomePage /> </PrivateRoute>} />
-        <Route path="/another" element={<PrivateRoute> <AnotherPage /> </PrivateRoute>} />    
+        <Route path="/homepage" element={<PrivateRoute> <Sidebar> <HomePage /> </Sidebar> </PrivateRoute>} />   
+        <Route path="/discover" element={<PrivateRoute> <Sidebar> <DiscoverPage/> </Sidebar> </PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute> <Sidebar> <SettingsPage/> </Sidebar> </PrivateRoute>} />
+        <Route path="/company" element={<PrivateRoute> <Sidebar> <CompanyPage/> </Sidebar> </PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute> <ProfilePage/> </PrivateRoute>} />
+        
       </Routes>
     </Router>
   );

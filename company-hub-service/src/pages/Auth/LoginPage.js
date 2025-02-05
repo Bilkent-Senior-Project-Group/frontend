@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import AuthService from '../services/AuthService';
+import AuthService from '../../services/AuthService';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import './LoginPage.css';
+import { useAuth } from '../../contexts/AuthContext';
+import '../../assets/LoginPage.css';
 
 const LoginPage = () => {
   const location = useLocation();

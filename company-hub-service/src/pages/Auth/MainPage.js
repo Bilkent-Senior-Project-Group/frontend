@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService';
-import './MainPage.css'; // Add the CSS file import
+import AuthService from '../../services/AuthService';
+import '../../assets/MainPage.css'; // Add the CSS file import
 
 const MainPage = () => {
   const [email, setEmail] = useState('');
