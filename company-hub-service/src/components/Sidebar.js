@@ -52,7 +52,7 @@ const Sidebar = ({ children }) => {
                   </li>
                 </ul>
               )}
-            <li><Link to="/logout"><FaSignOutAlt /><span className={isCollapsed ? 'collapsed-text' : ''}>Logout</span></Link></li>
+            <li><Link to="/"><FaSignOutAlt /><span className={isCollapsed ? 'collapsed-text' : ''}>Logout</span></Link></li>
           </ul>
         </div>
         <main className={isCollapsed ? 'expanded' : ''}>
