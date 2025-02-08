@@ -1,4 +1,4 @@
-// src/theme/theme.js
+// theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
@@ -7,31 +7,9 @@ const theme = createTheme({
       main: '#4F46E5',
       light: '#818CF8',
       dark: '#3730A3',
-      contrastText: '#FFFFFF',
-    },
-    secondary: {
-      main: '#8B5CF6',
-      light: '#A78BFA',
-      dark: '#6D28D9',
-      contrastText: '#FFFFFF',
-    },
-    error: {
-      main: '#EF4444',
-      light: '#F87171',
-      dark: '#DC2626',
-    },
-    warning: {
-      main: '#F59E0B',
-      light: '#FBBF24',
-      dark: '#D97706',
-    },
-    success: {
-      main: '#10B981',
-      light: '#34D399',
-      dark: '#059669',
     },
     background: {
-      default: '#F3F4F6',
+      default: '#F9FAFB',
       paper: '#FFFFFF',
     },
     text: {
@@ -42,50 +20,39 @@ const theme = createTheme({
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontSize: '2.5rem',
-      fontWeight: 600,
+      fontWeight: 700,
+      fontSize: '3.5rem',
     },
     h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
+      fontWeight: 700,
+      fontSize: '3rem',
     },
     h3: {
-      fontSize: '1.75rem',
       fontWeight: 600,
+      fontSize: '2.25rem',
     },
     h4: {
-      fontSize: '1.5rem',
       fontWeight: 600,
+      fontSize: '1.875rem',
     },
     h5: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
+      fontWeight: 500,
+      fontSize: '1.5rem',
     },
     h6: {
-      fontSize: '1rem',
-      fontWeight: 600,
+      fontWeight: 500,
+      fontSize: '1.25rem',
     },
-    body1: {
-      fontSize: '1rem',
-      lineHeight: 1.5,
+    button: {
+      textTransform: 'none',
+      fontWeight: 500,
     },
-    body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.57,
-    },
-  },
-  shape: {
-    borderRadius: 8,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
           borderRadius: 8,
-          padding: '8px 16px',
-        },
-        contained: {
           boxShadow: 'none',
           '&:hover': {
             boxShadow: 'none',
@@ -93,18 +60,25 @@ const theme = createTheme({
         },
       },
     },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+          borderRadius: 12,
+          border: '1px solid #E5E7EB',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
         },
       },
     },
