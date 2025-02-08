@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../assets/DiscoverPage.css';
+
 
 const DiscoverPage = () => {
   return (

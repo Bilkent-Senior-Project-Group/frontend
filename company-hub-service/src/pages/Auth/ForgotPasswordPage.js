@@ -1,7 +1,16 @@
+// src/pages/Auth/ForgotPasswordPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthService from '../../services/AuthService';
-import '../../assets/ForgotPasswordPage.css';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Container,
+  Alert,
+  Stack
+} from '@mui/material';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -12,41 +21,70 @@ const ForgotPasswordPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await AuthService.forgotPassword(email); // Assuming AuthService has a method for this
-      setMessage('Password reset link sent to your email.'); // Set success message
+      await AuthService.forgotPassword(email);
+      setMessage('Password reset link sent to your email.');
       setTimeout(() => {
-        navigate('/login'); // Redirect to login page after a delay
-      }, 3000); // Redirect after 3 seconds
+        navigate('/login');
+      }, 3000);
     } catch (err) {
       setError('Error sending password reset link. Please try again.');
     }
   };
 
-  const h1Style = {
-    marginTop: '100px',
-    marginBottom: '20px',
-    fontSize: '24px',
-    color: '#333',
-  };
-
   return (
-    <div className="forgot-password-container">
-      <p style={h1Style}>Forgot Password</p>
-      <form className="forgot-password-form" onSubmit={handleSubmit}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          required
-        />
-        <button type="submit">Send Reset Link</button>
-      </form>
+    <Container maxWidth="sm">
+      <Box
+        sx={{
+          mt: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h4" gutterBottom>
+          Forgot Password
+        </Typography>
 
-      {/* Display messages */}
-      {message && <p className="success-message">{message}</p>}
-      {error && <p className="error-message">{error}</p>}
-    </div>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3, width: '100%' }}>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              variant="outlined"
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ 
+                mt: 2, 
+                height: '48px',
+                textTransform: 'none'
+              }}
+            >
+              Send Reset Link
+            </Button>
+          </Stack>
+
+          {message && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {message}
+            </Alert>
+          )}
+          
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+        </Box>
+      </Box>
+    </Container>
   );
 };
 
