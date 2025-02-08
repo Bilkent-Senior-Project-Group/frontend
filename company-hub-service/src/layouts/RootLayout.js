@@ -1,5 +1,5 @@
 // src/layouts/RootLayout.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Drawer, 
@@ -13,7 +13,11 @@ import {
   IconButton,
   InputBase,
   Paper,
-  Badge
+  Badge,
+  Collapse,
+  Menu,
+  MenuItem,
+  Typography
 } from '@mui/material';
 import { 
   Home, 
@@ -23,56 +27,60 @@ import {
   Building,
   Search,
   Bell,
-  User
+  User,
+  ChevronDown,
+  ChevronRight,
+  Users as UsersIcon,
+  FileText as FileTextIcon
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
 
 const DRAWER_WIDTH = 240;
 
-// Styled search input
-const SearchInput = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
-  },
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  width: '100%',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: theme.spacing(4),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '40ch',
-    },
-  },
-}));
-
 const RootLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [companiesOpen, setCompaniesOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openCompanyId, setOpenCompanyId] = useState(null);
 
-  const menuItems = [
-    { text: 'Homepage', icon: <Home />, path: '/home' },
-    { text: 'Discover', icon: <Compass />, path: '/discover' },
-    { text: 'Settings', icon: <Settings />, path: '/settings' },
+  // Sample companies data
+  const companies = [
+    { id: 1, name: "Company 1" },
+    { id: 2, name: "Company 2" },
+    { id: 3, name: "Company 3" }
   ];
+
+  const handleCompanyClick = (companyId) => {
+    if (openCompanyId === companyId) {
+      setOpenCompanyId(null);
+    } else {
+      setOpenCompanyId(companyId);
+    }
+  };
+
+  const handleUserMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    handleUserMenuClose();
+    navigate('/login');
+  };
+
+  const handleSettingsClick = () => {
+    handleUserMenuClose();
+    navigate('/settings');
+  };
+  
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      {/* Left Sidebar */}
       <Drawer
         variant="permanent"
         sx={{
@@ -86,6 +94,7 @@ const RootLayout = () => {
           },
         }}
       >
+        {/* Logo section */}
         <Box sx={{ p: 2 }}>
           <Box 
             sx={{ 
@@ -100,32 +109,124 @@ const RootLayout = () => {
             <Box sx={{ typography: 'h6' }}>COMPEDIA</Box>
           </Box>
         </Box>
+        
         <Divider />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem 
-              button 
-              key={item.text}
-              onClick={() => navigate(item.path)}
-              selected={location.pathname === item.path}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          <ListItem button onClick={() => navigate('/login')}>
-            <ListItemIcon><LogOut /></ListItemIcon>
-            <ListItemText primary="Logout" />
+
+        {/* Main navigation list */}
+        <List sx={{ flex: 1 }}>
+          {/* Regular menu items */}
+          <ListItem 
+            button 
+            onClick={() => navigate('/home')}
+            selected={location.pathname === '/home'}
+          >
+            <ListItemIcon><Home /></ListItemIcon>
+            <ListItemText primary="Homepage" />
           </ListItem>
+
+          <ListItem 
+            button 
+            onClick={() => navigate('/discover')}
+            selected={location.pathname === '/discover'}
+          >
+            <ListItemIcon><Compass /></ListItemIcon>
+            <ListItemText primary="Discover" />
+          </ListItem>
+
+          {/* Companies section */}
+          <ListItem 
+            button 
+            onClick={() => setCompaniesOpen(!companiesOpen)}
+          >
+            <ListItemIcon>
+              <Building size={20} />
+            </ListItemIcon>
+            <ListItemText primary="My Companies" />
+            {companiesOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+          </ListItem>
+          
+          <Collapse in={companiesOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+              {companies.map((company) => (
+                <React.Fragment key={company.id}>
+                  <ListItem
+                    button
+                    onClick={() => handleCompanyClick(company.id)}
+                    sx={{ 
+                      pl: 4,
+                      py: 0.5,
+                    }}
+                  >
+                    <ListItemIcon>
+                      <Building size={18} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={company.name}
+                      primaryTypographyProps={{ 
+                        fontSize: '0.9rem',
+                        color: 'text.secondary'
+                      }}
+                    />
+                    {openCompanyId === company.id ? 
+                      <ChevronDown size={16} /> : 
+                      <ChevronRight size={16} />
+                    }
+                  </ListItem>
+                  
+                  {/* Company submenu */}
+                  <Collapse in={openCompanyId === company.id} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                      <ListItem
+                        button
+                        onClick={() => navigate(`/company/${company.id}/profile`)}
+                        sx={{ 
+                          pl: 6,
+                          py: 0.5,
+                        }}
+                      >
+                        <ListItemIcon>
+                          <FileTextIcon size={16} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Profile"
+                          primaryTypographyProps={{ 
+                            fontSize: '0.85rem',
+                            color: 'text.secondary'
+                          }}
+                        />
+                      </ListItem>
+
+                      <ListItem
+                        button
+                        onClick={() => navigate(`/company/${company.id}/people`)}
+                        sx={{ 
+                          pl: 6,
+                          py: 0.5,
+                        }}
+                      >
+                        <ListItemIcon>
+                          <UsersIcon size={16} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="People"
+                          primaryTypographyProps={{ 
+                            fontSize: '0.85rem',
+                            color: 'text.secondary'
+                          }}
+                        />
+                      </ListItem>
+                    </List>
+                  </Collapse>
+                </React.Fragment>
+              ))}
+            </List>
+          </Collapse>
         </List>
       </Drawer>
 
       {/* Main content area */}
       <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Top Navigation Bar */}
+        {/* AppBar */}
         <AppBar 
           position="static" 
           color="default" 
@@ -162,9 +263,41 @@ const RootLayout = () => {
                 <Bell />
               </Badge>
             </IconButton>
-            <IconButton sx={{ ml: 1 }}>
+            <IconButton 
+              sx={{ ml: 1 }}
+              onClick={handleUserMenuOpen}
+            >
               <User />
             </IconButton>
+            
+            {/* User Menu */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleUserMenuClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              <MenuItem onClick={handleSettingsClick}>
+                <ListItemIcon>
+                  <Settings size={18} />
+                </ListItemIcon>
+                <Typography variant="inherit">Settings</Typography>
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleLogout}>
+                <ListItemIcon>
+                  <LogOut size={18} />
+                </ListItemIcon>
+                <Typography variant="inherit">Logout</Typography>
+              </MenuItem>
+            </Menu>
           </Toolbar>
         </AppBar>
 

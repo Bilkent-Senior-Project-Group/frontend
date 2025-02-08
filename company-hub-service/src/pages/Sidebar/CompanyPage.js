@@ -45,6 +45,7 @@ const ProjectCard = styled(Card)(({ theme }) => ({
 const CompanyPage = () => {
   const [loading, setLoading] = useState(true);
   const [companyData, setCompanyData] = useState(null);
+  
   const theme = useTheme();
 
   // Sample Data (same as before)

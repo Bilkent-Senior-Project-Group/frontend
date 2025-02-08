@@ -1,3 +1,4 @@
+
 // src/routes/AppRoutes.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -10,7 +11,7 @@ import PrivateRoute from './PrivateRoute';
 import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
-import ProfilePage from '../pages/Topbar/ProfilePage';
+import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  // Make sure this path matches your file structure
 import RootLayout from '../layouts/RootLayout';
 
 const AppRoutes = () => {
@@ -24,15 +25,21 @@ const AppRoutes = () => {
 
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
+        {/* <Route index element={<Navigate to="/home" replace />} /> */}
         <Route path="/home" element={<HomePage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/company" element={<CompanyPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        
+        {/* Company routes */}
+        <Route path="/company/:id/profile" element={<CompanyPage />} />
+        <Route path="/company/:id/people" element={<CompanyPeoplePage />} />
       </Route>
 
-      {/* Catch all route - redirect to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Redirect root to home */}
+      {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}
+      
+      {/* Catch all route */}
+      {/* <Route path="*" element={<Navigate to="/home" replace />} /> */}
     </Routes>
   );
 };
