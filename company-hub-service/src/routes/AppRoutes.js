@@ -39,7 +39,7 @@ const AppRoutes = () => {
       {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}
       
       {/* Catch all route */}
-      {/* <Route path="*" element={<Navigate to="/home" replace />} /> */}
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 };

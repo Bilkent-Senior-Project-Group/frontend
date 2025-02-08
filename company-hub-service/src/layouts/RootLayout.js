@@ -35,8 +35,11 @@ import {
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
+import { Menu as MenuIcon } from 'lucide-react';
+import { Tooltip } from '@mui/material';
 
 const DRAWER_WIDTH = 240;
+const MINI_DRAWER_WIDTH = 65;
 
 const RootLayout = () => {
   const navigate = useNavigate();
@@ -44,6 +47,7 @@ const RootLayout = () => {
   const [companiesOpen, setCompaniesOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openCompanyId, setOpenCompanyId] = useState(null);
+  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
 
   // Sample companies data
   const companies = [
@@ -51,6 +55,39 @@ const RootLayout = () => {
     { id: 2, name: "Company 2" },
     { id: 3, name: "Company 3" }
   ];
+
+  const toggleDrawer = () => {
+    setIsDrawerCollapsed(!isDrawerCollapsed);
+  };
+
+  const NavItem = ({ icon, text, onClick, selected = false, children }) => (
+    <Tooltip title={isDrawerCollapsed ? text : ""} placement="right">
+      <ListItem 
+        button 
+        onClick={onClick}
+        selected={selected}
+        sx={{ 
+          minHeight: 48,
+          px: 2.5,
+          justifyContent: isDrawerCollapsed ? 'center' : 'initial',
+        }}
+      >
+        <ListItemIcon sx={{ 
+          minWidth: 0, 
+          mr: isDrawerCollapsed ? 0 : 2,
+          justifyContent: 'center' 
+        }}>
+          {icon}
+        </ListItemIcon>
+        {!isDrawerCollapsed && (
+          <>
+            <ListItemText primary={text} />
+            {children}
+          </>
+        )}
+      </ListItem>
+    </Tooltip>
+  );
 
   const handleCompanyClick = (companyId) => {
     if (openCompanyId === companyId) {
@@ -81,71 +118,205 @@ const RootLayout = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <Drawer
-        variant="permanent"
-        sx={{
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            position: 'relative',
-          },
+      {/* AppBar */}
+      <AppBar 
+        position="fixed" 
+        color="default" 
+        elevation={0}
+        sx={{ 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          backgroundColor: 'background.paper'
         }}
       >
-        {/* Logo section */}
-        <Box sx={{ p: 2 }}>
+        <Toolbar>
+          {/* Menu Icon and Logo */}
+          <IconButton 
+            edge="start" 
+            onClick={toggleDrawer} 
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
           <Box 
             sx={{ 
               display: 'flex', 
-              alignItems: 'center', 
+              alignItems: 'center',
               gap: 1,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              mr: 3
             }}
             onClick={() => navigate('/home')}
           >
             <Building size={24} />
-            <Box sx={{ typography: 'h6' }}>COMPEDIA</Box>
+            <Typography variant="h6">
+              COMPEDIA
+            </Typography>
           </Box>
-        </Box>
-        
-        <Divider />
+
+          {/* Search Bar */}
+          <Paper
+            component="form"
+            sx={{ 
+              p: '2px 4px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              width: 400,
+              flexGrow: 0
+            }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1 }}
+              placeholder="Enter some description"
+              inputProps={{ 'aria-label': 'search' }}
+            />
+            <IconButton type="button" sx={{ p: '10px', color: 'success.main' }}>
+              <Search />
+            </IconButton>
+          </Paper>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Notification and User Menu */}
+          <IconButton>
+            <Badge badgeContent={4} color="error">
+              <Bell />
+            </Badge>
+          </IconButton>
+          <IconButton 
+            sx={{ ml: 1 }}
+            onClick={handleUserMenuOpen}
+          >
+            <User />
+          </IconButton>
+
+          {/* User Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleUserMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <MenuItem onClick={handleSettingsClick}>
+              <ListItemIcon>
+                <Settings size={18} />
+              </ListItemIcon>
+              <Typography variant="inherit">Settings</Typography>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogOut size={18} />
+              </ListItemIcon>
+              <Typography variant="inherit">Logout</Typography>
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+
+      {/* Sidebar */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: isDrawerCollapsed ? MINI_DRAWER_WIDTH : DRAWER_WIDTH,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: isDrawerCollapsed ? MINI_DRAWER_WIDTH : DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            borderRight: '1px solid',
+            borderColor: 'divider',
+            position: 'relative',
+            transition: 'width 0.2s ease',
+            overflowX: 'hidden',
+            mt: '64px', // Add margin-top to account for AppBar height
+          },
+        }}
+      >
 
         {/* Main navigation list */}
         <List sx={{ flex: 1 }}>
-          {/* Regular menu items */}
-          <ListItem 
-            button 
-            onClick={() => navigate('/home')}
-            selected={location.pathname === '/home'}
-          >
-            <ListItemIcon><Home /></ListItemIcon>
-            <ListItemText primary="Homepage" />
-          </ListItem>
+          {/* Homepage */}
+          <Tooltip title={isDrawerCollapsed ? "Homepage" : ""} placement="right">
+            <ListItem 
+              button 
+              onClick={() => navigate('/home')}
+              selected={location.pathname === '/home'}
+              sx={{ 
+                minHeight: 48,
+                px: 2.5,
+                justifyContent: isDrawerCollapsed ? 'center' : 'initial'
+              }}
+            >
+              <ListItemIcon sx={{ 
+                minWidth: 0, 
+                mr: isDrawerCollapsed ? 0 : 2,
+                justifyContent: 'center'
+              }}>
+                <Home />
+              </ListItemIcon>
+              {!isDrawerCollapsed && <ListItemText primary="Homepage" />}
+            </ListItem>
+          </Tooltip>
 
-          <ListItem 
-            button 
-            onClick={() => navigate('/discover')}
-            selected={location.pathname === '/discover'}
-          >
-            <ListItemIcon><Compass /></ListItemIcon>
-            <ListItemText primary="Discover" />
-          </ListItem>
+          {/* Discover */}
+          <Tooltip title={isDrawerCollapsed ? "Discover" : ""} placement="right">
+            <ListItem 
+              button 
+              onClick={() => navigate('/discover')}
+              selected={location.pathname === '/discover'}
+              sx={{ 
+                minHeight: 48,
+                px: 2.5,
+                justifyContent: isDrawerCollapsed ? 'center' : 'initial'
+              }}
+            >
+              <ListItemIcon sx={{ 
+                minWidth: 0, 
+                mr: isDrawerCollapsed ? 0 : 2,
+                justifyContent: 'center'
+              }}>
+                <Compass />
+              </ListItemIcon>
+              {!isDrawerCollapsed && <ListItemText primary="Discover" />}
+            </ListItem>
+          </Tooltip>
 
           {/* Companies section */}
-          <ListItem 
-            button 
-            onClick={() => setCompaniesOpen(!companiesOpen)}
-          >
-            <ListItemIcon>
-              <Building size={20} />
-            </ListItemIcon>
-            <ListItemText primary="My Companies" />
-            {companiesOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-          </ListItem>
+          <Tooltip title={isDrawerCollapsed ? "My Companies" : ""} placement="right">
+            <ListItem 
+              button 
+              onClick={() => setCompaniesOpen(!companiesOpen)}
+              sx={{ 
+                minHeight: 48,
+                px: 2.5,
+                justifyContent: isDrawerCollapsed ? 'center' : 'initial'
+              }}
+            >
+              <ListItemIcon sx={{ 
+                minWidth: 0, 
+                mr: isDrawerCollapsed ? 0 : 2,
+                justifyContent: 'center'
+              }}>
+                <Building size={20} />
+              </ListItemIcon>
+              {!isDrawerCollapsed && (
+                <>
+                  <ListItemText primary="My Companies" />
+                  {companiesOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                </>
+              )}
+            </ListItem>
+          </Tooltip>
           
-          <Collapse in={companiesOpen} timeout="auto" unmountOnExit>
+          <Collapse in={companiesOpen && !isDrawerCollapsed} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               {companies.map((company) => (
                 <React.Fragment key={company.id}>
@@ -173,7 +344,6 @@ const RootLayout = () => {
                     }
                   </ListItem>
                   
-                  {/* Company submenu */}
                   <Collapse in={openCompanyId === company.id} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                       <ListItem
