@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "https://localhost:7181";  // Base URL for the API
+const API_URL = "http://localhost:5133";  // Base URL for the API
 
 const signup = async (userData) => {
   try {
