@@ -31,7 +31,10 @@ import {
   ChevronDown,
   ChevronRight,
   Users as UsersIcon,
-  FileText as FileTextIcon
+  FileText as FileTextIcon,
+  Plus as PlusIcon,       // Rename import to PlusIcon
+  ChevronUp as ChevronUpIcon,   // Rename import to ChevronUpIcon
+  HelpCircle as HelpCircleIcon   // Rename import to HelpCircleIcon  
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
@@ -47,6 +50,7 @@ const RootLayout = () => {
   const [companiesOpen, setCompaniesOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openCompanyId, setOpenCompanyId] = useState(null);
+  const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
 
   // Sample companies data
@@ -59,35 +63,6 @@ const RootLayout = () => {
   const toggleDrawer = () => {
     setIsDrawerCollapsed(!isDrawerCollapsed);
   };
-
-  const NavItem = ({ icon, text, onClick, selected = false, children }) => (
-    <Tooltip title={isDrawerCollapsed ? text : ""} placement="right">
-      <ListItem 
-        button 
-        onClick={onClick}
-        selected={selected}
-        sx={{ 
-          minHeight: 48,
-          px: 2.5,
-          justifyContent: isDrawerCollapsed ? 'center' : 'initial',
-        }}
-      >
-        <ListItemIcon sx={{ 
-          minWidth: 0, 
-          mr: isDrawerCollapsed ? 0 : 2,
-          justifyContent: 'center' 
-        }}>
-          {icon}
-        </ListItemIcon>
-        {!isDrawerCollapsed && (
-          <>
-            <ListItemText primary={text} />
-            {children}
-          </>
-        )}
-      </ListItem>
-    </Tooltip>
-  );
 
   const handleCompanyClick = (companyId) => {
     if (openCompanyId === companyId) {
@@ -115,6 +90,33 @@ const RootLayout = () => {
     navigate('/settings');
   };
   
+  const handleAddMenuOpen = (event) => {
+    setAddMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleAddMenuClose = () => {
+    setAddMenuAnchorEl(null);
+  };
+
+  const handleAddCompany = () => {
+    navigate('/add-company');
+    handleAddMenuClose();
+  };
+
+  const handleAddProject = () => {
+    navigate('/add-project');
+    handleAddMenuClose();
+  };
+
+  const handleGetPremium = () => {
+    navigate('/premium');
+    handleAddMenuClose();
+  };
+
+  const handleSupport = () => {
+    navigate('/support');
+    handleAddMenuClose();
+  };
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -177,6 +179,61 @@ const RootLayout = () => {
           </Paper>
 
           <Box sx={{ flexGrow: 1 }} />
+
+          {/* Notification and Add Menu */}
+          <IconButton>
+            <Badge badgeContent={4} color="error">
+              <Bell />
+            </Badge>
+          </IconButton>
+
+          {/* New Add Menu */}
+          <IconButton 
+            sx={{ ml: 1 }}
+            onClick={handleAddMenuOpen}
+          >
+            <PlusIcon />
+          </IconButton>
+          <Menu
+            anchorEl={addMenuAnchorEl}
+            open={Boolean(addMenuAnchorEl)}
+            onClose={handleAddMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+          <MenuItem onClick={handleAddCompany}>
+            <ListItemIcon>
+              <Building size={18} />
+            </ListItemIcon>
+            <Typography variant="inherit">Add Company</Typography>
+          </MenuItem>
+          <MenuItem onClick={handleAddProject}>
+            <ListItemIcon>
+              <FileTextIcon size={18} />
+            </ListItemIcon>
+            <Typography variant="inherit">Add Project</Typography>
+          </MenuItem>
+          <MenuItem onClick={handleGetPremium}>
+            <ListItemIcon>
+              <ChevronUpIcon size={18} />
+            </ListItemIcon>
+            <Typography variant="inherit">Get Premium</Typography>
+          </MenuItem>
+          <MenuItem onClick={handleSupport}>
+            <ListItemIcon>
+              <HelpCircleIcon size={18} />
+            </ListItemIcon>
+            <Typography variant="inherit">Support</Typography>
+          </MenuItem>
+          </Menu>
+
+
 
           {/* Notification and User Menu */}
           <IconButton>

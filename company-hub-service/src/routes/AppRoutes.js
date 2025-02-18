@@ -11,7 +11,10 @@ import PrivateRoute from './PrivateRoute';
 import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
-import AddCompanyPage from '../pages/Sidebar/AddCompanyPage';
+import AddCompanyPage from '../pages/Topbar/AddCompanyPage';
+import AddProjectPage from '../pages/Topbar/AddProjectPage';
+import PremiumPage from '../pages/Topbar/PremiumPage';
+import SupportPage from '../pages/Topbar/SupportPage';
 import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  
 import RootLayout from '../layouts/RootLayout';
 
@@ -31,6 +34,9 @@ const AppRoutes = () => {
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/add-company" element={<AddCompanyPage />} />
+        <Route path="/add-project" element={<AddProjectPage />} />
+        <Route path="/premium" element={<PremiumPage />} />
+        <Route path="/support" element={<SupportPage />} />
         {/* Company routes */}
         <Route path="/company/:id/profile" element={<CompanyPage />} />
         <Route path="/company/:id/people" element={<CompanyPeoplePage />} />
