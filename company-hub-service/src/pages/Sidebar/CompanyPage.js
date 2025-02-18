@@ -1,4 +1,3 @@
-// src/pages/Sidebar/CompanyPage.jsx
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { Star, MapPin, Building, Globe, Clock, Users } from "lucide-react";
@@ -19,12 +18,13 @@ import {
   useTheme
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { colors } from '../../theme/theme';
 
-// Styled components
+// Styled components with updated colors
 const CompanyLogo = styled(Box)(({ theme }) => ({
   width: 100,
   height: 100,
-  backgroundColor: theme.palette.primary.light,
+  backgroundColor: colors.primary[100],
   borderRadius: theme.shape.borderRadius * 2,
   display: 'flex',
   alignItems: 'center',
@@ -32,7 +32,7 @@ const CompanyLogo = styled(Box)(({ theme }) => ({
   '& svg': {
     width: 50,
     height: 50,
-    color: 'white',
+    color: colors.primary[600],
   },
 }));
 
@@ -40,11 +40,12 @@ const ProjectCard = styled(Card)(({ theme }) => ({
   background: theme.palette.background.paper,
   borderRadius: theme.shape.borderRadius * 1.5,
   border: '1px solid',
-  borderColor: theme.palette.divider,
+  borderColor: colors.neutral[200],
   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: theme.shadows[4],
+    borderColor: colors.primary[200],
   },
 }));
 
@@ -52,58 +53,55 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
   height: 10,
   borderRadius: 5,
   [`&.MuiLinearProgress-colorPrimary`]: {
-    backgroundColor: theme.palette.grey[200],
+    backgroundColor: colors.neutral[100],
   },
   [`& .MuiLinearProgress-bar`]: {
     borderRadius: 5,
   },
 }));
 
-
 const CompanyPage = () => {
   const [loading, setLoading] = useState(true);
   const [companyData, setCompanyData] = useState(null);
   const theme = useTheme();
 
-  // Your existing initialData and useEffect...
-   // Sample Data (same as before)
-    const initialData = {
-      id: "1",
-      name: "InnovateX Solutions",
-      owner: "Hamdullah Bilgin",
-      websiteUrl: "https://example.com",
-      rating: 4.8,
-      location: "Austin, Texas, USA",
-      foundingYear: 2013,
-      priceRange: "$200-$500",
-      employees: "50-100",
-      about: "InnovateX Solutions specializes in AI-driven analytics, mobile app development, and UX/UI design. Our team of experts delivers tailored solutions to help businesses grow.",
-      projects: [
-        { type: "Mobile App Development", percentage: 40, color: theme.palette.primary.main },
-        { type: "UI Design", percentage: 25, color: theme.palette.secondary.main },
-        { type: "UX Research", percentage: 18, color: theme.palette.error.main },
-        { type: "Web Development", percentage: 11, color: theme.palette.warning.main },
-        { type: "Marketing Strategy", percentage: 6, color: theme.palette.success.main },
-      ],
-      previousProjects: [
-        { type: "Mobile App Development", name: "Fitness App", description: "A mobile app that helps users track their workouts and nutrition.", date: "2020" },
-        { type: "UI Design", name: "Social Media Platform", description: "A social media platform with a focus on user privacy and data security", date: "2019" },
-        { type: "Web Development", name: "E-Commerce Platform", description: "An e-commerce platform for small businesses to sell their products online", date: "2018" },
-      ],
-      services: [
-        { name: "Mobile Development", value: 40 },
-        { name: "Web Development", value: 35 },
-        { name: "UI/UX Design", value: 25 },
-      ],
-    };
-  
-    useEffect(() => {
-      setTimeout(() => {
-        setCompanyData(initialData);
-        setLoading(false);
-      }, 1000);
-    }, []);
-  
+  // Sample data with updated colors
+  const initialData = {
+    id: "1",
+    name: "InnovateX Solutions",
+    owner: "Hamdullah Bilgin",
+    websiteUrl: "https://example.com",
+    rating: 4.8,
+    location: "Austin, Texas, USA",
+    foundingYear: 2013,
+    priceRange: "$200-$500",
+    employees: "50-100",
+    about: "InnovateX Solutions specializes in AI-driven analytics, mobile app development, and UX/UI design. Our team of experts delivers tailored solutions to help businesses grow.",
+    projects: [
+      { type: "Mobile App Development", percentage: 40, color: colors.primary[500] },
+      { type: "UI Design", percentage: 25, color: colors.primary[400] },
+      { type: "UX Research", percentage: 18, color: colors.accent.info },
+      { type: "Web Development", percentage: 11, color: colors.accent.warning },
+      { type: "Marketing Strategy", percentage: 6, color: colors.accent.success },
+    ],
+    previousProjects: [
+      { type: "Mobile App Development", name: "Fitness App", description: "A mobile app that helps users track their workouts and nutrition.", date: "2020" },
+      { type: "UI Design", name: "Social Media Platform", description: "A social media platform with a focus on user privacy and data security", date: "2019" },
+      { type: "Web Development", name: "E-Commerce Platform", description: "An e-commerce platform for small businesses to sell their products online", date: "2018" },
+    ],
+    services: [
+      { name: "Mobile Development", value: 40 },
+      { name: "Web Development", value: 35 },
+      { name: "UI/UX Design", value: 25 },
+    ],
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setCompanyData(initialData);
+      setLoading(false);
+    }, 1000);
+  }, []);
 
   if (loading) {
     return (
@@ -118,7 +116,7 @@ const CompanyPage = () => {
       {/* Hero Section */}
       <Box 
         sx={{ 
-          background: 'linear-gradient(45deg, #2B3A67 30%, #496A81 90%)',
+          background: `linear-gradient(45deg, ${colors.primary[700]} 30%, ${colors.primary[500]} 90%)`,
           color: 'white',
           pt: 6,
           pb: 8,
@@ -181,9 +179,9 @@ const CompanyPage = () => {
                 rel="noopener noreferrer"
                 sx={{
                   bgcolor: 'white',
-                  color: 'primary.main',
+                  color: colors.primary[600],
                   '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    bgcolor: colors.neutral[100],
                   },
                 }}
               >
@@ -196,11 +194,19 @@ const CompanyPage = () => {
 
       <Container maxWidth="lg" sx={{ py: 8 }}>
         {/* About Section */}
-        <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 3 }}>
-          <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 4, 
+            mb: 4, 
+            borderRadius: 3,
+            border: `1px solid ${colors.neutral[200]}`,
+          }}
+        >
+          <Typography variant="h4" gutterBottom sx={{ mb: 3, color: colors.neutral[800] }}>
             About Us
           </Typography>
-          <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.7 }}>
+          <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.7, color: colors.neutral[600] }}>
             {companyData.about}
           </Typography>
         </Paper>
@@ -208,18 +214,26 @@ const CompanyPage = () => {
         {/* Projects & Services */}
         <Grid container spacing={4} sx={{ mb: 4 }}>
           <Grid item xs={12} md={6}>
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, height: '100%' }}>
-              <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 4, 
+                borderRadius: 3, 
+                height: '100%',
+                border: `1px solid ${colors.neutral[200]}`,
+              }}
+            >
+              <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
                 Projects Overview
               </Typography>
               <Stack spacing={3}>
                 {companyData.projects.map((project, index) => (
                   <Box key={index}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="subtitle1">
+                      <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
                         {project.type}
                       </Typography>
-                      <Typography variant="subtitle1" color="primary">
+                      <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
                         {project.percentage}%
                       </Typography>
                     </Box>
@@ -238,8 +252,16 @@ const CompanyPage = () => {
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, height: '100%' }}>
-              <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 4, 
+                borderRadius: 3, 
+                height: '100%',
+                border: `1px solid ${colors.neutral[200]}`,
+              }}
+            >
+              <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
                 Services Breakdown
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -256,9 +278,9 @@ const CompanyPage = () => {
                       <Cell
                         key={`cell-${index}`}
                         fill={[
-                          theme.palette.primary.main,
-                          theme.palette.secondary.main,
-                          theme.palette.error.main,
+                          colors.primary[500],
+                          colors.primary[400],
+                          colors.primary[300],
                         ][index % 3]}
                       />
                     ))}
@@ -272,8 +294,15 @@ const CompanyPage = () => {
         </Grid>
 
         {/* Previous Projects */}
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 3 }}>
-          <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 4, 
+            borderRadius: 3,
+            border: `1px solid ${colors.neutral[200]}`,
+          }}
+        >
+          <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
             Previous Projects
           </Typography>
           <Grid container spacing={3}>
@@ -281,19 +310,23 @@ const CompanyPage = () => {
               <Grid item xs={12} md={4} key={index}>
                 <ProjectCard>
                   <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h5" color="primary" gutterBottom>
+                    <Typography variant="h5" sx={{ color: colors.primary[600] }} gutterBottom>
                       {project.name}
                     </Typography>
                     <Chip 
                       label={project.type} 
                       size="small" 
-                      sx={{ mb: 2 }}
+                      sx={{ 
+                        mb: 2,
+                        bgcolor: colors.primary[100],
+                        color: colors.primary[700],
+                      }}
                     />
-                    <Typography variant="body1" sx={{ mb: 2 }}>
+                    <Typography variant="body1" sx={{ mb: 2, color: colors.neutral[600] }}>
                       {project.description}
                     </Typography>
                     <Divider sx={{ my: 2 }} />
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ color: colors.neutral[500] }}>
                       Completed in {project.date}
                     </Typography>
                   </CardContent>

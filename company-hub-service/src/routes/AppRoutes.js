@@ -11,7 +11,8 @@ import PrivateRoute from './PrivateRoute';
 import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
-import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  // Make sure this path matches your file structure
+import AddCompanyPage from '../pages/Sidebar/AddCompanyPage';
+import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  
 import RootLayout from '../layouts/RootLayout';
 
 const AppRoutes = () => {
@@ -29,7 +30,7 @@ const AppRoutes = () => {
         <Route path="/home" element={<HomePage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        
+        <Route path="/add-company" element={<AddCompanyPage />} />
         {/* Company routes */}
         <Route path="/company/:id/profile" element={<CompanyPage />} />
         <Route path="/company/:id/people" element={<CompanyPeoplePage />} />
