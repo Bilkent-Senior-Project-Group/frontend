@@ -131,12 +131,12 @@ const CompanyPage = () => {
               </CompanyLogo>
             </Grid>
             <Grid item xs>
-              <Typography variant="h3" component="h1" gutterBottom>
+              <Typography variant="h3" component="h1" gutterBottom sx={{ color: 'white' }}>
                 {companyData.name}
               </Typography>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
                 <Rating value={companyData.rating} precision={0.1} readOnly size="large" />
-                <Typography variant="h6" sx={{ ml: 1 }}>
+                <Typography variant="h6" sx={{ ml: 1, color: 'white' }} >
                   {companyData.rating}
                 </Typography>
               </Stack>
@@ -179,9 +179,11 @@ const CompanyPage = () => {
                 rel="noopener noreferrer"
                 sx={{
                   bgcolor: 'white',
-                  color: colors.primary[600],
+                  color: colors.primary[700],
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                   '&:hover': {
-                    bgcolor: colors.neutral[100],
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
                   },
                 }}
               >
