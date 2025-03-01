@@ -1,7 +1,7 @@
 import React from 'react';
 
 
-const DiscoverPage = () => {
+const SupportPage = () => {
   return (
     <div className='discoverpage-content'>
       <h1>Discover Page</h1>
@@ -11,4 +11,4 @@ const DiscoverPage = () => {
   );
 };
 
-export default DiscoverPage;
+export default SupportPage;
