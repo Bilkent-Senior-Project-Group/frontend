@@ -29,6 +29,9 @@ import { colors } from '../../theme/theme';
 // Import the CompanyPDFExtractor component
 import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
 
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import CompanyService from '../../services/CompanyService';
+
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
   clipPath: 'inset(50%)',
@@ -68,6 +71,11 @@ const AddCompanyPage = () => {
     message: '',
     severity: 'info'
   });
+
+  const navigate = useNavigate();
+  const [validationErrors, setValidationErrors] = useState({});
+  const [error, setError] = useState(null);
+
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -137,26 +145,129 @@ const AddCompanyPage = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    // Map to backend data format
-    const companyData = {
-      CompanyName: companyDetails.name,
-      FoundedYear: parseInt(companyDetails.foundingYear) || new Date().getFullYear(),
-      Address: companyDetails.location,
-      Location: companyDetails.location,
-      Website: companyDetails.websiteUrl,
-      CompanySize: parseInt(companyDetails.employeeSize) || 0,
-      Portfolio: projects.map(project => ({
-        Name: project.name,
-        Description: project.description,
-        Type: project.type,
-        CompletionDate: project.completionDate
-      }))
-    };
+  const handleSubmit = async () => {
+    // Reset states
+    setValidationErrors({});
+    setError(null);
+    setIsLoading(true);
     
-    console.log('Submitting Company Data:', companyData);
-    // TODO: Implement actual submission logic
+    try {
+      // Basic client-side validation
+      const validationErrors = {};
+      
+      if (!companyDetails.name) {
+        validationErrors.name = "Company name is required";
+      }
+      
+      if (!companyDetails.location) {
+        validationErrors.location = "Location is required";
+      }
+      
+      const foundedYear = parseInt(companyDetails.foundingYear);
+      if (isNaN(foundedYear) || foundedYear < 1800 || foundedYear > 2100) {
+        validationErrors.foundingYear = "Please enter a valid founding year between 1800 and 2100";
+      }
+      
+      if (!projects || projects.length === 0) {
+        validationErrors.projects = "At least one project is required";
+      } else {
+        const invalidProjects = projects.filter(p => !p.name || !p.description);
+        if (invalidProjects.length > 0) {
+          validationErrors.projects = "All projects must have at least a name and description";
+        }
+      }
+      
+      if (Object.keys(validationErrors).length > 0) {
+        setValidationErrors(validationErrors);
+        setNotification({
+          open: true,
+          message: "Please fix the form errors before submitting",
+          severity: "error"
+        });
+        return;
+      }
+      
+      // Prepare data for backend with the correct format
+      const companyData = {
+        CompanyName: companyDetails.name,
+        Description: companyDetails.description || "",
+        FoundedYear: foundedYear || new Date().getFullYear(),
+        Address: companyDetails.location || "",
+        Location: companyDetails.location || "",
+        Website: companyDetails.websiteUrl || "",
+        CompanySize: parseInt(companyDetails.employeeSize) || 0,
+        // Important: Make sure these are arrays of strings where required
+        Specialties: "",
+        Industries: [], // Changed from string to empty array
+        ContactInfo: "",
+        CoreExpertise: [], // Changed from string to empty array
+        // Format Portfolio correctly
+        Portfolio: projects.map(project => ({
+          ProjectName: project.name,
+          Description: project.description || "",
+          TechnologiesUsed: [], // Empty array as default
+          Industry: project.type || "",
+          ClientType: "",
+          Impact: "",
+          Date: project.completionDate || "",
+          ProjectUrl: ""
+        }))
+      };
+      
+      console.log('Submitting Company Data:', companyData);
+      
+      const response = await CompanyService.addCompany(companyData);
+      
+      console.log('Company added successfully:', response.data);
+      
+      setNotification({
+        open: true,
+        message: 'Company added successfully!',
+        severity: 'success'
+      });
+      
+      // Navigate away on success
+      navigate('/home', {
+        state: {
+          message: 'Company added successfully!'
+        }
+      });
+      
+    } catch (err) {
+      console.error('Error adding company:', err);
+      
+      // Try to extract detailed error information
+      if (err.response?.data?.errors) {
+        console.log('Validation errors from server:', err.response.data.errors);
+        const backendErrors = err.response.data.errors;
+        const formattedErrors = {};
+        
+        Object.keys(backendErrors).forEach(key => {
+          // Skip the companyDto error since we're fixing that in the service
+          if (key !== 'companyDto') {
+            const formattedKey = key.startsWith('$.') 
+              ? key.substring(2).toLowerCase() 
+              : key.charAt(0).toLowerCase() + key.slice(1);
+            formattedErrors[formattedKey] = backendErrors[key][0];
+          }
+        });
+        
+        setValidationErrors(formattedErrors);
+      } else {
+        // Handle general error
+        setError(err.message || 'An error occurred while adding the company');
+      }
+      
+      setNotification({
+        open: true,
+        message: err.response?.data?.title || err.message || 'An error occurred while adding the company',
+        severity: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+  
 
   const handleCloseNotification = () => {
     setNotification(prev => ({
@@ -357,8 +468,72 @@ const AddCompanyPage = () => {
           )}
         </Grid>
       </Paper>
+        
+        {/* Add this right before your submit button */}
+      {(Object.keys(validationErrors).length > 0 || error) && (
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            mb: 3,
+            borderRadius: 2,
+            backgroundColor: 'rgba(211, 47, 47, 0.08)',
+            border: '1px solid rgba(211, 47, 47, 0.3)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Alert 
+              severity="error" 
+              sx={{ backgroundColor: 'transparent', p: 0, mb: 1 }}
+            >
+              <Typography variant="subtitle1" fontWeight={600}>
+                Please fix the following errors:
+              </Typography>
+            </Alert>
+          </Box>
+          
+          <ul style={{ margin: 0, paddingLeft: '1.5rem' }}>
+            {Object.entries(validationErrors).map(([field, message]) => (
+              <li key={field}>
+                <Typography variant="body2" color="error.dark">
+                  {message}
+                </Typography>
+              </li>
+            ))}
+            {error && (
+              <li>
+                <Typography variant="body2" color="error.dark">
+                  {error}
+                </Typography>
+              </li>
+            )}
+          </ul>
+        </Paper>
+      )}
 
+      {/* Update your submit button to show loading state */}
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={isLoading}
+          sx={{ 
+            bgcolor: colors.primary[500],
+            '&:hover': { bgcolor: colors.primary[600] },
+            minWidth: '160px'
+          }}
+        >
+          {isLoading ? (
+            <>
+              <CircularProgress size={20} sx={{ mr: 1, color: 'white' }} />
+              Submitting...
+            </>
+          ) : (
+            'Submit Company'
+          )}
+        </Button>
+      </Box>
+      {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
           onClick={handleSubmit}
@@ -370,7 +545,7 @@ const AddCompanyPage = () => {
         >
           Submit Company
         </Button>
-      </Box>
+      </Box> */}
 
       {/* Project Dialog */}
       <Dialog 
