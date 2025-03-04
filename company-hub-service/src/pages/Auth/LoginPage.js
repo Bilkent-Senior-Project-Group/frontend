@@ -1,18 +1,8 @@
-// src/pages/Auth/LoginPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthService from '../../services/AuthService';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Container,
-  Alert,
-  Stack,
-  Link as MuiLink
-} from '@mui/material';
+import { Box, Typography, TextField, Button, Container, Alert, Stack, Link as MuiLink } from '@mui/material';
 
 const LoginPage = () => {
   const location = useLocation();
@@ -31,12 +21,15 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await AuthService.login({email, password});
+      const response = await AuthService.login({ email, password });
+
       if (!response.status || response.status !== 200) {
         setError(response);
         return;
       }
-      login(response.data.user);
+
+      console.log('Login response:', response.data);
+      login(response.data.token);  // Store only token, decode later
       navigate('/homepage');
     } catch (err) {
       setError(err.message);
@@ -45,14 +38,7 @@ const LoginPage = () => {
 
   return (
     <Container maxWidth="sm">
-      <Box
-        sx={{
-          mt: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
+      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography variant="h4" gutterBottom>
           Login to COMPEDIA
         </Typography>
@@ -79,42 +65,19 @@ const LoginPage = () => {
               variant="outlined"
             />
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ 
-                mt: 2, 
-                height: '48px',
-                textTransform: 'none'
-              }}
-            >
+            <Button type="submit" fullWidth variant="contained" sx={{ mt: 2, height: '48px', textTransform: 'none' }}>
               Login
             </Button>
           </Stack>
 
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Stack spacing={1}>
-              <MuiLink 
-                component={Link} 
-                to="/forgot-password"
-                underline="hover"
-                sx={{ color: 'primary.main' }}
-              >
+              <MuiLink component={Link} to="/forgot-password" underline="hover" sx={{ color: 'primary.main' }}>
                 Forgot Password?
               </MuiLink>
-              <MuiLink 
-                component={Link} 
-                to="/signup"
-                underline="hover"
-                sx={{ color: 'primary.main' }}
-              >
+              <MuiLink component={Link} to="/signup" underline="hover" sx={{ color: 'primary.main' }}>
                 Sign Up
               </MuiLink>
             </Stack>

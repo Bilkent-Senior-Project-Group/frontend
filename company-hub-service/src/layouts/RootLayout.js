@@ -40,6 +40,7 @@ import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
+import { useAuth } from '../contexts/AuthContext';
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -52,6 +53,7 @@ const RootLayout = () => {
   const [openCompanyId, setOpenCompanyId] = useState(null);
   const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+  const { logout } = useAuth();
 
   // Sample companies data
   const companies = [
@@ -82,6 +84,7 @@ const RootLayout = () => {
 
   const handleLogout = () => {
     handleUserMenuClose();
+    logout();
     navigate('/login');
   };
 
