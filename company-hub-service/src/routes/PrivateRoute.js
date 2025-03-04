@@ -1,13 +1,11 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import RootLayout from '../layouts/RootLayout';
 
 const PrivateRoute = ({ children }) => {
-  const { currentUser } = useAuth();  // Assume AuthContext provides this
+  const token = localStorage.getItem("token");
 
-  // return currentUser ? <Sidebar>{children}</Sidebar> : <Navigate to="/" />;  //düzeltilecekk
-  return <RootLayout>{children}</RootLayout>;
+  return token ? <RootLayout>{children}</RootLayout> : <Navigate to="/" />;
 };
 
 export default PrivateRoute;
