@@ -26,10 +26,8 @@ import {
 import { styled } from '@mui/material/styles';
 import { colors } from '../../theme/theme';
 
-// Import PDF.js
-import * as pdfjsLib from 'pdfjs-dist/webpack';
-// Set worker path
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Import the CompanyPDFExtractor component
+import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -79,325 +77,24 @@ const AddCompanyPage = () => {
     }));
   };
 
-  // Extract text from PDF using PDF.js
-  const extractTextFromPDF = async (file) => {
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const numPages = pdf.numPages;
-      
-      let fullText = '';
-      for (let i = 1; i <= numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ');
-        fullText += pageText + '\n\n';
-      }
-      
-      return fullText;
-    } catch (error) {
-      console.error('Error extracting text from PDF:', error);
-      throw error;
+  // Handle data extracted from PDF
+  const handleExtractedData = (data) => {
+    // Update company details with extracted information
+    if (data.companyDetails) {
+      setCompanyDetails(data.companyDetails);
     }
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-  
-    setIsLoading(true);
+    
+    // Update projects with extracted information
+    if (data.projects && data.projects.length > 0) {
+      setProjects(data.projects);
+    }
+    
+    // Show notification
     setNotification({
       open: true,
-      message: 'Analyzing PDF document...',
-      severity: 'info'
+      message: `Successfully extracted company information${data.projects?.length ? ` and ${data.projects.length} projects` : ''}`,
+      severity: 'success'
     });
-
-    try {
-      // Extract text from PDF
-      const textContent = await extractTextFromPDF(file);
-      
-      // Parse company details
-      const extractedDetails = extractCompanyDetails(textContent);
-      
-      // Update company details state
-      setCompanyDetails(prev => ({
-        ...prev,
-        ...extractedDetails
-      }));
-      
-      // Extract and set projects
-      const extractedProjects = extractProjects(textContent);
-      if (extractedProjects && extractedProjects.length > 0) {
-        setProjects(extractedProjects);
-        setNotification({
-          open: true,
-          message: `Successfully extracted company details and ${extractedProjects.length} projects`,
-          severity: 'success'
-        });
-      } else {
-        setNotification({
-          open: true,
-          message: 'Company details extracted, but no projects were found',
-          severity: 'info'
-        });
-      }
-    } catch (error) {
-      console.error('Error processing PDF:', error);
-      setNotification({
-        open: true,
-        message: 'Failed to process PDF: ' + error.message,
-        severity: 'error'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const extractCompanyDetails = (text) => {
-    const details = {};
-    
-    // Company name - common patterns
-    const companyNamePatterns = [
-      /company\s*name\s*[:-]?\s*([A-Za-z0-9\s&\.]+)(?:\r|\n|$)/i,
-      /organization\s*[:-]?\s*([A-Za-z0-9\s&\.]+)(?:\r|\n|$)/i,
-      /([A-Z][A-Za-z0-9\s&\.]+(?:Inc\.|LLC|Ltd\.|Corp\.|Corporation|Company))(?:\r|\n|$)/
-    ];
-    
-    for (const pattern of companyNamePatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        details.name = match[1].trim();
-        break;
-      }
-    }
-    
-    // Location
-    const locationPatterns = [
-      /(?:location|address|headquarters)\s*[:-]?\s*([A-Za-z0-9\s,\.]+)(?:\r|\n|$)/i,
-      /based\s*in\s*([A-Za-z0-9\s,\.]+)(?:\r|\n|$)/i
-    ];
-    
-    for (const pattern of locationPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        details.location = match[1].trim();
-        break;
-      }
-    }
-    
-    // Founding year
-    const yearPattern = /(?:founded|established|started|since)\s*(?:in|:)?\s*(\d{4})(?:\r|\n|$)/i;
-    const yearMatch = text.match(yearPattern);
-    if (yearMatch && yearMatch[1]) {
-      details.foundingYear = yearMatch[1];
-    }
-    
-    // Employee size
-    const sizePatterns = [
-      /(?:employees|size|staff|team)\s*[:-]?\s*(\d+[\-\s]*\d*)\s*(?:employees|people|staff)?/i,
-      /(?:company|team)\s*size\s*[:-]?\s*(\d+[\-\s]*\d*)/i
-    ];
-    
-    for (const pattern of sizePatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        details.employeeSize = match[1].replace(/[^\d-]/g, '');
-        break;
-      }
-    }
-    
-    // Website
-    const websitePattern = /(?:website|url|web|visit us at)\s*[:-]?\s*((?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9][a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/i;
-    const websiteMatch = text.match(websitePattern);
-    if (websiteMatch && websiteMatch[1]) {
-      let website = websiteMatch[1];
-      if (!website.startsWith('http')) {
-        website = 'https://' + website;
-      }
-      details.websiteUrl = website;
-    }
-    
-    // Description - simple regex approach instead of NLP
-    const descriptionPatterns = [
-      /about(?:\s*us)?(?:\s*:|\s*-|\s*–)?\s*([^\n]{30,500})/i,
-      /company\s*(?:description|profile|overview)(?:\s*:|\s*-|\s*–)?\s*([^\n]{30,500})/i,
-      /(?:description|overview|profile)(?:\s*:|\s*-|\s*–)?\s*([^\n]{30,500})/i,
-      /mission(?:\s*statement)?(?:\s*:|\s*-|\s*–)?\s*([^\n]{30,500})/i
-    ];
-    
-    for (const pattern of descriptionPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        details.description = match[1].trim();
-        break;
-      }
-    }
-    
-    // If no description found, look for paragraphs that might be about the company
-    if (!details.description) {
-      // Split text into paragraphs
-      const paragraphs = text.split(/\r?\n\r?\n/).filter(p => p.trim().length > 80);
-      
-      // Look for paragraphs that might contain company descriptions
-      const companyKeywords = ['company', 'business', 'organization', 'firm', 'enterprise', 'industry', 'sector', 'service'];
-      
-      for (const paragraph of paragraphs) {
-        // Check if paragraph contains company-related words
-        if (companyKeywords.some(keyword => paragraph.toLowerCase().includes(keyword))) {
-          details.description = paragraph.trim();
-          if (details.description.length > 500) {
-            details.description = details.description.substring(0, 497) + '...';
-          }
-          break;
-        }
-      }
-    }
-    
-    return details;
-  };
-
-  const extractProjects = (text) => {
-    const projects = [];
-    
-    // First, try to find sections containing project information
-    const projectSectionPatterns = [
-      /projects?(?:\s*information|\s*details|\s*portfolio)?(?:\s*:|(?:\r?\n)){0,2}([\s\S]+?)(?=(?:(?:section|company|about)\b|$))/i,
-      /(?:portfolio|case studies|previous work|past projects)(?:\s*:|(?:\r?\n)){0,2}([\s\S]+?)(?=(?:(?:section|company|about)\b|$))/i
-    ];
-    
-    let projectsSection = '';
-    for (const pattern of projectSectionPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        projectsSection = match[1];
-        break;
-      }
-    }
-    
-    if (projectsSection) {
-      // Split the projects section into individual projects
-      const projectChunks = projectsSection.split(/(?:\r?\n){2,}|(?:project\s*\d+|case\s*study\s*\d+):/i);
-      
-      projectChunks.forEach(chunk => {
-        if (chunk.length < 20) return; // Skip very short chunks
-        
-        const project = {};
-        
-        // Project name
-        const namePatterns = [
-          /(?:name|title|project)[\s:]*([^\r\n]+)(?:\r|\n|$)/i,
-          /^([A-Z][^\r\n:]{3,50})(?:\r|\n|$)/m
-        ];
-        
-        for (const pattern of namePatterns) {
-          const match = chunk.match(pattern);
-          if (match && match[1]) {
-            project.name = match[1].trim();
-            break;
-          }
-        }
-        
-        // If no name found, try to extract one from the first line
-        if (!project.name) {
-          const firstLine = chunk.split(/\r?\n/)[0].trim();
-          if (firstLine && firstLine.length > 3 && firstLine.length < 100) {
-            project.name = firstLine;
-          }
-        }
-        
-        // Only continue if we found a project name
-        if (project.name) {
-          // Project description
-          const descPatterns = [
-            /description[\s:]*([^\r\n]{10,500})/i,
-            /overview[\s:]*([^\r\n]{10,500})/i,
-            /summary[\s:]*([^\r\n]{10,500})/i
-          ];
-          
-          for (const pattern of descPatterns) {
-            const match = chunk.match(pattern);
-            if (match && match[1]) {
-              project.description = match[1].trim();
-              break;
-            }
-          }
-          
-          // If no description yet, try to use the main chunk text
-          if (!project.description) {
-            // Remove the first line (likely the title) and use remainder as description
-            const lines = chunk.split(/\r?\n/).slice(1).join(' ').trim();
-            if (lines.length > 20 && lines.length < 500) {
-              project.description = lines;
-            }
-          }
-          
-          // Project type
-          const typePatterns = [
-            /type[\s:]*([^\r\n,;.]{3,50})/i,
-            /category[\s:]*([^\r\n,;.]{3,50})/i,
-            /field[\s:]*([^\r\n,;.]{3,50})/i
-          ];
-          
-          for (const pattern of typePatterns) {
-            const match = chunk.match(pattern);
-            if (match && match[1]) {
-              project.type = match[1].trim();
-              break;
-            }
-          }
-          
-          // Completion date
-          const datePatterns = [
-            /(?:completed|finished|delivered|completion)(?:\s*date)?[\s:]*([^\r\n,;.]{3,30})/i,
-            /date[\s:]*([^\r\n,;.]{3,30})/i
-          ];
-          
-          for (const pattern of datePatterns) {
-            const match = chunk.match(pattern);
-            if (match && match[1]) {
-              project.completionDate = match[1].trim();
-              break;
-            }
-          }
-          
-          projects.push(project);
-        }
-      });
-    }
-    
-    // Fallback: look for isolated project references throughout the document
-    if (projects.length === 0) {
-      const projectPatterns = [
-        /project[\s:]*([^\r\n:]{3,100})(?:\r|\n|:)[\s\S]{10,500}?(?=(?:project|$))/gi,
-        /case\s*study[\s:]*([^\r\n:]{3,100})(?:\r|\n|:)[\s\S]{10,500}?(?=(?:case\s*study|$))/gi
-      ];
-      
-      for (const pattern of projectPatterns) {
-        let match;
-        while ((match = pattern.exec(text)) !== null) {
-          if (match[1]) {
-            const projectName = match[1].trim();
-            const contextAfter = text.substring(match.index, match.index + 1000);
-            
-            // Extract a description from the following text
-            let description = '';
-            const descMatch = contextAfter.match(/(?:\r?\n|:)([^\r\n]{20,300})/);
-            if (descMatch && descMatch[1]) {
-              description = descMatch[1].trim();
-            }
-            
-            projects.push({
-              name: projectName,
-              description: description,
-              type: '',
-              completionDate: ''
-            });
-          }
-        }
-      }
-    }
-    
-    return projects;
   };
 
   const handleAddProject = () => {
@@ -474,45 +171,8 @@ const AddCompanyPage = () => {
         Add New Company
       </Typography>
 
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 4, 
-          mb: 4, 
-          borderRadius: 3,
-          border: `1px solid ${colors.neutral[200]}`,
-        }}
-      >
-        <Typography variant="h6" gutterBottom sx={{ mb: 3, color: colors.neutral[700] }}>
-          Upload Company Document
-        </Typography>
-        
-        <Button
-          component="label"
-          variant="contained"
-          startIcon={isLoading ? <CircularProgress size={24} color="inherit" /> : <UploadIcon />}
-          disabled={isLoading}
-          sx={{ 
-            mb: 2,
-            bgcolor: colors.primary[500],
-            '&:hover': { bgcolor: colors.primary[600] }
-          }}
-        >
-          {isLoading ? 'Processing PDF...' : 'Upload PDF'}
-          <VisuallyHiddenInput 
-            type="file" 
-            accept=".pdf"
-            onChange={handleFileUpload}
-            disabled={isLoading}
-          />
-        </Button>
-        
-        {isLoading && (
-          <Typography variant="body2" sx={{ mt: 1, color: colors.neutral[600] }}>
-            Analyzing document with PDF.js...
-          </Typography>
-        )}
-      </Paper>
+      {/* Replace the original PDF upload paper with the CompanyPDFExtractor component */}
+      <CompanyPDFExtractor onExtracted={handleExtractedData} />
 
       <Paper 
         elevation={0} 
