@@ -19,10 +19,14 @@ import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';
 import RootLayout from '../layouts/RootLayout';
 
 const AppRoutes = () => {
+
+  const token = localStorage.getItem("token");
+
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<MainPage />} />
+      {/* <Route path="/" element={<MainPage />} /> */}
+      <Route path="/" element={token ? <Navigate to="/home" replace /> : <MainPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />

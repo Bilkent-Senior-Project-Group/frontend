@@ -21,8 +21,8 @@ const MainPage = () => {
 
     try {
       const response = await AuthService.checkEmailExistence(email);
-
-      if (response.data.exists) {
+      console.log('Email existence:', response);
+      if (response.data.isRegistered) {
         navigate('/login', { state: { email } });
       } else {
         navigate('/signup', { state: { email } });

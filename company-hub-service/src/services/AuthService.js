@@ -1,59 +1,41 @@
 import axios from 'axios';
 
-const API_URL = "http://localhost:5133";  // Base URL for the API
+const API_URL = "http://localhost:5133"; 
 
 const signup = async (userData) => {
   try {
     const response = await axios.post(`${API_URL}/api/Account/Register`, userData);
-    return response; // Return the response on success
+    return response;
   } catch (error) {
-    const message = error.response?.data?.message || "Connection Error Occured.";
-    throw new Error(message);
+    throw new Error(error.response?.data?.message || "Connection Error Occured.");
   }
 };
 
 const login = async (userData) => {
-  try{
+  try {
     const response = await axios.post(`${API_URL}/api/Account/Login`, userData);
-    return response;
+    return response;  // No need to handle user separately
   } catch (error) {
-    const message = error.response?.data?.message || "Connection Error Occured.";
-    throw new Error(message);
+    throw new Error(error.response?.data?.message || "Connection Error Occured.");
   } 
 };
 
 const checkEmailExistence = async (email) => {
-  // Simulate an API call to check if the email exists in the system
-  if (email === "deneme@gmail.com") {
-    return { status: 200, data: { exists: true } }; // Email exists
-  }
-  return { status: 200, data: { exists: false } }; // Email does not exist
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/CheckEmail`, { email });
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Connection Error Occured.");
+  } 
 };
 
-// Add forgotPassword function
 const forgotPassword = async (email) => {
-  // Simulate an API call to send a password reset link
-  if (email === "deneme@gmail.com") {
-    return {
-      status: 200,
-      data: {
-        message: "Password reset link sent to your email."
-      }
-    };
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/ForgotPassword`, { email });
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Connection Error Occured.");
   }
-  return {
-    status: 400,
-    data: {
-      message: "Email not found."
-    }
-  };
 };
 
-const AuthService = {
-  signup,
-  login,
-  checkEmailExistence,
-  forgotPassword
-};
-
-export default AuthService;
+export default { signup, login, checkEmailExistence, forgotPassword };
