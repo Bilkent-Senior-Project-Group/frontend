@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Container,
@@ -73,9 +73,9 @@ const AddCompanyPage = () => {
   });
 
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
-
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -187,34 +187,93 @@ const AddCompanyPage = () => {
         return;
       }
       
-      // Prepare data for backend with the correct format
+      // // Prepare data for backend with the correct format
+      // const companyData = {
+      //   companyName: companyDetails.name,
+      //   description: companyDetails.description || "",
+      //   foundedYear: foundedYear || new Date().getFullYear(),
+      //   address: companyDetails.location || "",
+      //   location: companyDetails.location || "",
+      //   website: companyDetails.websiteUrl || "",
+      //   companySize: parseInt(companyDetails.employeeSize) || 0,
+      //   // Important: Make sure these are arrays of strings where required
+      //   specialties: "",
+      //   industries: [], // Changed from string to empty array
+      //   contactInfo: "",
+      //   coreExpertise: [], // Changed from string to empty array
+      //   // Format Portfolio correctly
+      //   portfolio: projects.map(project => ({
+      //     projectId: "",
+      //     project_name: project.name,
+      //     description: project.description || "",
+      //     technologies_used: [], // Empty array as default
+      //     industry: project.type || "",
+      //     client_type: "",
+      //     impact: "",
+      //     startDate: project.completionDate || "",
+      //     completionDate: project.completionDate || "",
+      //     isOnCompedia: false,
+      //     isCompleted: false,
+      //     clientCompany: {
+      //       companyId: "",
+      //       companyName: "",
+      //     },
+      //     providerCompany: {
+      //       companyId: "",
+      //       companyName: "",
+      //     },
+      //     project_url: "",
+      //     company: {
+      //       companyId: "",
+      //       companyName: "",
+      //     }
+          
+      //   }))
+      // };
+      
+      // console.log('Submitting Company Data:', companyData);
+
       const companyData = {
-        CompanyName: companyDetails.name,
-        Description: companyDetails.description || "",
-        FoundedYear: foundedYear || new Date().getFullYear(),
-        Address: companyDetails.location || "",
-        Location: companyDetails.location || "",
-        Website: companyDetails.websiteUrl || "",
-        CompanySize: parseInt(companyDetails.employeeSize) || 0,
-        // Important: Make sure these are arrays of strings where required
-        Specialties: "",
-        Industries: [], // Changed from string to empty array
-        ContactInfo: "",
-        CoreExpertise: [], // Changed from string to empty array
-        // Format Portfolio correctly
-        Portfolio: projects.map(project => ({
-          ProjectName: project.name,
-          Description: project.description || "",
-          TechnologiesUsed: [], // Empty array as default
-          Industry: project.type || "",
-          ClientType: "",
-          Impact: "",
-          Date: project.completionDate || "",
-          ProjectUrl: ""
-        }))
+        companyName: companyDetails.name || "string",
+        description: companyDetails.description || "string",
+        foundedYear: parseInt(companyDetails.foundingYear) || 2100,
+        address: companyDetails.location || "string",
+        specialties: companyDetails.specialties || "string",
+        industries: companyDetails.industries || "string", // Send as string, not array
+        location: companyDetails.location || "string",
+        website: companyDetails.websiteUrl || "string",
+        companySize: parseInt(companyDetails.employeeSize) || 0,
+        contactInfo: companyDetails.contactInfo || "string",
+        coreExpertise: companyDetails.coreExpertise || "string", // Send as string, not array
+        portfolio: companyDetails.projects?.map(project => ({
+          projectId: project.id || "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          project_name: project.name,
+          description: project.description || "string",
+          technologies_used: ["string"], // Array of strings, matching postman
+          industry: project.type || "string",
+          client_type: "string",
+          impact: "string",
+          startDate: new Date().toISOString(),
+          completionDate: project.completionDate || new Date().toISOString(),
+          isOnCompedia: true,
+          isCompleted: true,
+          clientCompany: {
+            companyId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            companyName: "string"
+          },
+          providerCompany: {
+            companyId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            companyName: "string"
+          },
+          project_url: "string",
+          company: {
+            companyId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            companyName: "string"
+          }
+        })) || []
       };
       
-      console.log('Submitting Company Data:', companyData);
+      console.log('Sending formatted data:', companyData);
       
       const response = await CompanyService.addCompany(companyData);
       
