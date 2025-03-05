@@ -15,9 +15,11 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem("token");
     if (token) {
       const decodedUser = jwtDecode(token);
+      console.log("Decoded token:", decodedUser);
       setCurrentUser(decodedUser);
     }
   }, []);
+  
 
 
   // Effect to log currentUser when it changes
@@ -27,12 +29,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, [currentUser]);
 
+  
 
   const login = (token) => {
     localStorage.setItem("token", token);
     const decodedUser = jwtDecode(token);
-    setCurrentUser(decodedUser);
+    // Ensure we store the raw token as well
+    setCurrentUser({ ...decodedUser, token });
   };
+  
 
   const logout = () => {
     localStorage.removeItem("token");
