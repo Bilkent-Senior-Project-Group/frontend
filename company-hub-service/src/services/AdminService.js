@@ -25,10 +25,13 @@ const updateUserRole = async (token, userId, newRole) => {
   };
 
 
-  const getCompaniesToBeVerified = async () => {
-    const response = await axios.get(`${API_URL}/Admin/CompaniesToBeVerified`);
-    return response.data;
-  };
+    const getCompaniesToBeVerified = async (token) => {
+        const response = await axios.get(`${API_URL}/Admin/CompaniesToBeVerified`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    };
+  
   
 //   // AdminDashboard.js
 // const changeRole = async (userId, newRole) => {
@@ -43,14 +46,20 @@ const updateUserRole = async (token, userId, newRole) => {
 // Add more admin-related functions here, e.g. fetchProjects, deleteUser, etc.
 
 const verifyCompany = async (token, companyId) => {
-  const response = await axios.put(`${API_URL}/Admin/VerifyCompany/${companyId}`, {}, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
-};
-
+    // The request body must be just a JSON string with the GUID, not an object
+    const response = await axios.put(
+      `${API_URL}/Admin/VerifyCompany`,
+      `"${companyId}"`, // a raw string with the GUID
+      {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+      }
+    );
+    return response.data;
+  };
+  
 const AdminService = {
     fetchUsers,
     updateUserRole,
