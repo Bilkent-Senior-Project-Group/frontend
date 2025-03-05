@@ -19,12 +19,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+
   // Effect to log currentUser when it changes
   useEffect(() => {
     if (currentUser) {
       console.log(currentUser);
     }
   }, [currentUser]);
+
 
   const login = (token) => {
     localStorage.setItem("token", token);
