@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,13 +14,18 @@ import {
 } from '@mui/material';
 import { Search } from 'lucide-react';
 import { colors } from '../../theme/theme';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const handleSearch = (e) => {
     e.preventDefault();
     // Handle search logic
+    if (searchQuery.trim()) {
+      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   return (
