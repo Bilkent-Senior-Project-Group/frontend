@@ -23,13 +23,16 @@ const addCompany = async (companyData) => {
     
     const response = await axios.post(
       `${API_URL}/api/Company/CreateCompany`, 
-      companyData, 
+    //   { companyDto: companyData },
+        companyData,
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Include the auth token
+          'Authorization': `Bearer ${token}`, // Include the auth token
+          'Access-Control-Allow-Credentials': true
         },
-        withCredentials: true
+        withCredentials: true,
+        timeout: 30000
       }
     );
     
