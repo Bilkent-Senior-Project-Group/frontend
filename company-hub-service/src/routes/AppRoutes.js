@@ -17,6 +17,9 @@ import PremiumPage from '../pages/Topbar/PremiumPage';
 import SupportPage from '../pages/Topbar/SupportPage';
 import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  
 import RootLayout from '../layouts/RootLayout';
+import AdminRoute from './AdminRoute';
+import AdminDashboard from '../pages/Admin/AdminDashboard';
+
 
 const AppRoutes = () => {
 
@@ -44,6 +47,15 @@ const AppRoutes = () => {
         {/* Company routes */}
         <Route path="/company/:id/profile" element={<CompanyPage />} />
         <Route path="/company/:id/people" element={<CompanyPeoplePage />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
       </Route>
 
       {/* Redirect root to home */}
