@@ -1,4 +1,6 @@
 import axios from 'axios';
+import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js';
+
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
 
@@ -17,22 +19,33 @@ const addCompany = async (companyData) => {
       throw new Error('You must be logged in to add a company');
     }
     
-    // const requestPayload = {
-    //   companyDto: companyData
-    // };
+    // Convert form data to DTO
+    const companyDTO = CreateCompanyRequestDTO.fromFormData(companyData);
     
+    // Validate before sending
+    const validationErrors = companyDTO.validate();
+    if (Object.keys(validationErrors).length > 0) {
+      throw { 
+        response: { 
+          data: { 
+            errors: validationErrors,
+            title: "Validation failed"
+          }
+        }
+      };
+    }
+
     const response = await axios.post(
       `${API_URL}/api/Company/CreateCompany`, 
-    //   { companyDto: companyData },
-        companyData,
+        companyDTO,
       {
         headers: {
-          'Content-Type': 'application/json',
+          // 'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`, // Include the auth token
-          'Access-Control-Allow-Credentials': true
+          // 'Access-Control-Allow-Credentials': true
         },
-        withCredentials: true,
-        timeout: 30000
+        // withCredentials: true,
+        // timeout: 30000
       }
     );
     
