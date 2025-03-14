@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 const CompanyPeoplePage = () => {
-  const { id } = useParams();
+  const { companyName } = useParams();
 
   return (
     <Box>
@@ -11,7 +11,8 @@ const CompanyPeoplePage = () => {
         Company People
       </Typography>
       <Typography variant="body1">
-        People page for company ID: {id}
+        {/* People page for company ID: {companyId} */}
+        People page for company Name: {companyName}
       </Typography>
     </Box>
   );

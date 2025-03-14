@@ -47,8 +47,8 @@ const AppRoutes = () => {
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
         {/* Company routes */}
-        <Route path="/company/:id/profile" element={<CompanyPage />} />
-        <Route path="/company/:id/people" element={<CompanyPeoplePage />} />
+        <Route path="/company/:companyName/profile" element={<CompanyPage />} />
+        <Route path="/company/:companyName/people" element={<CompanyPeoplePage />} />
         <Route
           path="/admin"
           element={

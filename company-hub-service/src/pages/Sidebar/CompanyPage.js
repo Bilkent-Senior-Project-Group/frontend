@@ -22,6 +22,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
 
+
 // Mock data for a single company
 const mockCompanyDetails = {
   id: 1,
@@ -64,7 +65,7 @@ Their team consists of experienced developers, designers, and project managers w
 };
 
 const CompanyPage = () => {
-  const { companyId } = useParams();
+  const { companyName } = useParams();
   const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -73,7 +74,7 @@ const CompanyPage = () => {
     // In a real app, you would fetch the company details from your API
     // For this example, we're using mock data
     setCompany(mockCompanyDetails);
-  }, [companyId]);
+  }, [companyName]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);

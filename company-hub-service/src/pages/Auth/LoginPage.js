@@ -28,7 +28,7 @@ const LoginPage = () => {
         return;
       }
       console.log('Login response:', response.data);
-      login(response.data.token);  // Store only token, decode later
+      login(response.data.token, response.data.user);  // Store only token, decode later
       navigate('/homepage');
     } catch (err) {
       setError(err.message);

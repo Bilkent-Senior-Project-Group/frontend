@@ -1,4 +1,4 @@
-import React, {useState } from 'react';
+import React, {useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -19,6 +19,17 @@ import { useNavigate } from 'react-router-dom';
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  //will be commented out
+  // Log user info when the homepage loads
+  useEffect(() => {
+    const user = localStorage.getItem("user"); // Retrieve user data from localStorage
+    if (user) {
+      console.log("User Info:", JSON.parse(user)); // Parse and log it
+    } else {
+      console.log("No user found in localStorage");
+    }
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
