@@ -5,33 +5,54 @@ import {ProjectDTO} from '../project/ProjectDTO.js';
  */
 export class CompanyProfileDTO {
   constructor(data = {}) {
-    this.CompanyId = data.CompanyId || null;
-    this.Name = data.Name || '';
-    this.Description = data.Description || '';
-    this.Specialties = data.Specialties || '';
-    this.CoreExpertise = Array.isArray(data.CoreExpertise) && data.CoreExpertise.length > 0 
-    ? data.CoreExpertise 
-    : ['Not specified'];
-    this.Verified = data.Verified || false;
-    this.Projects = Array.isArray(data.Projects) && data.Projects.length > 0 
-    ? data.Projects 
-    : ['Not specified'];
-    this.Industries = Array.isArray(data.Industries) && data.Industries.length > 0 
-    ? data.Industries 
-    : ['Not specified'];
-    this.Location = data.Location || '';
-    this.Website = data.Website || '';
-    this.TechnologiesUsed = Array.isArray(data.TechnologiesUsed) && data.TechnologiesUsed.length > 0 
-      ? data.TechnologiesUsed 
-      : ['Not specified'];  // Ensure it's never an empty array
-    this.Partnerships = Array.isArray(data.Partnerships) && data.Partnerships.length > 0 
-    ? data.Partnerships 
-    : ['Not specified'];
-    this.CompanySize = data.CompanySize || 0;
-    this.FoundedYear = data.FoundedYear || new Date().getFullYear();
-    this.Address = data.Address || '';
-    this.ContactInfo = data.ContactInfo || '';
+    // Handle property name differences between backend (lowercase) and frontend (uppercase)
+    this.CompanyId = data.CompanyId || data.companyId || null;
+    this.Name = data.Name || data.name || '';
+    this.Description = data.Description || data.description || '';
+    this.Specialties = data.Specialties || data.specialties || '';
     
+    // Handle arrays with proper fallbacks
+    this.CoreExpertise = Array.isArray(data.CoreExpertise || data.coreExpertise) && 
+      (data.CoreExpertise || data.coreExpertise).length > 0
+      ? (data.CoreExpertise || data.coreExpertise)
+      : ['Not specified'];
+    
+    // Convert numeric or boolean values to appropriate types
+    this.Verified = data.Verified !== undefined ? Boolean(data.Verified) : 
+                   data.verified !== undefined ? Boolean(data.verified) : false;
+    
+    this.Projects = Array.isArray(data.Projects || data.projects) && 
+      (data.Projects || data.projects).length > 0
+      ? (data.Projects || data.projects)
+      : ['Not specified'];
+    
+    this.Industries = Array.isArray(data.Industries || data.industries) && 
+      (data.Industries || data.industries).length > 0
+      ? (data.Industries || data.industries)
+      : ['Not specified'];
+    
+    this.Location = data.Location || data.location || '';
+    this.Website = data.Website || data.website || '';
+    
+    this.TechnologiesUsed = Array.isArray(data.TechnologiesUsed || data.technologiesUsed) && 
+      (data.TechnologiesUsed || data.technologiesUsed).length > 0
+      ? (data.TechnologiesUsed || data.technologiesUsed)
+      : ['Not specified'];
+    
+    this.Partnerships = Array.isArray(data.Partnerships || data.partnerships) && 
+      (data.Partnerships || data.partnerships).length > 0
+      ? (data.Partnerships || data.partnerships)
+      : ['Not specified'];
+    
+    this.CompanySize = data.CompanySize !== undefined ? Number(data.CompanySize) : 
+                      data.companySize !== undefined ? Number(data.companySize) : 0;
+    
+    this.FoundedYear = data.FoundedYear !== undefined ? Number(data.FoundedYear) :
+                      data.foundedYear !== undefined ? Number(data.foundedYear) : 
+                      new Date().getFullYear();
+    
+    this.Address = data.Address || data.address || '';
+    this.ContactInfo = data.ContactInfo || data.contactInfo || '';
   }
 
   /**
@@ -39,7 +60,6 @@ export class CompanyProfileDTO {
    */
   static fromFormData(formData) {
     const { companyDetails, projects } = formData;
-    
     return new CompanyProfileDTO({
       CompanyName: companyDetails.name,
       Description: companyDetails.description || '',
@@ -52,7 +72,7 @@ export class CompanyProfileDTO {
       Industries: companyDetails.industries || '',
       ContactInfo: companyDetails.contactInfo || '',
       CoreExpertise: companyDetails.coreExpertise || '',
-      Portfolio: projects.map(project => ProjectDTO.fromFormData(project))
+      Portfolio: projects ? projects.map(project => ProjectDTO.fromFormData(project)) : []
     });
   }
 }

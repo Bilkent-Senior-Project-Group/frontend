@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js';
+import {CompanyProfileDTO} from '../DTO/company/CompanyProfileDTO.js';
 
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
@@ -73,8 +74,42 @@ const addCompany = async (companyData) => {
   }
 };
 
+const GetFeaturedCompanies = async () => {
+  try {
+    // This endpoint doesn't require authentication based on your backend code
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetFeaturedCompanies`
+    );
+    
+    // Log the response to help with debugging
+    console.log('Raw featured companies data:', response.data);
+    
+    // Convert each company data to a CompanyProfileDTO instance
+    // The updated DTO constructor will handle property name differences
+    const companies = response.data.map(company => new CompanyProfileDTO(company));
+    
+    console.log('Processed company data:', companies);
+    return companies;
+  } catch (error) {
+    console.error('Error fetching featured companies:', error.response || error);
+    
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch featured companies. Please check your connection and try again.";
+    
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+};
+
+
+
+
 const CompanyService = {
-  addCompany
+  addCompany,
+  GetFeaturedCompanies
 };
 
 export default CompanyService;
