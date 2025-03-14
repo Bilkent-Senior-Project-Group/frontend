@@ -41,6 +41,7 @@ import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import AuthService from '../services/AuthService';
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -82,7 +83,16 @@ const RootLayout = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try{
+      await AuthService.logout(token);
+      console.log('Logged out successfully');
+    }
+    catch (error) {
+      console.error('Error logging out:', error);
+    }        
     handleUserMenuClose();
     logout();
     navigate('/login');

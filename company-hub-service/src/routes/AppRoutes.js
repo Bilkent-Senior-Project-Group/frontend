@@ -19,6 +19,7 @@ import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';
 import RootLayout from '../layouts/RootLayout';
 import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
+import SearchResultsPage from '../pages/SearchResultsPage';
 
 
 const AppRoutes = () => {
@@ -38,6 +39,7 @@ const AppRoutes = () => {
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
         {/* <Route index element={<Navigate to="/home" replace />} /> */}
         <Route path="/home" element={<HomePage />} />
+        <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/add-company" element={<AddCompanyPage />} />

@@ -98,7 +98,7 @@ const SignupPage = () => {
     }
   
     if (!validatePassword(password)) {
-      newValidationErrors.password = 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number';
+      newValidationErrors.password = 'Password must be at least 6 characters with 1 uppercase, 1 lowercase, and 1 symbol';
       hasErrors = true;
     }
   
