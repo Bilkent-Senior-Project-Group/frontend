@@ -41,6 +41,7 @@ import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import AuthService from '../services/AuthService';
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -53,14 +54,10 @@ const RootLayout = () => {
   const [openCompanyId, setOpenCompanyId] = useState(null);
   const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   // Sample companies data
-  const companies = [
-    { id: 1, name: "Company 1" },
-    { id: 2, name: "Company 2" },
-    { id: 3, name: "Company 3" }
-  ];
+  const companies = user?.companies || [];
 
   const toggleDrawer = () => {
     setIsDrawerCollapsed(!isDrawerCollapsed);
@@ -82,7 +79,16 @@ const RootLayout = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try{
+      await AuthService.logout(token);
+      console.log('Logged out successfully');
+    }
+    catch (error) {
+      console.error('Error logging out:', error);
+    }        
     handleUserMenuClose();
     logout();
     navigate('/login');
@@ -379,10 +385,10 @@ const RootLayout = () => {
           <Collapse in={companiesOpen && !isDrawerCollapsed} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               {companies.map((company) => (
-                <React.Fragment key={company.id}>
+                <React.Fragment key={company.companyId}>
                   <ListItem
                     button
-                    onClick={() => handleCompanyClick(company.id)}
+                    onClick={() => handleCompanyClick(company.companyId)}
                     sx={{ 
                       pl: 4,
                       py: 0.5,
@@ -392,23 +398,23 @@ const RootLayout = () => {
                       <Building size={18} />
                     </ListItemIcon>
                     <ListItemText 
-                      primary={company.name}
+                      primary={company.companyName}
                       primaryTypographyProps={{ 
                         fontSize: '0.9rem',
                         color: 'text.secondary'
                       }}
                     />
-                    {openCompanyId === company.id ? 
+                    {openCompanyId === company.companyId ? 
                       <ChevronDown size={16} /> : 
                       <ChevronRight size={16} />
                     }
                   </ListItem>
                   
-                  <Collapse in={openCompanyId === company.id} timeout="auto" unmountOnExit>
+                  <Collapse in={openCompanyId === company.companyId} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.id}/profile`)}
+                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/profile`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,
@@ -428,7 +434,7 @@ const RootLayout = () => {
 
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.id}/people`)}
+                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/people`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,

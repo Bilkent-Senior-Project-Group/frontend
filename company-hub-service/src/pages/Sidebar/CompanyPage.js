@@ -1,345 +1,423 @@
-import React, { useState, useEffect } from "react";
-import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
-import { Star, MapPin, Building, Globe, Clock, Users } from "lucide-react";
+
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Paper,
   Typography,
+  Container,
   Grid,
-  Button,
-  LinearProgress,
   Card,
   CardContent,
-  Rating,
-  Stack,
   Chip,
+  Button,
   Divider,
-  useTheme
+  Rating,
+  Tab,
+  Tabs,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
 
-// Styled components with updated colors
-const CompanyLogo = styled(Box)(({ theme }) => ({
-  width: 100,
-  height: 100,
-  backgroundColor: colors.primary[100],
-  borderRadius: theme.shape.borderRadius * 2,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  '& svg': {
-    width: 50,
-    height: 50,
-    color: colors.primary[600],
-  },
-}));
 
-const ProjectCard = styled(Card)(({ theme }) => ({
-  background: theme.palette.background.paper,
-  borderRadius: theme.shape.borderRadius * 1.5,
-  border: '1px solid',
-  borderColor: colors.neutral[200],
-  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: theme.shadows[4],
-    borderColor: colors.primary[200],
-  },
-}));
+// Mock data for a single company
+const mockCompanyDetails = {
+  id: 1,
+  name: 'Naked Development',
+  rating: 4.7,
+  reviews: 53,
+  priceRange: '$150 - $199 / hr',
+  teamSize: '10 - 49',
+  location: 'Irvine, CA',
+  phone: '+1 (123) 456-7890',
+  email: 'contact@nakeddevelopment.com',
+  website: 'www.nakeddevelopment.com',
+  founded: 2014,
+  services: ['Mobile App Development', 'UX/UI Design', 'Application Management'],
+  description: 'A mobile app development company specializing in delivering custom-built, high-quality mobile applications. With generally positive feedback, over 70% of reviewers commend their attention to detail, project management, and ability to enhance user engagement.',
+  longDescription: `Naked Development is a mobile app development company specializing in delivering custom-built, high-quality mobile applications. With generally positive feedback, over 70% of reviewers commend their attention to detail, project management, and ability to enhance user engagement.
 
-const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 10,
-  borderRadius: 5,
-  [`&.MuiLinearProgress-colorPrimary`]: {
-    backgroundColor: colors.neutral[100],
-  },
-  [`& .MuiLinearProgress-bar`]: {
-    borderRadius: 5,
-  },
-}));
+The company focuses on creating innovative solutions tailored to each client's specific needs. Their development process includes thorough planning, agile implementation, rigorous testing, and ongoing support.
+
+Their team consists of experienced developers, designers, and project managers who work collaboratively to ensure projects are delivered on time and within budget. The company prides itself on transparent communication and maintaining close relationships with clients throughout the development process.`,
+  expertise: [
+    { skill: 'iOS Development', level: 95 },
+    { skill: 'Android Development', level: 90 },
+    { skill: 'React Native', level: 85 },
+    { skill: 'Flutter', level: 80 },
+    { skill: 'UX/UI Design', level: 85 }
+  ],
+  clients: ['Tesla', 'Amazon', 'Microsoft', 'Google', 'Facebook'],
+  portfolioItems: [
+    { name: 'Health Tracker App', description: 'A comprehensive health monitoring application', completionDate: '2021' },
+    { name: 'E-commerce Platform', description: 'Full-featured mobile shopping experience',completionDate: '2021' },
+    { name: 'Social Media App', description: 'Innovative social networking platform', completionDate: '2021' }
+  ],
+  testimonials: [
+    { author: 'John Smith, CEO at TechCorp', content: 'Working with Naked Development was a pleasure. They delivered our app on time and exceeded our expectations.', rating: 5 },
+    { author: 'Jane Doe, Product Manager at StartupX', content: 'Great team to work with! Very responsive and professional.', rating: 4 },
+    { author: 'Robert Johnson, CTO at Enterprise Solutions', content: 'Excellent technical skills and project management. Would work with them again.', rating: 5 }
+  ],
+  verified: true
+};
 
 const CompanyPage = () => {
-  const [loading, setLoading] = useState(true);
-  const [companyData, setCompanyData] = useState(null);
-  const theme = useTheme();
-
-  // Sample data with updated colors
-  const initialData = {
-    id: "1",
-    name: "InnovateX Solutions",
-    owner: "Hamdullah Bilgin",
-    websiteUrl: "https://example.com",
-    rating: 4.8,
-    location: "Austin, Texas, USA",
-    foundingYear: 2013,
-    priceRange: "$200-$500",
-    employees: "50-100",
-    about: "InnovateX Solutions specializes in AI-driven analytics, mobile app development, and UX/UI design. Our team of experts delivers tailored solutions to help businesses grow.",
-    projects: [
-      { type: "Mobile App Development", percentage: 40, color: colors.primary[500] },
-      { type: "UI Design", percentage: 25, color: colors.primary[400] },
-      { type: "UX Research", percentage: 18, color: colors.accent.info },
-      { type: "Web Development", percentage: 11, color: colors.accent.warning },
-      { type: "Marketing Strategy", percentage: 6, color: colors.accent.success },
-    ],
-    previousProjects: [
-      { type: "Mobile App Development", name: "Fitness App", description: "A mobile app that helps users track their workouts and nutrition.", date: "2020" },
-      { type: "UI Design", name: "Social Media Platform", description: "A social media platform with a focus on user privacy and data security", date: "2019" },
-      { type: "Web Development", name: "E-Commerce Platform", description: "An e-commerce platform for small businesses to sell their products online", date: "2018" },
-    ],
-    services: [
-      { name: "Mobile Development", value: 40 },
-      { name: "Web Development", value: 35 },
-      { name: "UI/UX Design", value: 25 },
-    ],
-  };
+  const { companyName } = useParams();
+  const navigate = useNavigate();
+  const [company, setCompany] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    setTimeout(() => {
-      setCompanyData(initialData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    // In a real app, you would fetch the company details from your API
+    // For this example, we're using mock data
+    setCompany(mockCompanyDetails);
+  }, [companyName]);
 
-  if (loading) {
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  if (!company) {
     return (
-      <Box sx={{ width: '100%', mt: 4 }}>
-        <LinearProgress />
-      </Box>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Typography>Loading company details...</Typography>
+      </Container>
     );
   }
 
   return (
     <Box>
-      {/* Hero Section */}
+      {/* Company Header */}
       <Box 
         sx={{ 
-          background: `linear-gradient(45deg, ${colors.primary[700]} 30%, ${colors.primary[500]} 90%)`,
-          color: 'white',
-          pt: 6,
-          pb: 8,
-          mb: -6,
+          backgroundColor: colors.neutral[100],
+          py: 4,
+          borderBottom: `1px solid ${colors.neutral[300]}`
         }}
       >
         <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item>
-              <CompanyLogo>
-                <Building />
-              </CompanyLogo>
+          <Button 
+            variant="text" 
+            onClick={handleBack}
+            sx={{ mb: 2 }}
+          >
+            ← Back to results
+          </Button>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Box
+                  sx={{
+                    width: 100,
+                    height: 100,
+                    borderRadius: 2,
+                    backgroundColor: colors.neutral[200],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    mr: 3
+                  }}
+                >
+                  Logo
+                </Box>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                      {company.name}
+                    </Typography>
+                    {company.verified && (
+                      <Chip 
+                        label="Verified" 
+                        size="small" 
+                        color="primary"
+                        sx={{ ml: 2 }} 
+                      />
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                    <Rating value={company.rating} readOnly precision={0.1} />
+                    <Typography variant="body1" sx={{ ml: 1 }}>
+                      {company.rating} ({company.reviews} reviews)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Map size={16} />
+                      <Typography variant="body2" sx={{ ml: 1 }}>
+                        {company.location}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Users size={16} />
+                      <Typography variant="body2" sx={{ ml: 1 }}>
+                        {company.teamSize} employees
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <DollarSign size={16} />
+                      <Typography variant="body2" sx={{ ml: 1 }}>
+                        {company.priceRange}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
             </Grid>
-            <Grid item xs>
-              <Typography variant="h3" component="h1" gutterBottom sx={{ color: 'white' }}>
-                {companyData.name}
-              </Typography>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                <Rating value={companyData.rating} precision={0.1} readOnly size="large" />
-                <Typography variant="h6" sx={{ ml: 1, color: 'white' }} >
-                  {companyData.rating}
-                </Typography>
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <Chip 
-                  icon={<MapPin size={18} />} 
-                  label={companyData.location} 
-                  sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    '& .MuiChip-icon': { color: 'white' }
-                  }}
-                />
-                <Chip 
-                  icon={<Clock size={18} />} 
-                  label={`Founded in ${companyData.foundingYear}`}
-                  sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    '& .MuiChip-icon': { color: 'white' }
-                  }}
-                />
-                <Chip 
-                  icon={<Users size={18} />} 
-                  label={`${companyData.employees} Employees`}
-                  sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    color: 'white',
-                    '& .MuiChip-icon': { color: 'white' }
-                  }}
-                />
-              </Stack>
-            </Grid>
-            <Grid item>
-              <Button
-                variant="contained"
-                startIcon={<Globe />}
-                href={companyData.websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
-                  bgcolor: 'white',
-                  color: colors.primary[700],
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.9)',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.15)',
-                  },
-                }}
-              >
-                Visit Website
-              </Button>
+            <Grid item xs={12} md={4}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                <Button 
+                  variant="contained" 
+                  size="large"
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  Contact Company
+                </Button>
+                <Button 
+                  variant="outlined" 
+                  size="large"
+                  fullWidth
+                >
+                  Visit Website
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        {/* About Section */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 4, 
-            mb: 4, 
-            borderRadius: 3,
-            border: `1px solid ${colors.neutral[200]}`,
-          }}
-        >
-          <Typography variant="h4" gutterBottom sx={{ mb: 3, color: colors.neutral[800] }}>
-            About Us
-          </Typography>
-          <Typography variant="body1" sx={{ fontSize: '1.1rem', lineHeight: 1.7, color: colors.neutral[600] }}>
-            {companyData.about}
-          </Typography>
-        </Paper>
+      {/* Tabs & Content */}
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+          <Tabs value={activeTab} onChange={handleTabChange} aria-label="company tabs">
+            <Tab label="Overview" />
+            <Tab label="Services" />
+            <Tab label="Portfolio" />
+            <Tab label="Reviews" />
+            <Tab label="Contact" />
+          </Tabs>
+        </Box>
 
-        {/* Projects & Services */}
-        <Grid container spacing={4} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
-                borderRadius: 3, 
-                height: '100%',
-                border: `1px solid ${colors.neutral[200]}`,
-              }}
-            >
-              <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
-                Projects Overview
-              </Typography>
-              <Stack spacing={3}>
-                {companyData.projects.map((project, index) => (
-                  <Box key={index}>
+        {/* Tab Content */}
+        <Box>
+          {/* Overview Tab */}
+          {activeTab === 0 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  About {company.name}
+                </Typography>
+                <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
+                  {company.longDescription}
+                </Typography>
+                
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+                  Key Expertise
+                </Typography>
+                {company.expertise.map((skill, index) => (
+                  <Box key={index} sx={{ mb: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
-                        {project.type}
-                      </Typography>
-                      <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
-                        {project.percentage}%
-                      </Typography>
+                      <Typography variant="body1">{skill.skill}</Typography>
+                      <Typography variant="body1">{skill.level}%</Typography>
                     </Box>
-                    <StyledLinearProgress
-                      variant="determinate"
-                      value={project.percentage}
-                      sx={{
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: project.color,
-                        },
+                    <Box 
+                      sx={{ 
+                        height: 8, 
+                        backgroundColor: colors.neutral[200],
+                        borderRadius: 4,
+                        overflow: 'hidden'
                       }}
-                    />
+                    >
+                      <Box 
+                        sx={{ 
+                          height: '100%', 
+                          width: `${skill.level}%`,
+                          backgroundColor: colors.primary[500],
+                          borderRadius: 4
+                        }}
+                      />
+                    </Box>
                   </Box>
                 ))}
-              </Stack>
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
-                borderRadius: 3, 
-                height: '100%',
-                border: `1px solid ${colors.neutral[200]}`,
-              }}
-            >
-              <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
-                Services Breakdown
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <PieChart width={300} height={300}>
-                  <Pie
-                    data={companyData.services}
-                    cx={150}
-                    cy={150}
-                    innerRadius={60}
-                    outerRadius={80}
-                    dataKey="value"
-                  >
-                    {companyData.services.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={[
-                          colors.primary[500],
-                          colors.primary[400],
-                          colors.primary[300],
-                        ][index % 3]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </Box>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Previous Projects */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 4, 
-            borderRadius: 3,
-            border: `1px solid ${colors.neutral[200]}`,
-          }}
-        >
-          <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
-            Previous Projects
-          </Typography>
-          <Grid container spacing={3}>
-            {companyData.previousProjects.map((project, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <ProjectCard>
-                  <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h5" sx={{ color: colors.primary[600] }} gutterBottom>
-                      {project.name}
-                    </Typography>
-                    <Chip 
-                      label={project.type} 
-                      size="small" 
-                      sx={{ 
-                        mb: 2,
-                        bgcolor: colors.primary[100],
-                        color: colors.primary[700],
-                      }}
-                    />
-                    <Typography variant="body1" sx={{ mb: 2, color: colors.neutral[600] }}>
-                      {project.description}
-                    </Typography>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography variant="body2" sx={{ color: colors.neutral[500] }}>
-                      Completed in {project.date}
-                    </Typography>
-                  </CardContent>
-                </ProjectCard>
+                
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+                  Key Clients
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {company.clients.map((client, index) => (
+                    <Chip key={index} label={client} />
+                  ))}
+                </Box>
               </Grid>
-            ))}
-          </Grid>
-        </Paper>
+              
+              <Grid item xs={12} md={4}>
+                <Card elevation={1}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Company Information
+                    </Typography>
+                    <List disablePadding>
+                      <ListItem disableGutters>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <Globe size={18} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Website" 
+                          secondary={company.website} 
+                        />
+                      </ListItem>
+                      <ListItem disableGutters>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <Mail size={18} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Email" 
+                          secondary={company.email} 
+                        />
+                      </ListItem>
+                      <ListItem disableGutters>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <Phone size={18} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Phone" 
+                          secondary={company.phone} 
+                        />
+                      </ListItem>
+                      <ListItem disableGutters>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <Calendar size={18} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Founded" 
+                          secondary={company.founded} 
+                        />
+                      </ListItem>
+                    </List>
+                    
+                    <Divider sx={{ my: 2 }} />
+                    
+                    <Typography variant="h6" gutterBottom>
+                      Services Offered
+                    </Typography>
+                    <List disablePadding>
+                      {company.services.map((service, index) => (
+                        <ListItem key={index} disableGutters>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <Check size={18} color={colors.primary[500]} />
+                          </ListItemIcon>
+                          <ListItemText primary={service} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          )}
+          
+          {/* Services Tab */}
+          {activeTab === 1 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Services Offered
+                </Typography>
+                <List disablePadding>
+                  {company.services.map((service, index) => (
+                    <ListItem key={index} disableGutters>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Check size={18} color={colors.primary[500]} />
+                      </ListItemIcon>
+                      <ListItemText primary={service} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            </Grid>
+          )}
+          
+          {/* Portfolio Tab */}
+          {activeTab === 2 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Portfolio
+                </Typography>
+                <List disablePadding>
+                  {company.portfolioItems.map((item, index) => (
+                    <ListItem key={index} disableGutters>
+                      <ListItemText 
+                        primary={item.name} 
+                        secondary={item.description} 
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            </Grid>
+          )}
+          
+          {/* Reviews Tab */}
+          {activeTab === 3 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Reviews
+                </Typography>
+                <List disablePadding>
+                  {company.testimonials.map((testimonial, index) => (
+                    <ListItem key={index} disableGutters>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Rating value={testimonial.rating} readOnly precision={0.1} />
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          {testimonial.rating}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body1" paragraph>
+                        "{testimonial.content}"
+                      </Typography>
+                      <Typography variant="body2">
+                        - {testimonial.author}
+                      </Typography>
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            </Grid>
+          )}
+          
+          {/* Contact Tab */}
+          {activeTab === 4 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Contact {company.name}
+                </Typography>
+                <Typography variant="body1" paragraph>
+                  For inquiries or to request a quote, please contact {company.name} directly.
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  size="large"
+                >
+                  Contact Company
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+        </Box>
       </Container>
     </Box>
   );
-};
+}
 
 export default CompanyPage;

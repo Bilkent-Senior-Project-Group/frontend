@@ -38,4 +38,18 @@ const forgotPassword = async (email) => {
   }
 };
 
-export default { signup, login, checkEmailExistence, forgotPassword };
+const logout = async (token) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/Logout`,null, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+});
+
+    return response;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Connection Error Occured.");
+  }
+}
+
+export default { signup, login, checkEmailExistence, forgotPassword, logout };

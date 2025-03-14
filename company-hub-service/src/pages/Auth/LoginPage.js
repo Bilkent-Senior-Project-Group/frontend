@@ -28,8 +28,8 @@ const LoginPage = () => {
         setError(response);
         return;
       }
-      console.log(response.data.token);
-      login(response.data.token);  // Store only token, decode later
+      console.log('Login response:', response.data);
+      login(response.data.token, response.data.user);  // Store only token, decode later
       navigate('/homepage');
     } catch (err) {
       setError(err.message);
