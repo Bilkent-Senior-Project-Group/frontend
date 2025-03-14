@@ -104,12 +104,40 @@ const GetFeaturedCompanies = async () => {
   }
 };
 
+const getCompany = async (companyName) => {
+  try{
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetCompany/${companyName}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        }
+      }
+    );
+    console.log('Company data:', response.data);
+    return response.data;
+  }
+  catch(error){
+    console.error('Error fetching company:', error.response || error);
+    
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch company. Please check your connection and try again.";
+    
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
 
 
+}
 
 const CompanyService = {
   addCompany,
-  GetFeaturedCompanies
+  GetFeaturedCompanies,
+  getCompany
 };
 
 export default CompanyService;

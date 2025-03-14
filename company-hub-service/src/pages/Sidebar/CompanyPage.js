@@ -21,6 +21,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
+import CompanyService  from '../../services/CompanyService';
 
 
 // Mock data for a single company
@@ -70,11 +71,26 @@ const CompanyPage = () => {
   const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
 
+  const fetchCompany = async () => {
+    try {
+      const companyData = await CompanyService.getCompany(companyName);
+      console.log("Backend Company Data:", companyData);
+      // setCompany(companyData);
+    } catch (error) {
+      console.error("Error fetching company:", error.message);
+    }
+  };
+  
   useEffect(() => {
-    // In a real app, you would fetch the company details from your API
-    // For this example, we're using mock data
-    setCompany(mockCompanyDetails);
+    fetchCompany();
+    setCompany (mockCompanyDetails);
   }, [companyName]);
+
+  // useEffect(() => {
+  //   // In a real app, you would fetch the company details from your API
+  //   // For this example, we're using mock data
+  //   setCompany(mockCompanyDetails);
+  // }, [companyName]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
