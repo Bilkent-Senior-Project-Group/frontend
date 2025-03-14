@@ -3,7 +3,6 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthService from '../../services/AuthService';
 import { Box, Typography, TextField, Button, Container, Alert, Stack, Link as MuiLink } from '@mui/material';
-import { jwtDecode } from 'jwt-decode';
 
 const LoginPage = () => {
   const location = useLocation();
