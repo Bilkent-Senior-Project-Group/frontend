@@ -278,8 +278,6 @@ const CreateCompanyPage = () => {
       updatedUser.companies.push(response.data);
 
       updateUser(updatedUser);
-
-      console.log('Company added successfully:', response.data);
       
       console.log('Company added successfully:', response.data);
       

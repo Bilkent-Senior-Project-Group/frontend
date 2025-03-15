@@ -40,7 +40,7 @@ const createCompany = async (companyData, token) => {
     );
 
     console.log('Company created successfully:', response.data);
-    return response.data;
+    return response;
   } catch (error) {
     console.error('Error details:', error.response || error);
 
