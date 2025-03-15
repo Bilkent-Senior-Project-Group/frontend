@@ -273,12 +273,16 @@ const CreateCompanyPage = () => {
     };
       
       const response = await CompanyService.createCompany(formData, token);
- 
-      const updatedUser = { ...user };
-      updatedUser.companies.push(response.data);
 
-      updateUser(updatedUser);
-      
+      if(response.status == 200) {
+        const updatedUser = { ...user };
+        updatedUser.companies.push(response.data);
+
+        updateUser(updatedUser);
+      }else{
+        console.error('Error adding company:', response.data);
+      }
+
       console.log('Company added successfully:', response.data);
       
       setNotification({
