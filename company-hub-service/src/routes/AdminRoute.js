@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function AdminRoute({ children }) {
-    const { currentUser } = useAuth();
+    const { user } = useAuth();
     
     return children;
 }

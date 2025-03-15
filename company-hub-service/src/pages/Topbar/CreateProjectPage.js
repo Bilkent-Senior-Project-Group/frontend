@@ -42,7 +42,7 @@ const CreateProjectPage = () => {
   const navigate = useNavigate();
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
-  const token = useAuth();
+  const {token} = useAuth();
 
   const handleProjectDetailsChange = (e) => {
     const { name, value } = e.target;

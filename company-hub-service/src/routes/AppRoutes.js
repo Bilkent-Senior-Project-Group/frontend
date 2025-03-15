@@ -25,7 +25,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const AppRoutes = () => {
 
-  const token = useAuth();
+  const {token} = useAuth();
 
   return (
     <Routes>

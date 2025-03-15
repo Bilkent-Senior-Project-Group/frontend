@@ -101,7 +101,7 @@ const CreateCompanyPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
-  const token = useAuth();
+  const {token} = useAuth();
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;

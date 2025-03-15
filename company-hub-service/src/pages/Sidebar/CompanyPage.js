@@ -70,7 +70,7 @@ const CompanyPage = () => {
   const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
-    const token = useAuth();
+    const {token} = useAuth();
 
   const fetchCompany = async () => {
     try {
