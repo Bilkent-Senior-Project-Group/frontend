@@ -8,24 +8,22 @@ import {
 } from '@mui/material';
 
 function AdminDashboard() {
-  const { currentUser } = useAuth();
+  const { user, token } = useAuth();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch companies when currentUser is available
   useEffect(() => {
-    if (currentUser && currentUser.token) {
-      getCompaniesToBeVerified(currentUser.token);
+    if (user && token) {
+      getCompaniesToBeVerified(token);
     } else {
-      // Optionally, try to read token from localStorage if not in currentUser
-      const token = localStorage.getItem("token");
       if (token) {
         getCompaniesToBeVerified(token);
       } else {
         setLoading(false);
       }
     }
-  }, [currentUser]);
+  }, [user]);
   
   const getCompaniesToBeVerified = async (token) => {
     try {   
@@ -48,7 +46,6 @@ function AdminDashboard() {
   const handleVerify = async (companyId) => {
     try {
       // Use currentUser.token if available, otherwise try localStorage
-      const token = currentUser?.token || localStorage.getItem("token");
       if (!token) {
         console.error("No authentication token available");
         return;

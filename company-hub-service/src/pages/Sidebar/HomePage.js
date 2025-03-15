@@ -19,6 +19,7 @@ import { Search, MapPin, Users, Building } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import { useNavigate } from 'react-router-dom';
 import CompanyService from '../../services/CompanyService';
+import { useAuth } from "../../contexts/AuthContext";
 
 const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,17 +27,12 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   //will be commented out
-  // Log user info when the homepage loads
   useEffect(() => {
-    const user = localStorage.getItem("user"); // Retrieve user data from localStorage
-    if (user) {
-      console.log("User Info:", JSON.parse(user)); // Parse and log it
-    } else {
-      console.log("No user found in localStorage");
-    }
-  }, []);
+    console.log("User Info:", user || "No user found");
+  }, [user]);
 
   useEffect(() => {
     // Fetch featured companies when component mounts
@@ -47,7 +43,7 @@ const HomePage = () => {
     try {
       setLoading(true);
       // Use the service method instead of direct fetch
-      const companies = await CompanyService.GetFeaturedCompanies();
+      const companies = await CompanyService.getFeaturedCompanies();
       console.log("Companies fetched:", companies); // Log for debugging
       setFeaturedCompanies(companies);
       setError(null);

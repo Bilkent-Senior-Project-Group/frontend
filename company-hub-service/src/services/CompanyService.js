@@ -1,20 +1,15 @@
 import axios from 'axios';
 import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js';
 import {CompanyProfileDTO} from '../DTO/company/CompanyProfileDTO.js';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
 
-// Helper function to get the authentication token
-const getAuthToken = () => {
-  // Retrieve the token from localStorage or wherever you store it after login
-  return localStorage.getItem('token'); // Or however you store your auth token
-};
+const token = useAuth();
 
-const addCompany = async (companyData) => {
+const createCompany = async (companyData) => {
   try {
-    // Get the authentication token
-    const token = getAuthToken();
     console.log(token);
     if (!token) {
       throw new Error('You must be logged in to add a company');
@@ -41,12 +36,8 @@ const addCompany = async (companyData) => {
         companyDTO,
       {
         headers: {
-          // 'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`, // Include the auth token
-          // 'Access-Control-Allow-Credentials': true
         },
-        // withCredentials: true,
-        // timeout: 30000
       }
     );
     
@@ -74,7 +65,7 @@ const addCompany = async (companyData) => {
   }
 };
 
-const GetFeaturedCompanies = async () => {
+const getFeaturedCompanies = async () => {
   try {
     // This endpoint doesn't require authentication based on your backend code
     const response = await axios.get(
@@ -111,7 +102,7 @@ const getCompany = async (companyName) => {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
+          'Authorization': `Bearer ${token}`
         }
       }
     );
@@ -135,8 +126,8 @@ const getCompany = async (companyName) => {
 }
 
 const CompanyService = {
-  addCompany,
-  GetFeaturedCompanies,
+  createCompany,
+  getFeaturedCompanies,
   getCompany
 };
 

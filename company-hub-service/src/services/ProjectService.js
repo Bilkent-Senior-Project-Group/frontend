@@ -1,18 +1,13 @@
 import axios from 'axios';
 import {ProjectRequestDTO} from '../DTO/project/ProjectRequestDTO.js';
+import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
-
-// Helper function to get the authentication token
-const getAuthToken = () => {
-  // Retrieve the token from localStorage or wherever you store it after login
-  return localStorage.getItem('token'); // Or however you store your auth token
-};
+const token = useAuth();
 
 const createProject = async (projectData) => {
   try {
     // Get the authentication token
-    const token = getAuthToken();
     console.log(token);
     if (!token) {
       throw new Error('You must be logged in to create a project');

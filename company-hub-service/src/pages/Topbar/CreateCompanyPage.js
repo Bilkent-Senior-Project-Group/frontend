@@ -46,7 +46,7 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
-const AddCompanyPage = () => {
+const CreateCompanyPage = () => {
   const [companyDetails, setCompanyDetails] = useState({
     name: '',              
     description: '',       
@@ -271,7 +271,7 @@ const AddCompanyPage = () => {
         projects
     };
       
-      const response = await CompanyService.addCompany(formData);
+      const response = await CompanyService.createCompany(formData);
       
       console.log('Company added successfully:', response.data);
       
@@ -848,4 +848,4 @@ const AddCompanyPage = () => {
   );
 };
 
-export default AddCompanyPage;
+export default CreateCompanyPage;

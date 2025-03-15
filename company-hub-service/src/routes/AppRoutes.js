@@ -11,7 +11,7 @@ import PrivateRoute from './PrivateRoute';
 import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
-import AddCompanyPage from '../pages/Topbar/AddCompanyPage';
+import CreateCompanyPage from '../pages/Topbar/CreateCompanyPage';
 import AddProjectPage from '../pages/Topbar/AddProjectPage';
 import PremiumPage from '../pages/Topbar/PremiumPage';
 import SupportPage from '../pages/Topbar/SupportPage';
@@ -20,11 +20,12 @@ import RootLayout from '../layouts/RootLayout';
 import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import SearchResultsPage from '../pages/SearchResultsPage';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const AppRoutes = () => {
 
-  const token = localStorage.getItem("token");
+  const token = useAuth();
 
   return (
     <Routes>
@@ -42,7 +43,7 @@ const AppRoutes = () => {
         <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/add-company" element={<AddCompanyPage />} />
+        <Route path="/create-company" element={<CreateCompanyPage />} />
         <Route path="/add-project" element={<AddProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
