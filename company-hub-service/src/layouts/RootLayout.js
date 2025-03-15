@@ -103,8 +103,8 @@ const RootLayout = () => {
     handleAddMenuClose();
   };
 
-  const handleAddProject = () => {
-    navigate('/add-project');
+  const handleCreateProject = () => {
+    navigate('/create-project');
     handleAddMenuClose();
   };
 
@@ -213,7 +213,7 @@ const RootLayout = () => {
             </ListItemIcon>
             <Typography variant="inherit">Add Company</Typography>
           </MenuItem>
-          <MenuItem onClick={handleAddProject}>
+          <MenuItem onClick={handleCreateProject}>
             <ListItemIcon>
               <FileTextIcon size={18} />
             </ListItemIcon>
@@ -405,7 +405,7 @@ const RootLayout = () => {
                     <List component="div" disablePadding>
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/profile`)}
+                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,
@@ -425,7 +425,7 @@ const RootLayout = () => {
 
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/people`)}
+                        onClick={() => navigate(`/company/people/${company.companyName.replace(/\s+/g, '')}`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,

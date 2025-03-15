@@ -1,14 +1,12 @@
 import axios from 'axios';
 import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js';
 import {CompanyProfileDTO} from '../DTO/company/CompanyProfileDTO.js';
-import { useAuth } from '../contexts/AuthContext';
+
 
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
 
-const token = useAuth();
-
-const createCompany = async (companyData) => {
+const createCompany = async (companyData, token) => {
   try {
     console.log(token);
     if (!token) {
@@ -95,7 +93,7 @@ const getFeaturedCompanies = async () => {
   }
 };
 
-const getCompany = async (companyName) => {
+const getCompany = async (companyName, token) => {
   try{
     const response = await axios.get(
       `${API_URL}/api/Company/GetCompany/${companyName}`,

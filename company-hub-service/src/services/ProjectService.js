@@ -1,11 +1,9 @@
 import axios from 'axios';
 import {ProjectRequestDTO} from '../DTO/project/ProjectRequestDTO.js';
-import { useAuth } from '../contexts/AuthContext';
 
 const API_URL = "http://localhost:5133"; // Base URL for the API
-const token = useAuth();
 
-const createProject = async (projectData) => {
+const createProject = async (projectData, token) => {
   try {
     // Get the authentication token
     console.log(token);

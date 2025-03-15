@@ -12,7 +12,7 @@ import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
 import CreateCompanyPage from '../pages/Topbar/CreateCompanyPage';
-import AddProjectPage from '../pages/Topbar/AddProjectPage';
+import CreateProjectPage from '../pages/Topbar/CreateProjectPage';
 import PremiumPage from '../pages/Topbar/PremiumPage';
 import SupportPage from '../pages/Topbar/SupportPage';
 import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  
@@ -44,12 +44,12 @@ const AppRoutes = () => {
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/create-company" element={<CreateCompanyPage />} />
-        <Route path="/add-project" element={<AddProjectPage />} />
+        <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
         {/* Company routes */}
-        <Route path="/company/:companyName/profile" element={<CompanyPage />} />
-        <Route path="/company/:companyName/people" element={<CompanyPeoplePage />} />
+        <Route path="/company/:companyName" element={<CompanyPage />} />
+        <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
         <Route
           path="/admin"
           element={

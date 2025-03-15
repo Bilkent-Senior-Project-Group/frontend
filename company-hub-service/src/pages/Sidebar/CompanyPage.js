@@ -22,7 +22,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import CompanyService  from '../../services/CompanyService';
-
+import { useAuth } from '../../contexts/AuthContext';
 
 // Mock data for a single company
 const mockCompanyDetails = {
@@ -70,10 +70,11 @@ const CompanyPage = () => {
   const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
+    const token = useAuth();
 
   const fetchCompany = async () => {
     try {
-      const companyData = await CompanyService.getCompany(companyName);
+      const companyData = await CompanyService.getCompany(companyName, token);
       console.log("Backend Company Data:", companyData);
       // setCompany(companyData);
     } catch (error) {

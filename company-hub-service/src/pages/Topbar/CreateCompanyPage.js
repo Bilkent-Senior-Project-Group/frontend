@@ -32,7 +32,7 @@ import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CompanyService from '../../services/CompanyService';
-import { CreateCompanyRequestDTO } from '../../DTO';
+import { useAuth } from '../../contexts/AuthContext';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -101,6 +101,7 @@ const CreateCompanyPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
+  const token = useAuth();
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -130,7 +131,7 @@ const CreateCompanyPage = () => {
     });
   };
 
-  const handleAddProject = () => {
+  const handleCreateProject = () => {
     // Ensure all required fields have default values
     const formattedProject = {
       ...currentProject,
@@ -271,7 +272,7 @@ const CreateCompanyPage = () => {
         projects
     };
       
-      const response = await CompanyService.createCompany(formData);
+      const response = await CompanyService.createCompany(formData, token);
       
       console.log('Company added successfully:', response.data);
       
@@ -823,7 +824,7 @@ const CreateCompanyPage = () => {
           <Button onClick={() => setOpenProjectDialog(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleAddProject} color="primary" variant="contained">
+          <Button onClick={handleCreateProject} color="primary" variant="contained">
             {editingProjectIndex !== null ? 'Update Project' : 'Add Project'}
           </Button>
         </DialogActions>
