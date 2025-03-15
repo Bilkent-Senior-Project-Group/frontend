@@ -276,14 +276,14 @@ const CreateCompanyPage = () => {
 
       if(response.status == 200) {
         const updatedUser = { ...user };
-        updatedUser.companies.push(response.data);
+        updatedUser.companies.push(response.data.data);
 
         updateUser(updatedUser);
       }else{
-        console.error('Error adding company:', response.data);
+        console.error('Error adding company:', response.data.message);
       }
 
-      console.log('Company added successfully:', response.data);
+      console.log('Company added successfully:', response.data.data);
       
       setNotification({
         open: true,
