@@ -34,7 +34,7 @@ const createCompany = async (companyData, token) => {
       companyDTO,
       {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("token")}`, // Include the auth token
+          'Authorization': `Bearer ${token}`, // Include the auth token
         },
       }
     );

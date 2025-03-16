@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user", JSON.stringify(response.data.user));
         setToken(response.data.token);
         setUser(response.data.user);
+        console.log("Login successful response is:", response.data);
         return { success: true };
       }
     } catch (err) {
