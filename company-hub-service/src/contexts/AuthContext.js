@@ -46,6 +46,7 @@ export const AuthProvider = ({ children }) => {
     try {
       if (token) {
         await AuthService.logout(token);
+        console.log("Logout successful");
       }
     } catch (error) {
       console.error("Error during logout:", error);

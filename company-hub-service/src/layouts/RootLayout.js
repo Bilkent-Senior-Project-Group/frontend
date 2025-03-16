@@ -157,6 +157,8 @@ const RootLayout = () => {
             </Typography>
           </Box>
 
+          <Box sx={{ flexGrow: 0.8 }} />
+
           {/* Search Bar */}
           <Paper
             component="form"
@@ -164,7 +166,7 @@ const RootLayout = () => {
               p: '2px 4px', 
               display: 'flex', 
               alignItems: 'center', 
-              width: 400,
+              width: 500,
               flexGrow: 0
             }}
           >
@@ -293,13 +295,12 @@ const RootLayout = () => {
             position: 'relative',
             transition: 'width 0.2s ease',
             overflowX: 'hidden',
-            mt: '64px', // Add margin-top to account for AppBar height
           },
         }}
       >
 
         {/* Main navigation list */}
-        <List sx={{ flex: 1 }}>
+        <List sx={{ flex: 1, pt: '64px' }}>
           {/* Homepage */}
           <Tooltip title={isDrawerCollapsed ? "Homepage" : ""} placement="right">
             <ListItem 
@@ -309,6 +310,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -332,6 +334,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -354,6 +357,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -383,6 +387,7 @@ const RootLayout = () => {
                     sx={{ 
                       pl: 4,
                       py: 0.5,
+                      cursor: 'pointer'
                     }}
                   >
                     <ListItemIcon>
@@ -409,6 +414,7 @@ const RootLayout = () => {
                         sx={{ 
                           pl: 6,
                           py: 0.5,
+                          cursor: 'pointer'
                         }}
                       >
                         <ListItemIcon>
@@ -429,6 +435,7 @@ const RootLayout = () => {
                         sx={{ 
                           pl: 6,
                           py: 0.5,
+                          cursor: 'pointer'
                         }}
                       >
                         <ListItemIcon>
