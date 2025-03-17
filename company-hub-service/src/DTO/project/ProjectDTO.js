@@ -1,4 +1,3 @@
-import CompanyDTO from '../company/CompanyDTO.js';
 /**
  * Frontend mirror of the backend ProjectDTO
  */
@@ -21,9 +20,8 @@ export class ProjectDTO {
     this.IsCompleted = data.IsCompleted || false;
     this.ProjectUrl = data.ProjectUrl || '';
     this.ClientType = data.ClientType || '';
-    this.ClientCompany = data.ClientCompany || null;
-    this.ProviderCompany = data.ProviderCompany || null;
-    this.Company = data.Company || null;
+    this.ClientCompanyName = data.ClientCompanyName || null;
+    this.ProviderCompanyName = data.ProviderCompanyName || null;
   }
 
   /**
@@ -45,27 +43,13 @@ export class ProjectDTO {
       IsCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
       ProjectUrl: project.projectUrl || 'https://example.com',  // Default URL if empty
       ClientType: project.clientType || 'Unknown',  // Default client type if empty
-      ClientCompany: project.clientCompany || null,
-      ProviderCompany: project.providerCompany || null,
-      Company: project.company
+      ClientCompanyName: project.clientCompanyName || null,
+      ProviderCompanyName: project.providerCompanyName || null
     };
 
     // Only include ProjectId if it already exists (for editing existing projects)
     if (project.id) {
       dto.ProjectId = project.id;
-    }
-    
-    if (project.clientCompany) {
-      console.log('ClientCompany', project.clientCompany);
-      dto.ClientCompany = CompanyDTO.fromFormData(project.clientCompany);
-    }
-    
-    if (project.providerCompany) {
-      dto.ProviderCompany = CompanyDTO.fromFormData(project.providerCompany);
-    }
-    
-    if (project.company) {
-      dto.Company = CompanyDTO.fromFormData(project.company);
     }
     
     return new ProjectDTO(dto);

@@ -1,3 +1,5 @@
+//to be deleted
+
 /**
  * Frontend mirror of the backend CompanyDTO
  */

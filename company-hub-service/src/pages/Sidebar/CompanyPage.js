@@ -23,6 +23,7 @@ import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } fro
 import { colors } from '../../theme/theme';
 import CompanyService  from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
+import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 
 // Mock data for a single company
 const mockCompanyDetails = {
@@ -76,6 +77,10 @@ const CompanyPage = () => {
     try {
       const companyData = await CompanyService.getCompany(companyName, token);
       console.log("Backend Company Data:", companyData);
+      const companyProfile = new CompanyProfileDTO(companyData);
+      console.log("company profile: ", companyProfile);
+      //convert companyData to CompanyProfileDto
+
       // setCompany(companyData);
     } catch (error) {
       console.error("Error fetching company:", error.message);

@@ -56,7 +56,8 @@ const CreateCompanyPage = () => {
     websiteUrl: '',          
     specialties: '',         
     industries: '',          
-    contactInfo: '',         
+    phone: '',
+    email: '',         
     coreExpertise: ''        
   });
 
@@ -73,19 +74,8 @@ const CreateCompanyPage = () => {
     isCompleted: true,        
     projectUrl: '',      
     clientType: '',
-    // Ensure valid GUIDs are set
-    clientCompany: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    },
-    providerCompany: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    },
-    company: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    }
+    clientCompanyName: '',
+    providerCompanyName: '',
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
   
@@ -149,18 +139,8 @@ const CreateCompanyPage = () => {
       projectUrl: currentProject.projectUrl || 'https://example.com', // Default URL for validation
       clientType: currentProject.clientType || 'Unknown', // Default client type for validation
       // Ensure company objects have valid structure
-      clientCompany: {
-        companyId: currentProject.clientCompany?.companyId || uuidv4(),
-        companyName: currentProject.clientCompany?.companyName || 'Unknown Client'
-      },
-      providerCompany: {
-        companyId: currentProject.providerCompany?.companyId || uuidv4(),
-        companyName: currentProject.providerCompany?.companyName || 'Unknown Provider'
-      },
-      company: {
-        companyId: currentProject.company?.companyId || uuidv4(),
-        companyName: currentProject.company?.companyName || 'Unknown Company'
-      }
+      clientCompanyName: currentProject.clientCompanyName || 'Unknown Client',
+      providerCompanyName: currentProject.providerCompanyName || 'Unknown Provider'
     };
   
     if (editingProjectIndex !== null) {
@@ -186,18 +166,8 @@ const CreateCompanyPage = () => {
       technologiesUsed: [''],
       projectUrl: '',
       isCompleted: true,
-      clientCompany: {
-        companyId: uuidv4(),
-        companyName: ''
-      },
-      providerCompany: {
-        companyId: uuidv4(),
-        companyName: ''
-      },
-      company: {
-        companyId: uuidv4(),
-        companyName: ''
-      }
+      clientCompanyName: '',
+      providerCompanyName: ''
     });
     setOpenProjectDialog(false);
   };
@@ -217,18 +187,8 @@ const CreateCompanyPage = () => {
         isCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
         clientType: project.clientType || '',
         // Update these to ensure proper DTO structure
-        clientCompany: {
-            companyId: project.clientCompany?.companyId || uuidv4(),
-            companyName: project.clientCompany?.companyName || ''
-        },
-        providerCompany: {
-            companyId: project.providerCompany?.companyId || uuidv4(),
-            companyName: project.providerCompany?.companyName || ''
-        },
-        company: {
-            companyId: project.company?.companyId || uuidv4(),
-            companyName: project.company?.companyName || ''
-        }
+        clientCompanyName: project.clientCompanyName || '',
+        providerCompanyName: project.providerCompanyName || ''
     });
     
     setEditingProjectIndex(index);
@@ -242,21 +202,11 @@ const CreateCompanyPage = () => {
   const handleProjectChange = (e) => {
     const { name, value } = e.target;
     
-    // Special handling for company fields
-    if (name === 'clientCompany' || name === 'providerCompany' || name === 'company') {
-        setCurrentProject(prev => ({
-            ...prev,
-            [name]: {
-                companyId: prev[name].companyId || uuidv4(), // Keep existing GUID or create new one
-                companyName: value
-            }
-        }));
-    } else {
         setCurrentProject(prev => ({
             ...prev,
             [name]: value
         }));
-    }
+
   };
 
   const handleSubmit = async () => {
@@ -441,9 +391,19 @@ const CreateCompanyPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Contact Information"
-              name="contactInfo"
-              value={companyDetails.contactInfo || ''}
+              label="Phone Number"
+              name="phone"
+              value={companyDetails.phone || ''}
+              onChange={handleCompanyDetailsChange}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Email Address"
+              name="email"
+              value={companyDetails.email || ''}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
             />
@@ -505,18 +465,8 @@ const CreateCompanyPage = () => {
                 technologiesUsed: [''],
                 projectUrl: '',
                 isCompleted: true,
-                clientCompany: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                },
-                providerCompany: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                },
-                company: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                }
+                clientCompanyName: '',
+                providerCompanyName: ''
               });
               setEditingProjectIndex(null);
               setOpenProjectDialog(true);
@@ -761,8 +711,8 @@ const CreateCompanyPage = () => {
               <TextField
                 fullWidth
                 label="Client Company"
-                name="clientCompany"
-                value={currentProject.clientCompany?.companyName || ''}
+                name="clientCompanyName"
+                value={currentProject.clientCompanyName || ''}
                 onChange={handleProjectChange}
                 variant="outlined"
               />
@@ -771,18 +721,8 @@ const CreateCompanyPage = () => {
               <TextField
                 fullWidth
                 label="Provider Company"
-                name="providerCompany"
-                value={currentProject.providerCompany?.companyName || ''}
-                onChange={handleProjectChange}
-                variant="outlined"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Company"
-                name="company"
-                value={currentProject.company?.companyName || ''}
+                name="providerCompanyName"
+                value={currentProject.providerCompanyName || ''}
                 onChange={handleProjectChange}
                 variant="outlined"
               />
