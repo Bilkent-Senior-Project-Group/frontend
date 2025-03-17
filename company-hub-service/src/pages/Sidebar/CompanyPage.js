@@ -81,7 +81,7 @@ const CompanyPage = () => {
       console.log("company profile: ", companyProfile);
       //convert companyData to CompanyProfileDto
 
-      // setCompany(companyData);
+      setCompany(companyData);
     } catch (error) {
       console.error("Error fetching company:", error.message);
     }
@@ -89,7 +89,7 @@ const CompanyPage = () => {
   
   useEffect(() => {
     fetchCompany();
-    setCompany (mockCompanyDetails);
+    // setCompany (mockCompanyDetails);
   }, [companyName]);
 
   // useEffect(() => {
@@ -164,12 +164,12 @@ const CompanyPage = () => {
                       />
                     )}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                  {/* <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
                     <Rating value={company.rating} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ ml: 1 }}>
                       {company.rating} ({company.reviews} reviews)
                     </Typography>
-                  </Box>
+                  </Box> */}
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Map size={16} />
@@ -180,13 +180,7 @@ const CompanyPage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Users size={16} />
                       <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.teamSize} employees
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <DollarSign size={16} />
-                      <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.priceRange}
+                        {company.companySize} employees
                       </Typography>
                     </Box>
                   </Box>
@@ -238,13 +232,13 @@ const CompanyPage = () => {
                   About {company.name}
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
-                  {company.longDescription}
+                  {company.description}
                 </Typography>
                 
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                   Key Expertise
                 </Typography>
-                {company.expertise.map((skill, index) => (
+                {/* {company.coreExpertise.map((skill, index) => (
                   <Box key={index} sx={{ mb: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body1">{skill.skill}</Typography>
@@ -268,13 +262,19 @@ const CompanyPage = () => {
                       />
                     </Box>
                   </Box>
+                ))} */}
+                {company.coreExpertise.map((skill, index) => (
+                  <Box key={index} sx={{ mb: 2 }}>
+                    <Typography variant="body1">{skill}</Typography>
+                  </Box>
                 ))}
+
                 
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                   Key Clients
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {company.clients.map((client, index) => (
+                  {company.partnerships.map((client, index) => (
                     <Chip key={index} label={client} />
                   ))}
                 </Box>
@@ -320,7 +320,7 @@ const CompanyPage = () => {
                         </ListItemIcon>
                         <ListItemText 
                           primary="Founded" 
-                          secondary={company.founded} 
+                          secondary={company.foundedYear} 
                         />
                       </ListItem>
                     </List>
@@ -331,12 +331,20 @@ const CompanyPage = () => {
                       Services Offered
                     </Typography>
                     <List disablePadding>
-                      {company.services.map((service, index) => (
+                      {/* {company.services.map((service, index) => (
                         <ListItem key={index} disableGutters>
                           <ListItemIcon sx={{ minWidth: 36 }}>
                             <Check size={18} color={colors.primary[500]} />
                           </ListItemIcon>
                           <ListItemText primary={service} />
+                        </ListItem>
+                      ))} */}
+                      {company.specialties.split(',').map((specialty, index) => (
+                        <ListItem key={index} disableGutters>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <Check size={18} color={colors.primary[500]} />
+                          </ListItemIcon>
+                          <ListItemText primary={specialty.trim()} />
                         </ListItem>
                       ))}
                     </List>
@@ -354,12 +362,20 @@ const CompanyPage = () => {
                   Services Offered
                 </Typography>
                 <List disablePadding>
-                  {company.services.map((service, index) => (
+                  {/* {company.services.map((service, index) => (
                     <ListItem key={index} disableGutters>
                       <ListItemIcon sx={{ minWidth: 36 }}>
                         <Check size={18} color={colors.primary[500]} />
                       </ListItemIcon>
                       <ListItemText primary={service} />
+                    </ListItem>
+                  ))} */}
+                  {company.specialties.split(',').map((specialty, index) => (
+                    <ListItem key={index} disableGutters>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Check size={18} color={colors.primary[500]} />
+                      </ListItemIcon>
+                      <ListItemText primary={specialty.trim()} />
                     </ListItem>
                   ))}
                 </List>
@@ -375,10 +391,10 @@ const CompanyPage = () => {
                   Portfolio
                 </Typography>
                 <List disablePadding>
-                  {company.portfolioItems.map((item, index) => (
+                  {company.projects.map((item, index) => (
                     <ListItem key={index} disableGutters>
                       <ListItemText 
-                        primary={item.name} 
+                        primary={item.projectName} 
                         secondary={item.description} 
                       />
                     </ListItem>
@@ -396,7 +412,7 @@ const CompanyPage = () => {
                   Reviews
                 </Typography>
                 <List disablePadding>
-                  {company.testimonials.map((testimonial, index) => (
+                  {/* {company.testimonials.map((testimonial, index) => (
                     <ListItem key={index} disableGutters>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <Rating value={testimonial.rating} readOnly precision={0.1} />
@@ -411,7 +427,7 @@ const CompanyPage = () => {
                         - {testimonial.author}
                       </Typography>
                     </ListItem>
-                  ))}
+                  ))} */}
                 </List>
               </Grid>
             </Grid>

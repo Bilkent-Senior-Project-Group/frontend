@@ -52,7 +52,8 @@ export class CompanyProfileDTO {
                       new Date().getFullYear();
     
     this.Address = data.Address || data.address || '';
-    this.ContactInfo = data.ContactInfo || data.contactInfo || '';
+    this.Phone = data.Phone || data.phone || '';
+    this.Email = data.Email || data.email || '';
   }
 
   /**
