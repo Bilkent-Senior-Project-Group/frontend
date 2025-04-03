@@ -60,7 +60,7 @@ const CompanyPDFExtractor = ({ onExtracted }) => {
   
       // Use absolute URL to backend API
       // Change this to match your .NET backend URL and port
-      const API_URL = 'http://localhost:5133'; // or http://localhost:5000
+      const API_URL = 'https://localhost:7181'; // or http://localhost:5000
         const response = await axios.post(
         `${API_URL}/api/company/extract-from-pdf`,
         formData,

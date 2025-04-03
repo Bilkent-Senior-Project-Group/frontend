@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 // Base URL for convenience (optional)
-const API_URL = 'http://localhost:5133/api';
+const API_URL = 'https://localhost:7181/api';
 
 const fetchUsers = async (token) => {
   // Example: calling an admin-only endpoint that returns non-sensitive user data

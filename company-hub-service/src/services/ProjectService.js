@@ -1,7 +1,7 @@
 import axios from 'axios';
 import {ProjectRequestDTO} from '../DTO/project/ProjectRequestDTO.js';
 
-const API_URL = "http://localhost:5133"; // Base URL for the API
+const API_URL = "https://localhost:7181"; // Base URL for the API
 
 // Helper function to get the authentication token
 const getAuthToken = () => {

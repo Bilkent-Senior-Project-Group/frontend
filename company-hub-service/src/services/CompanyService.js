@@ -3,7 +3,7 @@ import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js
 import {CompanyProfileDTO} from '../DTO/company/CompanyProfileDTO.js';
 
 
-const API_URL = "http://localhost:5133"; // Base URL for the API
+const API_URL = "https://localhost:7181"; // Base URL for the API
 
 // Helper function to get the authentication token
 const getAuthToken = () => {
