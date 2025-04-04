@@ -255,7 +255,7 @@ const HomePage = () => {
                       cursor: 'pointer'
                     },
                   }}
-                  onClick={() => navigate(`/companies/${company.CompanyId}`)}
+                  onClick={() => navigate(`/company/${company.Name.replace(/\s+/g, '')}`)}
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>

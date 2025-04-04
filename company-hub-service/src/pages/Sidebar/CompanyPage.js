@@ -25,46 +25,6 @@ import CompanyService  from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 
-// Mock data for a single company
-const mockCompanyDetails = {
-  id: 1,
-  name: 'Naked Development',
-  rating: 4.7,
-  reviews: 53,
-  priceRange: '$150 - $199 / hr',
-  teamSize: '10 - 49',
-  location: 'Irvine, CA',
-  phone: '+1 (123) 456-7890',
-  email: 'contact@nakeddevelopment.com',
-  website: 'www.nakeddevelopment.com',
-  founded: 2014,
-  services: ['Mobile App Development', 'UX/UI Design', 'Application Management'],
-  description: 'A mobile app development company specializing in delivering custom-built, high-quality mobile applications. With generally positive feedback, over 70% of reviewers commend their attention to detail, project management, and ability to enhance user engagement.',
-  longDescription: `Naked Development is a mobile app development company specializing in delivering custom-built, high-quality mobile applications. With generally positive feedback, over 70% of reviewers commend their attention to detail, project management, and ability to enhance user engagement.
-
-The company focuses on creating innovative solutions tailored to each client's specific needs. Their development process includes thorough planning, agile implementation, rigorous testing, and ongoing support.
-
-Their team consists of experienced developers, designers, and project managers who work collaboratively to ensure projects are delivered on time and within budget. The company prides itself on transparent communication and maintaining close relationships with clients throughout the development process.`,
-  expertise: [
-    { skill: 'iOS Development', level: 95 },
-    { skill: 'Android Development', level: 90 },
-    { skill: 'React Native', level: 85 },
-    { skill: 'Flutter', level: 80 },
-    { skill: 'UX/UI Design', level: 85 }
-  ],
-  clients: ['Tesla', 'Amazon', 'Microsoft', 'Google', 'Facebook'],
-  portfolioItems: [
-    { name: 'Health Tracker App', description: 'A comprehensive health monitoring application', completionDate: '2021' },
-    { name: 'E-commerce Platform', description: 'Full-featured mobile shopping experience',completionDate: '2021' },
-    { name: 'Social Media App', description: 'Innovative social networking platform', completionDate: '2021' }
-  ],
-  testimonials: [
-    { author: 'John Smith, CEO at TechCorp', content: 'Working with Naked Development was a pleasure. They delivered our app on time and exceeded our expectations.', rating: 5 },
-    { author: 'Jane Doe, Product Manager at StartupX', content: 'Great team to work with! Very responsive and professional.', rating: 4 },
-    { author: 'Robert Johnson, CTO at Enterprise Solutions', content: 'Excellent technical skills and project management. Would work with them again.', rating: 5 }
-  ],
-  verified: true
-};
 
 const CompanyPage = () => {
   const { companyName } = useParams();

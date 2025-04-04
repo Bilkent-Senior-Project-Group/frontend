@@ -11,6 +11,7 @@ import { Upload as UploadIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { colors } from '../theme/theme';
+import { API_URL } from '../config/apiConfig';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -58,10 +59,8 @@ const CompanyPDFExtractor = ({ onExtracted }) => {
       const formData = new FormData();
       formData.append('file', selectedFile);
   
-      // Use absolute URL to backend API
-      // Change this to match your .NET backend URL and port
-      const API_URL = 'https://localhost:7181'; // or http://localhost:5000
-        const response = await axios.post(
+      // Using the imported API_URL from config
+      const response = await axios.post(
         `${API_URL}/api/company/extract-from-pdf`,
         formData,
         {

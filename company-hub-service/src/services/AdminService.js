@@ -1,9 +1,7 @@
 // src/services/AdminService.js
 
 import axios from 'axios';
-
-// Base URL for convenience (optional)
-const API_URL = 'https://localhost:7181/api';
+import { API_URL } from '../config/apiConfig';
 
 const fetchUsers = async (token) => {
   // Example: calling an admin-only endpoint that returns non-sensitive user data
