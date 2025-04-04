@@ -44,8 +44,8 @@ export class CompanyProfileDTO {
       ? (data.Partnerships || data.partnerships)
       : ['Not specified'];
     
-    this.CompanySize = data.CompanySize !== undefined ? Number(data.CompanySize) : 
-                      data.companySize !== undefined ? Number(data.companySize) : 0;
+    this.CompanySize = data.CompanySize !== undefined ? data.CompanySize : 
+                      data.companySize !== undefined ? data.companySize : '';
     
     this.FoundedYear = data.FoundedYear !== undefined ? Number(data.FoundedYear) :
                       data.foundedYear !== undefined ? Number(data.foundedYear) : 
@@ -68,7 +68,7 @@ export class CompanyProfileDTO {
       Address: companyDetails.location || '',
       Location: companyDetails.location || '',
       Website: companyDetails.websiteUrl || '',
-      CompanySize: parseInt(companyDetails.employeeSize) || 0,
+      CompanySize: companyDetails.employeeSize || '',
       Specialties: companyDetails.specialties || '',
       Industries: companyDetails.industries || '',
       ContactInfo: companyDetails.contactInfo || '',

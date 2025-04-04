@@ -100,10 +100,7 @@ const HomePage = () => {
   const getCompanySizeText = (size) => {
     if (!size) return 'Unknown size';
     
-    if (size < 10) return 'Micro (1-9)';
-    if (size < 50) return 'Small (10-49)';
-    if (size < 250) return 'Medium (50-249)';
-    return 'Large (250+)';
+    return size;
   };
 
   // Function to get first two letters for logo placeholder

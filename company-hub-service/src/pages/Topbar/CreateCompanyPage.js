@@ -95,10 +95,18 @@ const CreateCompanyPage = () => {
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
-    setCompanyDetails(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    // Ensure employeeSize is stored as a string
+    if (name === 'employeeSize') {
+      setCompanyDetails(prev => ({
+        ...prev,
+        [name]: value.toString()
+      }));
+    } else {
+      setCompanyDetails(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Handle data extracted from PDF
@@ -356,6 +364,8 @@ const CreateCompanyPage = () => {
               value={companyDetails.employeeSize}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
+              type="text"
+              helperText="Enter number of employees (e.g., '100' or '100-500')"
             />
           </Grid>
           <Grid item xs={12} md={4}>
