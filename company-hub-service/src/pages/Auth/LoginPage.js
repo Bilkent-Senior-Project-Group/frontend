@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import AuthService from '../../services/AuthService';
 import { Box, Typography, TextField, Button, Container, Alert, Stack, Link as MuiLink } from '@mui/material';
 
 const LoginPage = () => {
@@ -20,18 +19,12 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const response = await AuthService.login({ email, password });
+    const result = await login(email, password);
 
-      if (!response.status || response.status !== 200) {
-        setError(response);
-        return;
-      }
-      console.log('Login response:', response.data);
-      login(response.data.token, response.data.user);  // Store only token, decode later
+    if (!result.success) {
+      setError(result.message);
+    } else {
       navigate('/homepage');
-    } catch (err) {
-      setError(err.message);
     }
   };
 

@@ -17,8 +17,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import ProjectService from '../../services/ProjectService';
 import { colors } from '../../theme/theme';
+import { useAuth } from '../../contexts/AuthContext';
 
-const CreateProject = () => {
+const CreateProjectPage = () => {
   const [projectDetails, setProjectDetails] = useState({
     name: '',
     description: '',
@@ -41,6 +42,7 @@ const CreateProject = () => {
   const navigate = useNavigate();
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
+  const {token} = useAuth();
 
   const handleProjectDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -91,7 +93,7 @@ const CreateProject = () => {
         providerCompanyId: projectDetails.providerCompanyId || null,
       };
       
-      const response = await ProjectService.createProject(formData);
+      const response = await ProjectService.createProject(formData, token);
       
       console.log('Project added successfully:', response);
       
@@ -397,4 +399,4 @@ const CreateProject = () => {
   );
 };
 
-export default CreateProject;
+export default CreateProjectPage;

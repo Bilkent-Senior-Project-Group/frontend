@@ -32,7 +32,7 @@ import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CompanyService from '../../services/CompanyService';
-import { CreateCompanyRequestDTO } from '../../DTO';
+import { useAuth } from '../../contexts/AuthContext';
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -46,7 +46,7 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
-const AddCompanyPage = () => {
+const CreateCompanyPage = () => {
   const [companyDetails, setCompanyDetails] = useState({
     name: '',              
     description: '',       
@@ -56,7 +56,8 @@ const AddCompanyPage = () => {
     websiteUrl: '',          
     specialties: '',         
     industries: '',          
-    contactInfo: '',         
+    phone: '',
+    email: '',         
     coreExpertise: ''        
   });
 
@@ -73,19 +74,8 @@ const AddCompanyPage = () => {
     isCompleted: true,        
     projectUrl: '',      
     clientType: '',
-    // Ensure valid GUIDs are set
-    clientCompany: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    },
-    providerCompany: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    },
-    company: {
-        companyId: uuidv4(), // Always set a valid GUID
-        companyName: ''
-    }
+    clientCompanyName: '',
+    providerCompanyName: '',
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
   
@@ -101,13 +91,22 @@ const AddCompanyPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
+  const {token, user, updateUser } = useAuth();
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
-    setCompanyDetails(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    // Ensure employeeSize is stored as a string
+    if (name === 'employeeSize') {
+      setCompanyDetails(prev => ({
+        ...prev,
+        [name]: value.toString()
+      }));
+    } else {
+      setCompanyDetails(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   // Handle data extracted from PDF
@@ -130,7 +129,7 @@ const AddCompanyPage = () => {
     });
   };
 
-  const handleAddProject = () => {
+  const handleCreateProject = () => {
     // Ensure all required fields have default values
     const formattedProject = {
       ...currentProject,
@@ -148,18 +147,8 @@ const AddCompanyPage = () => {
       projectUrl: currentProject.projectUrl || 'https://example.com', // Default URL for validation
       clientType: currentProject.clientType || 'Unknown', // Default client type for validation
       // Ensure company objects have valid structure
-      clientCompany: {
-        companyId: currentProject.clientCompany?.companyId || uuidv4(),
-        companyName: currentProject.clientCompany?.companyName || 'Unknown Client'
-      },
-      providerCompany: {
-        companyId: currentProject.providerCompany?.companyId || uuidv4(),
-        companyName: currentProject.providerCompany?.companyName || 'Unknown Provider'
-      },
-      company: {
-        companyId: currentProject.company?.companyId || uuidv4(),
-        companyName: currentProject.company?.companyName || 'Unknown Company'
-      }
+      clientCompanyName: currentProject.clientCompanyName || 'Unknown Client',
+      providerCompanyName: currentProject.providerCompanyName || 'Unknown Provider'
     };
   
     if (editingProjectIndex !== null) {
@@ -185,18 +174,8 @@ const AddCompanyPage = () => {
       technologiesUsed: [''],
       projectUrl: '',
       isCompleted: true,
-      clientCompany: {
-        companyId: uuidv4(),
-        companyName: ''
-      },
-      providerCompany: {
-        companyId: uuidv4(),
-        companyName: ''
-      },
-      company: {
-        companyId: uuidv4(),
-        companyName: ''
-      }
+      clientCompanyName: '',
+      providerCompanyName: ''
     });
     setOpenProjectDialog(false);
   };
@@ -216,18 +195,8 @@ const AddCompanyPage = () => {
         isCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
         clientType: project.clientType || '',
         // Update these to ensure proper DTO structure
-        clientCompany: {
-            companyId: project.clientCompany?.companyId || uuidv4(),
-            companyName: project.clientCompany?.companyName || ''
-        },
-        providerCompany: {
-            companyId: project.providerCompany?.companyId || uuidv4(),
-            companyName: project.providerCompany?.companyName || ''
-        },
-        company: {
-            companyId: project.company?.companyId || uuidv4(),
-            companyName: project.company?.companyName || ''
-        }
+        clientCompanyName: project.clientCompanyName || '',
+        providerCompanyName: project.providerCompanyName || ''
     });
     
     setEditingProjectIndex(index);
@@ -241,21 +210,11 @@ const AddCompanyPage = () => {
   const handleProjectChange = (e) => {
     const { name, value } = e.target;
     
-    // Special handling for company fields
-    if (name === 'clientCompany' || name === 'providerCompany' || name === 'company') {
-        setCurrentProject(prev => ({
-            ...prev,
-            [name]: {
-                companyId: prev[name].companyId || uuidv4(), // Keep existing GUID or create new one
-                companyName: value
-            }
-        }));
-    } else {
         setCurrentProject(prev => ({
             ...prev,
             [name]: value
         }));
-    }
+
   };
 
   const handleSubmit = async () => {
@@ -271,9 +230,18 @@ const AddCompanyPage = () => {
         projects
     };
       
-      const response = await CompanyService.addCompany(formData);
-      
-      console.log('Company added successfully:', response.data);
+      const response = await CompanyService.createCompany(formData, token);
+
+      if(response.status == 200) {
+        const updatedUser = { ...user };
+        updatedUser.companies.push(response.data.data);
+
+        updateUser(updatedUser);
+      }else{
+        console.error('Error adding company:', response.data.message);
+      }
+
+      console.log('Company added successfully:', response.data.data);
       
       setNotification({
         open: true,
@@ -396,6 +364,8 @@ const AddCompanyPage = () => {
               value={companyDetails.employeeSize}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
+              type="text"
+              helperText="Enter number of employees (e.g., '100' or '100-500')"
             />
           </Grid>
           <Grid item xs={12} md={4}>
@@ -431,9 +401,19 @@ const AddCompanyPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Contact Information"
-              name="contactInfo"
-              value={companyDetails.contactInfo || ''}
+              label="Phone Number"
+              name="phone"
+              value={companyDetails.phone || ''}
+              onChange={handleCompanyDetailsChange}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Email Address"
+              name="email"
+              value={companyDetails.email || ''}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
             />
@@ -495,18 +475,8 @@ const AddCompanyPage = () => {
                 technologiesUsed: [''],
                 projectUrl: '',
                 isCompleted: true,
-                clientCompany: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                },
-                providerCompany: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                },
-                company: {
-                  companyId: uuidv4(), // Always set a new GUID
-                  companyName: ''
-                }
+                clientCompanyName: '',
+                providerCompanyName: ''
               });
               setEditingProjectIndex(null);
               setOpenProjectDialog(true);
@@ -751,8 +721,8 @@ const AddCompanyPage = () => {
               <TextField
                 fullWidth
                 label="Client Company"
-                name="clientCompany"
-                value={currentProject.clientCompany?.companyName || ''}
+                name="clientCompanyName"
+                value={currentProject.clientCompanyName || ''}
                 onChange={handleProjectChange}
                 variant="outlined"
               />
@@ -761,18 +731,8 @@ const AddCompanyPage = () => {
               <TextField
                 fullWidth
                 label="Provider Company"
-                name="providerCompany"
-                value={currentProject.providerCompany?.companyName || ''}
-                onChange={handleProjectChange}
-                variant="outlined"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Company"
-                name="company"
-                value={currentProject.company?.companyName || ''}
+                name="providerCompanyName"
+                value={currentProject.providerCompanyName || ''}
                 onChange={handleProjectChange}
                 variant="outlined"
               />
@@ -823,7 +783,7 @@ const AddCompanyPage = () => {
           <Button onClick={() => setOpenProjectDialog(false)} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleAddProject} color="primary" variant="contained">
+          <Button onClick={handleCreateProject} color="primary" variant="contained">
             {editingProjectIndex !== null ? 'Update Project' : 'Add Project'}
           </Button>
         </DialogActions>
@@ -848,4 +808,4 @@ const AddCompanyPage = () => {
   );
 };
 
-export default AddCompanyPage;
+export default CreateCompanyPage;

@@ -1,34 +1,27 @@
 import axios from 'axios';
-import {CreateCompanyRequestDTO} from '../DTO/company/CreateCompanyRequestDTO.js';
-import {CompanyProfileDTO} from '../DTO/company/CompanyProfileDTO.js';
+import { CreateCompanyRequestDTO } from '../DTO/company/CreateCompanyRequestDTO.js';
+import { CompanyProfileDTO } from '../DTO/company/CompanyProfileDTO.js';
+
 
 
 const API_URL = "https://localhost:7181"; // Base URL for the API
 
-// Helper function to get the authentication token
-const getAuthToken = () => {
-  // Retrieve the token from localStorage or wherever you store it after login
-  return localStorage.getItem('token'); // Or however you store your auth token
-};
-
-const addCompany = async (companyData) => {
+const createCompany = async (companyData, token) => {
   try {
-    // Get the authentication token
-    const token = getAuthToken();
     console.log(token);
     if (!token) {
       throw new Error('You must be logged in to add a company');
     }
-    
+
     // Convert form data to DTO
     const companyDTO = CreateCompanyRequestDTO.fromFormData(companyData);
-    
+
     // Validate before sending
     const validationErrors = companyDTO.validate();
     if (Object.keys(validationErrors).length > 0) {
-      throw { 
-        response: { 
-          data: { 
+      throw {
+        response: {
+          data: {
             errors: validationErrors,
             title: "Validation failed"
           }
@@ -37,24 +30,20 @@ const addCompany = async (companyData) => {
     }
 
     const response = await axios.post(
-      `${API_URL}/api/Company/CreateCompany`, 
-        companyDTO,
+      `${API_URL}/api/Company/CreateCompany`,
+      companyDTO,
       {
         headers: {
-          // 'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`, // Include the auth token
-          // 'Access-Control-Allow-Credentials': true
         },
-        // withCredentials: true,
-        // timeout: 30000
       }
     );
-    
+
     console.log('Company created successfully:', response.data);
-    return response.data;
+    return response;
   } catch (error) {
     console.error('Error details:', error.response || error);
-    
+
     // Handle 401 Unauthorized errors specifically
     if (error.response?.status === 401) {
       console.error('Authentication error: Your session may have expired. Please log in again.');
@@ -62,54 +51,82 @@ const addCompany = async (companyData) => {
       // window.location.href = '/login';
       throw new Error('Your session has expired. Please log in again.');
     }
-    
+
     // Get a meaningful error message
     const message = error.response?.data?.message ||
       error.response?.data?.title ||
       error.response?.data ||
       "Failed to create company. Please check your connection and try again.";
-      
+
     console.error('Error creating company:', message);
     throw new Error(message);
   }
 };
 
-const GetFeaturedCompanies = async () => {
+const getFeaturedCompanies = async () => {
   try {
     // This endpoint doesn't require authentication based on your backend code
     const response = await axios.get(
       `${API_URL}/api/Company/GetFeaturedCompanies`
     );
-    
+
     // Log the response to help with debugging
     console.log('Raw featured companies data:', response.data);
-    
+
     // Convert each company data to a CompanyProfileDTO instance
     // The updated DTO constructor will handle property name differences
     const companies = response.data.map(company => new CompanyProfileDTO(company));
-    
+
     console.log('Processed company data:', companies);
     return companies;
   } catch (error) {
     console.error('Error fetching featured companies:', error.response || error);
-    
+
     // Get a meaningful error message
     const message = error.response?.data?.message ||
       error.response?.data?.title ||
       error.response?.data ||
       "Failed to fetch featured companies. Please check your connection and try again.";
-    
+
     console.error('Error details:', message);
     throw new Error(message);
   }
 };
 
+const getCompany = async (companyName, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetCompany/${companyName}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('Company data:', response.data);
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error fetching company:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch company. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
 
 
+}
 
 const CompanyService = {
-  addCompany,
-  GetFeaturedCompanies
+  createCompany,
+  getFeaturedCompanies,
+  getCompany
 };
 
 export default CompanyService;

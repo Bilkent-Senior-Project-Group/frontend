@@ -1,3 +1,4 @@
+import { Phone } from 'lucide-react';
 import {ProjectDTO} from '../project/ProjectDTO.js';
 
 /**
@@ -13,8 +14,9 @@ export class CreateCompanyRequestDTO {
     this.Industries = data.Industries || '';
     this.Location = data.Location || '';
     this.Website = data.Website || '';
-    this.CompanySize = data.CompanySize || 0;
-    this.ContactInfo = data.ContactInfo || '';
+    this.CompanySize = data.CompanySize || '';
+    this.Phone = data.Phone || '';
+    this.Email = data.Email || '';
     this.CoreExpertise = data.CoreExpertise || '';
     this.Portfolio = data.Portfolio || [];
   }
@@ -60,10 +62,11 @@ export class CreateCompanyRequestDTO {
       Address: companyDetails.location || '',
       Location: companyDetails.location || '',
       Website: companyDetails.websiteUrl || '',
-      CompanySize: parseInt(companyDetails.employeeSize) || 0,
+      CompanySize: companyDetails.employeeSize || '',
       Specialties: companyDetails.specialties || '',
       Industries: companyDetails.industries || '',
-      ContactInfo: companyDetails.contactInfo || '',
+      Phone: companyDetails.phone || '',
+      Email: companyDetails.email || '',
       CoreExpertise: companyDetails.coreExpertise || '',
       Portfolio: projects.map(project => ProjectDTO.fromFormData(project))
     });

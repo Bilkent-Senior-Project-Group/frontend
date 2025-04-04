@@ -3,16 +3,9 @@ import {ProjectRequestDTO} from '../DTO/project/ProjectRequestDTO.js';
 
 const API_URL = "https://localhost:7181"; // Base URL for the API
 
-// Helper function to get the authentication token
-const getAuthToken = () => {
-  // Retrieve the token from localStorage or wherever you store it after login
-  return localStorage.getItem('token'); // Or however you store your auth token
-};
-
-const createProject = async (projectData) => {
+const createProject = async (projectData, token) => {
   try {
     // Get the authentication token
-    const token = getAuthToken();
     console.log(token);
     if (!token) {
       throw new Error('You must be logged in to create a project');

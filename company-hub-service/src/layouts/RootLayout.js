@@ -41,7 +41,6 @@ import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import AuthService from '../services/AuthService';
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -81,16 +80,8 @@ const RootLayout = () => {
 
   const handleLogout = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
-    try{
-      await AuthService.logout(token);
-      console.log('Logged out successfully');
-    }
-    catch (error) {
-      console.error('Error logging out:', error);
-    }        
+    await logout();
     handleUserMenuClose();
-    logout();
     navigate('/login');
   };
 
@@ -107,13 +98,13 @@ const RootLayout = () => {
     setAddMenuAnchorEl(null);
   };
 
-  const handleAddCompany = () => {
-    navigate('/add-company');
+  const handleCreateCompany = () => {
+    navigate('/create-company');
     handleAddMenuClose();
   };
 
-  const handleAddProject = () => {
-    navigate('/add-project');
+  const handleCreateProject = () => {
+    navigate('/create-project');
     handleAddMenuClose();
   };
 
@@ -166,6 +157,8 @@ const RootLayout = () => {
             </Typography>
           </Box>
 
+          <Box sx={{ flexGrow: 0.8 }} />
+
           {/* Search Bar */}
           <Paper
             component="form"
@@ -173,7 +166,7 @@ const RootLayout = () => {
               p: '2px 4px', 
               display: 'flex', 
               alignItems: 'center', 
-              width: 400,
+              width: 500,
               flexGrow: 0
             }}
           >
@@ -216,13 +209,13 @@ const RootLayout = () => {
               horizontal: 'right',
             }}
           >
-          <MenuItem onClick={handleAddCompany}>
+          <MenuItem onClick={handleCreateCompany}>
             <ListItemIcon>
               <Building size={18} />
             </ListItemIcon>
             <Typography variant="inherit">Add Company</Typography>
           </MenuItem>
-          <MenuItem onClick={handleAddProject}>
+          <MenuItem onClick={handleCreateProject}>
             <ListItemIcon>
               <FileTextIcon size={18} />
             </ListItemIcon>
@@ -302,13 +295,12 @@ const RootLayout = () => {
             position: 'relative',
             transition: 'width 0.2s ease',
             overflowX: 'hidden',
-            mt: '64px', // Add margin-top to account for AppBar height
           },
         }}
       >
 
         {/* Main navigation list */}
-        <List sx={{ flex: 1 }}>
+        <List sx={{ flex: 1, pt: '64px' }}>
           {/* Homepage */}
           <Tooltip title={isDrawerCollapsed ? "Homepage" : ""} placement="right">
             <ListItem 
@@ -318,6 +310,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -341,6 +334,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -363,6 +357,7 @@ const RootLayout = () => {
               sx={{ 
                 minHeight: 48,
                 px: 2.5,
+                cursor: 'pointer',
                 justifyContent: isDrawerCollapsed ? 'center' : 'initial'
               }}
             >
@@ -392,6 +387,7 @@ const RootLayout = () => {
                     sx={{ 
                       pl: 4,
                       py: 0.5,
+                      cursor: 'pointer'
                     }}
                   >
                     <ListItemIcon>
@@ -414,10 +410,11 @@ const RootLayout = () => {
                     <List component="div" disablePadding>
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/profile`)}
+                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,
+                          cursor: 'pointer'
                         }}
                       >
                         <ListItemIcon>
@@ -434,10 +431,11 @@ const RootLayout = () => {
 
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/${company.companyName.replace(/\s+/g, '')}/people`)}
+                        onClick={() => navigate(`/company/people/${company.companyName.replace(/\s+/g, '')}`)}
                         sx={{ 
                           pl: 6,
                           py: 0.5,
+                          cursor: 'pointer'
                         }}
                       >
                         <ListItemIcon>

@@ -11,8 +11,8 @@ import PrivateRoute from './PrivateRoute';
 import DiscoverPage from '../pages/Sidebar/DiscoverPage';
 import SettingsPage from '../pages/Sidebar/SettingsPage';
 import CompanyPage from '../pages/Sidebar/CompanyPage';
-import AddCompanyPage from '../pages/Topbar/AddCompanyPage';
-import AddProjectPage from '../pages/Topbar/AddProjectPage';
+import CreateCompanyPage from '../pages/Topbar/CreateCompanyPage';
+import CreateProjectPage from '../pages/Topbar/CreateProjectPage';
 import PremiumPage from '../pages/Topbar/PremiumPage';
 import SupportPage from '../pages/Topbar/SupportPage';
 import CompanyPeoplePage from '../pages/Sidebar/CompanyPeoplePage';  
@@ -20,11 +20,12 @@ import RootLayout from '../layouts/RootLayout';
 import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import SearchResultsPage from '../pages/SearchResultsPage';
+import { useAuth } from '../contexts/AuthContext';
 
 
 const AppRoutes = () => {
 
-  const token = localStorage.getItem("token");
+  const {token} = useAuth();
 
   return (
     <Routes>
@@ -42,13 +43,13 @@ const AppRoutes = () => {
         <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/add-company" element={<AddCompanyPage />} />
-        <Route path="/add-project" element={<AddProjectPage />} />
+        <Route path="/create-company" element={<CreateCompanyPage />} />
+        <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
         {/* Company routes */}
-        <Route path="/company/:companyName/profile" element={<CompanyPage />} />
-        <Route path="/company/:companyName/people" element={<CompanyPeoplePage />} />
+        <Route path="/company/:companyName" element={<CompanyPage />} />
+        <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
         <Route
           path="/admin"
           element={
