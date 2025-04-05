@@ -116,14 +116,39 @@ const getCompany = async (companyName, token) => {
     console.error('Error details:', message);
     throw new Error(message);
   }
-
-
+}
+const getCompanyPeople = async (companyId, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetUsersOfCompany/${companyId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('Company people data:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error in getCompanyPeople:', error);
+    
+    // Get a meaningful error message like the other functions
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch company people. Please check your connection and try again.";
+      
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
 }
 
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
-  getCompany
+  getCompany,
+  getCompanyPeople
 };
 
 export default CompanyService;
