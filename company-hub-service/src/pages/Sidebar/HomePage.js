@@ -255,7 +255,7 @@ const HomePage = () => {
                       cursor: 'pointer'
                     },
                   }}
-                  onClick={() => navigate(`/company/${company.Name.replace(/\s+/g, '')}`)}
+                  onClick={() => navigate(`/company/${company.name.replace(/\s+/g, '')}`)}
                 >
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
@@ -275,11 +275,11 @@ const HomePage = () => {
                           flexShrink: 0
                         }}
                       >
-                        {getNameInitials(company.Name)}
+                        {getNameInitials(company.name)}
                       </Box>
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography variant="h6" gutterBottom>
-                          {company.Name || 'Unnamed Company'}
+                          {company.name || 'Unnamed Company'}
                         </Typography>
                         
                         {/* Display rating */}
@@ -303,7 +303,7 @@ const HomePage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <MapPin size={16} color={colors.neutral[500]} />
                       <Typography variant="body2" color="text.secondary" sx={{ ml: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {company.Location || 'Location not specified'}
+                        {company.location || 'Location not specified'}
                       </Typography>
                     </Box>
                     
@@ -311,21 +311,21 @@ const HomePage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                       <Users size={16} color={colors.neutral[500]} />
                       <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                        {getCompanySizeText(company.CompanySize)}
+                        {getCompanySizeText(company.companySize)}
                       </Typography>
                     </Box>
                     
                     {/* Founded Year */}
-                    {company.FoundedYear > 0 && (
+                    {company.foundedYear > 0 && (
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                         <Building size={16} color={colors.neutral[500]} />
                         <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                          Founded: {company.FoundedYear}
+                          Founded: {company.foundedYear}
                         </Typography>
                       </Box>
                     )}
                     
-                    {company.Description && (
+                    {company.description && (
                       <Typography 
                         variant="body2" 
                         color="text.secondary" 
@@ -340,11 +340,11 @@ const HomePage = () => {
                           mb: 2
                         }}
                       >
-                        {company.Description}
+                        {company.description}
                       </Typography>
                     )}
 
-                    {renderSpecialties(company.Specialties)}
+                    {renderSpecialties(company.specialties)}
                   </CardContent>
                 </Card>
               </Grid>
