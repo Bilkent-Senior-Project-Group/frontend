@@ -37,9 +37,6 @@ const CompanyPage = () => {
       const companyData = await CompanyService.getCompany(companyName, token);
       console.log("Backend Company Data:", companyData);
       const companyProfile = new CompanyProfileDTO(companyData);
-      console.log("test etmek için");
-      console.log("Projects data:", companyProfile.projects);
-      console.log("company profile: ", companyProfile);
       
       // Use the DTO instead of raw data
       setCompany(companyProfile);
@@ -155,6 +152,9 @@ const CompanyPage = () => {
                   size="large"
                   fullWidth
                   sx={{ mb: 2 }}
+                  href={`mailto:${company.email}`}  // Email link
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Contact Company
                 </Button>
@@ -162,6 +162,9 @@ const CompanyPage = () => {
                   variant="outlined" 
                   size="large"
                   fullWidth
+                  href={company.website?.startsWith('http') ? company.website : `https://${company.website}`}  // Website link with http check
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Visit Website
                 </Button>
@@ -498,6 +501,9 @@ const CompanyPage = () => {
                 <Button 
                   variant="contained" 
                   size="large"
+                  href={`mailto:${company.email}`}  // Email link
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   Contact Company
                 </Button>
