@@ -22,6 +22,7 @@ import { Search } from 'lucide-react';
 import { colors } from '../theme/theme';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios
+import { API_URL } from '../config/apiConfig';
 
 const SearchResultsPage = () => {
   const location = useLocation();
@@ -42,7 +43,7 @@ const SearchResultsPage = () => {
         setError(null);
 
         try {
-            const response = await axios.get(`https://localhost:7181/api/Company/FreeTextSearch/${encodeURIComponent(initialQuery)}`);
+            const response = await axios.get(`${API_URL}/api/Company/FreeTextSearch/${encodeURIComponent(initialQuery)}`);
 
             console.log('API Response:', response.data);
 

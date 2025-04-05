@@ -1,10 +1,7 @@
 import axios from 'axios';
 import { CreateCompanyRequestDTO } from '../DTO/company/CreateCompanyRequestDTO.js';
 import { CompanyProfileDTO } from '../DTO/company/CompanyProfileDTO.js';
-
-
-
-const API_URL = "https://localhost:7181"; // Base URL for the API
+import { API_URL } from '../config/apiConfig';
 
 const createCompany = async (companyData, token) => {
   try {

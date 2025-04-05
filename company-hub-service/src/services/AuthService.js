@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = "https://localhost:7181"; 
+import { API_URL } from '../config/apiConfig';
 
 const signup = async (userData) => {
   try {

@@ -1,7 +1,6 @@
 import axios from 'axios';
 import {ProjectRequestDTO} from '../DTO/project/ProjectRequestDTO.js';
-
-const API_URL = "https://localhost:7181"; // Base URL for the API
+import { API_URL } from '../config/apiConfig';
 
 const createProject = async (projectData, token) => {
   try {
