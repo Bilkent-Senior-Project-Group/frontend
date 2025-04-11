@@ -95,6 +95,11 @@ const CompanyPage = () => {
     ]
   };
 
+  const reviewMockCompany = {
+    rating: 3.6,
+    reviews: 132,
+  };
+
   return (
     <Box>
       {/* Company Header */}
@@ -145,12 +150,12 @@ const CompanyPage = () => {
                       />
                     )}
                   </Box>
-                  {/* <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
-                    <Rating value={company.rating} readOnly precision={0.1} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                    <Rating value={reviewMockCompany.rating} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ ml: 1 }}>
-                      {company.rating} ({company.reviews} reviews)
+                      {reviewMockCompany.rating} ({reviewMockCompany.reviews} reviews)
                     </Typography>
-                  </Box> */}
+                  </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Map size={16} />
