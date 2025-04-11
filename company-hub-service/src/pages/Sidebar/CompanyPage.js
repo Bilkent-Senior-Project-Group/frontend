@@ -15,8 +15,11 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemIcon
+  ListItemIcon,
+  Stack,
+  LinearProgress
 } from '@mui/material';
+import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
@@ -47,14 +50,7 @@ const CompanyPage = () => {
   
   useEffect(() => {
     fetchCompany();
-    // setCompany (mockCompanyDetails);
   }, [companyName]);
-
-  // useEffect(() => {
-  //   // In a real app, you would fetch the company details from your API
-  //   // For this example, we're using mock data
-  //   setCompany(mockCompanyDetails);
-  // }, [companyName]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -71,6 +67,33 @@ const CompanyPage = () => {
       </Container>
     );
   }
+
+  const companyData = {
+    projects: [
+      {
+        type: "Web Development",
+        percentage: 40,
+      },
+      {
+        type: "Mobile Apps",
+        percentage: 30,
+      },
+      {
+        type: "Digital Marketing",
+        percentage: 20,
+      },
+      {
+        type: "Cloud Solutions",
+        percentage: 10,
+      }
+    ],
+    services: [
+      { name: "Web Development", value: 40 },
+      { name: "Mobile Apps", value: 30 },
+      { name: "Digital Marketing", value: 20 },
+      { name: "Cloud Solutions", value: 10 }
+    ]
+  };
 
   return (
     <Box>
@@ -193,11 +216,72 @@ const CompanyPage = () => {
             <Grid container spacing={4}>
               <Grid item xs={12} md={8}>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  About {company.name}
+                  About us
                 </Typography>
                 <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
                   {company.description}
                 </Typography>
+        
+          
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Projects Overview
+                </Typography>
+                <Stack spacing={3}>
+                    {companyData.projects.map((project, index) => (
+                    <Box key={index}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
+                          {project.type}
+                        </Typography>
+                        <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
+                          {project.percentage}%
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={project.percentage}
+                        sx={{
+                          height: 10,
+                          borderRadius: 5,
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: project.color,
+                          },
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              
+            
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+                  Services Breakdown
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <PieChart width={300} height={300}> {/* Increase the height to accommodate the legend */}
+                <Pie
+                  data={companyData.services}
+                  cx={150}
+                  cy={100}
+                  innerRadius={60}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {companyData.services.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={[
+                        colors.primary[500],
+                        colors.primary[400],
+                        colors.primary[300],
+                        colors.primary[600], {/* Added an additional color for the 4th item */}
+                      ][index % 4]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend/>
+              </PieChart>
+                </Box>
                 
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                   Key Expertise
