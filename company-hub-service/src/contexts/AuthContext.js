@@ -13,6 +13,21 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const location = useLocation();
 
+  const logout = React.useCallback(async () => {
+    try {
+      if (token) {
+        await AuthService.logout(token);
+        console.log("Logout successful");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null); // Reset token state
+    setUser(null); // Reset user state
+  }, [token]);
+
   // Load user from localStorage on app startup
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -21,6 +36,7 @@ export const AuthProvider = ({ children }) => {
     if (storedToken && storedUser) {
       try {
         if (isTokenExpired(storedToken)) {
+          console.log("Token expired, logging out...");
           logout();
         } else {
           setToken(storedToken);
@@ -31,7 +47,7 @@ export const AuthProvider = ({ children }) => {
         logout(); // Clear invalid token
       }
     }
-  }, [location]);
+  }, [location, logout]);
 
   const login = async (email, password) => {
     try {
@@ -49,20 +65,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    try {
-      if (token) {
-        await AuthService.logout(token);
-        console.log("Logout successful");
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null); // Reset token state
-    setUser(null); // Reset user state
-  };
+  
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
