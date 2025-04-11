@@ -76,13 +76,6 @@ export const AuthProvider = ({ children }) => {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const expiryInSeconds = payload.exp;
       const expiryInMs = expiryInSeconds * 1000;
-  
-      
-      console.log("expiry in ms:", expiryInMs);
-      console.log("expiry in seconds:", expiryInSeconds);
-      console.log("current time in ms:", Date.now());
-      console.log("difference in seconds:", (Date.now() - expiryInMs) / 1000);
-      console.log("is expired:", Date.now() > expiryInMs);
       return Date.now() > expiryInMs;
     } catch (err) {
       console.error("Failed to decode token", err);
