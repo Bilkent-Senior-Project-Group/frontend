@@ -47,9 +47,14 @@ const AppRoutes = () => {
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
+
         {/* Company routes */}
         <Route path="/company/:companyName" element={<CompanyPage />} />
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
+
+        {/* Project routes */}
+        
+        {/* Admin Routes */}
         <Route
           path="/admin"
           element={

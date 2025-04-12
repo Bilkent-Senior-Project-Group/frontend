@@ -4,7 +4,6 @@ import { API_URL } from '../config/apiConfig';
 
 const createProject = async (projectData, token) => {
   try {
-    // Get the authentication token
     console.log(token);
     if (!token) {
       throw new Error('You must be logged in to create a project');
@@ -14,7 +13,7 @@ const createProject = async (projectData, token) => {
     const projectDTO = ProjectRequestDTO.fromFormData(projectData);
 
     const response = await axios.post(
-      `${API_URL}/api/Project/CreateProjectRequest`, 
+      `${API_URL}/api/Project/CreateProjectRequestByName`, 
       projectDTO,
       {
         headers: {

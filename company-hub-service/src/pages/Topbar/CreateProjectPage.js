@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -10,12 +10,11 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  MenuItem,
-  FormControlLabel,
-  Checkbox
+  Autocomplete
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import ProjectService from '../../services/ProjectService';
+import CompanyService from '../../services/CompanyService';
 import { colors } from '../../theme/theme';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -27,8 +26,8 @@ const CreateProjectPage = () => {
     clientType: '',
     impact: '',
     technologiesUsed: [''],
-    clientCompanyId: '',
-    providerCompanyId: ''
+    clientCompanyName: '',
+    providerCompanyName: ''
   });
 
   // Add states for loading and notifications
@@ -39,10 +38,55 @@ const CreateProjectPage = () => {
     severity: 'info'
   });
 
+  // States for company autocomplete
+  const [clientCompanyOptions, setClientCompanyOptions] = useState([]);
+  const [providerCompanyOptions, setProviderCompanyOptions] = useState([]);
+  const [clientInputValue, setClientInputValue] = useState('');
+  const [providerInputValue, setProviderInputValue] = useState('');
+
   const navigate = useNavigate();
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
   const {token} = useAuth();
+
+  // Fetch companies when input changes
+  useEffect(() => {
+    const fetchClientCompanies = async () => {
+      if (clientInputValue.length >= 2) {
+        try {
+          const companies = await CompanyService.searchCompaniesByName(clientInputValue);
+          setClientCompanyOptions(companies);
+        } catch (error) {
+          console.error("Error fetching client companies:", error);
+        }
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchClientCompanies();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [clientInputValue]);
+
+  useEffect(() => {
+    const fetchProviderCompanies = async () => {
+      if (providerInputValue.length >= 2) {
+        try {
+          const companies = await CompanyService.searchCompaniesByName(providerInputValue);
+          setProviderCompanyOptions(companies);
+        } catch (error) {
+          console.error("Error fetching provider companies:", error);
+        }
+      }
+    };
+
+    const timer = setTimeout(() => {
+      fetchProviderCompanies();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [providerInputValue]);
 
   const handleProjectDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -60,28 +104,38 @@ const CreateProjectPage = () => {
     }));
   };
 
-  function isValidGuid(str) {
-    const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return guidRegex.test(str);
-  }
-  
-  // Convert string to GUID if needed
-  function convertToGuid(value) {
-    if (!value) return null;
-    if (isValidGuid(value)) return value; // Already a valid GUID
-    throw new Error(`Invalid GUID format: ${value}`);
-  }
+  const validateForm = () => {
+    const errors = {};
+    if (!projectDetails.name || projectDetails.name.trim() === '') {
+      errors.name = "Project name is required";
+    }
+    if (!projectDetails.clientCompanyName || projectDetails.clientCompanyName.trim() === '') {
+      errors.clientCompanyName = "Client company is required";
+    }
+    if (!projectDetails.providerCompanyName || projectDetails.providerCompanyName.trim() === '') {
+      errors.providerCompanyName = "Provider company is required";
+    }
+    return errors;
+  };
 
   const handleSubmit = async () => {
     // Reset states
     setValidationErrors({});
     setError(null);
+    
+    // Validate required fields
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setValidationErrors(formErrors);
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       // Ensure we have the correct format before submission
       const formData = {
-        name: projectDetails.name || 'Untitled Project',
+        name: projectDetails.name,
         description: projectDetails.description || 'No description provided',
         industry: projectDetails.industry || '',
         clientType: projectDetails.clientType || 'Unknown',
@@ -89,8 +143,8 @@ const CreateProjectPage = () => {
         technologiesUsed: projectDetails.technologiesUsed.length > 0 && projectDetails.technologiesUsed[0] !== '' 
           ? projectDetails.technologiesUsed 
           : ['Not specified'],
-        clientCompanyId: projectDetails.clientCompanyId || null,
-        providerCompanyId: projectDetails.providerCompanyId || null,
+        clientCompanyName: projectDetails.clientCompanyName,
+        providerCompanyName: projectDetails.providerCompanyName,
       };
       
       const response = await ProjectService.createProject(formData, token);
@@ -149,33 +203,6 @@ const CreateProjectPage = () => {
     }));
   };
 
-  // Sample industry options (you might want to fetch these from an API)
-  const industryOptions = [
-    'Technology',
-    'Finance',
-    'Healthcare',
-    'Education',
-    'Manufacturing',
-    'Retail',
-    'Construction',
-    'Entertainment',
-    'Food & Beverage',
-    'Transportation',
-    'Energy',
-    'Other'
-  ];
-
-  // Sample client types
-  const clientTypeOptions = [
-    'Enterprise',
-    'Small Business',
-    'Startup',
-    'Government',
-    'Non-profit',
-    'Individual',
-    'Other'
-  ];
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
@@ -211,7 +238,6 @@ const CreateProjectPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              select
               label="Industry"
               name="industry"
               value={projectDetails.industry}
@@ -219,18 +245,11 @@ const CreateProjectPage = () => {
               variant="outlined"
               error={!!validationErrors.industry}
               helperText={validationErrors.industry}
-            >
-              {industryOptions.map(option => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
+            />
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              select
               label="Client Type"
               name="clientType"
               value={projectDetails.clientType}
@@ -238,36 +257,64 @@ const CreateProjectPage = () => {
               variant="outlined"
               error={!!validationErrors.clientType}
               helperText={validationErrors.clientType}
-            >
-              {clientTypeOptions.map(option => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Client Company ID"
-              name="clientCompanyId"
-              value={projectDetails.clientCompanyId}
-              onChange={handleProjectDetailsChange}
-              variant="outlined"
-              error={!!validationErrors.clientCompanyId}
-              helperText={validationErrors.clientCompanyId}
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Provider Company ID"
-              name="providerCompanyId"
-              value={projectDetails.providerCompanyId}
-              onChange={handleProjectDetailsChange}
-              variant="outlined"
-              error={!!validationErrors.providerCompanyId}
-              helperText={validationErrors.providerCompanyId}
+            <Autocomplete
+              options={clientCompanyOptions}
+              getOptionLabel={(option) => option.companyName || ''}
+              inputValue={clientInputValue}
+              onInputChange={(event, newInputValue) => {
+                setClientInputValue(newInputValue);
+              }}
+              onChange={(event, newValue) => {
+                setProjectDetails(prev => ({
+                  ...prev,
+                  clientCompanyName: newValue?.companyName || ''
+                }));
+              }}
+              isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Client Company"
+                  required
+                  error={!!validationErrors.clientCompanyName}
+                  helperText={validationErrors.clientCompanyName}
+                  variant="outlined"
+                />
+              )}
+              freeSolo
+              noOptionsText="Type to search companies"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Autocomplete
+              options={providerCompanyOptions}
+              getOptionLabel={(option) => option.companyName || ''}
+              inputValue={providerInputValue}
+              onInputChange={(event, newInputValue) => {
+                setProviderInputValue(newInputValue);
+              }}
+              onChange={(event, newValue) => {
+                setProjectDetails(prev => ({
+                  ...prev,
+                  providerCompanyName: newValue?.companyName || ''
+                }));
+              }}
+              isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Provider Company"
+                  required
+                  error={!!validationErrors.providerCompanyName}
+                  helperText={validationErrors.providerCompanyName}
+                  variant="outlined"
+                />
+              )}
+              freeSolo
+              noOptionsText="Type to search companies"
             />
           </Grid>
           <Grid item xs={12}>
@@ -306,7 +353,6 @@ const CreateProjectPage = () => {
               multiline
               rows={4}
               variant="outlined"
-              required
               error={!!validationErrors.description}
               helperText={validationErrors.description}
             />
