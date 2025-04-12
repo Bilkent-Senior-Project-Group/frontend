@@ -34,13 +34,16 @@ import {
   FileText as FileTextIcon,
   Plus as PlusIcon,       // Rename import to PlusIcon
   ChevronUp as ChevronUpIcon,   // Rename import to ChevronUpIcon
-  HelpCircle as HelpCircleIcon   // Rename import to HelpCircleIcon  
+  HelpCircle as HelpCircleIcon,   // Rename import to HelpCircleIcon  
+  Moon as MoonIcon,  // Add this import
+  Sun as SunIcon    // Add this import
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeContext } from '../contexts/ThemeContext';  // Add this import
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -54,6 +57,7 @@ const RootLayout = () => {
   const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   const { user, logout } = useAuth();
+  const { mode, toggleColorMode } = useThemeContext();  // Add this line to access theme context
 
   // Sample companies data
   const companies = user?.companies || [];
@@ -181,6 +185,13 @@ const RootLayout = () => {
           </Paper>
 
           <Box sx={{ flexGrow: 1 }} />
+
+          {/* Add Theme Toggle Button here */}
+          <Tooltip title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}>
+            <IconButton onClick={toggleColorMode} sx={{ ml: 1 }}>
+              {mode === 'light' ? <MoonIcon size={20} /> : <SunIcon size={20} />}
+            </IconButton>
+          </Tooltip>
 
           {/* Notification and Add Menu */}
           <IconButton>
