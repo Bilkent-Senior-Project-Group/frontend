@@ -20,6 +20,10 @@ import RootLayout from '../layouts/RootLayout';
 import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import SearchResultsPage from '../pages/SearchResultsPage';
+import ProjectsPage from '../pages/Sidebar/ProjectsPage';
+import Project from '../pages/Sidebar/Projects/Project';
+import ProjectRequestsPage from '../pages/Sidebar/Projects/ProjectRequestsPage';
+import EditProjectPage from '../pages/Sidebar/Projects/EditProjectPage';
 import { useAuth } from '../contexts/AuthContext';
 
 
@@ -53,7 +57,14 @@ const AppRoutes = () => {
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
 
         {/* Project routes */}
-        
+        {/* <Route path="/company/projects/:companyName" element={<ProjectsPage />} /> */}
+        <Route path="/company/projects" element={<ProjectsPage />} />
+        <Route path="/company/projects/:projectId" element={<Project />} />
+        {/* <Route path="/company/projects/project-requests/:companyName" element={<Project />} /> */}
+        <Route path="/company/projects/project-requests" element={<ProjectRequestsPage />} />
+        {/* <Route path="/company/projects/edit-project/:projectId" element={<EditProjectPage />} /> */}
+        <Route path="/company/projects/edit-project" element={<EditProjectPage />} />
+
         {/* Admin Routes */}
         <Route
           path="/admin"
