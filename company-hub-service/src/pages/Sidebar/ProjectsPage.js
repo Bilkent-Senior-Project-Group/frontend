@@ -32,7 +32,7 @@ const ProjectsPage = () => {
   const { token } = useAuth();
 
   useEffect(() => {
-    // This will be replaced with actual API call when backend is ready
+    
     const fetchProjects = async () => {
       try {
         setLoading(true);
@@ -45,12 +45,15 @@ const ProjectsPage = () => {
         setLoading(false);
         console.error('Error fetching projects:', err);
       }
+        finally {
+            setLoading(false);
+        }
     };
 
     fetchProjects();
-  }, [token]);
+  }, [token, companyName]);
 
-  const handleViewProject = (projectId) => {
+  const handleViewProject = (projectId, companyName) => {
     navigate(`/company/projects/${companyName}/${projectId}`);
   };
 

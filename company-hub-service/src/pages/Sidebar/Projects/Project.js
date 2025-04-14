@@ -33,9 +33,10 @@ import {
 import { colors } from '../../../../src/theme/theme.js';
 import ProjectService from '../../../services/ProjectService.js';
 import { useAuth } from '../../../contexts/AuthContext.js';
+import ProjectDTO from '../../../DTO/project/ProjectDTO.js';
 
 const Project = () => {
-  const { projectId } = useParams();
+  const [companyName, projectId] = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,34 +49,10 @@ const Project = () => {
       try {
         setLoading(true);
         
-        // This will be replaced with actual API call when backend is ready
-        // For now using mock data
-        // Simulated data structure based on ProjectDTO
-        setTimeout(() => {
-          const mockProject = {
-            ProjectId: '1',
-            ProjectName: 'Enterprise Resource Planning System',
-            Description: 'A comprehensive ERP solution designed for medium to large enterprises. The system includes modules for inventory management, human resources, accounting, and customer relationship management. Built with scalability in mind, it can support organizations with up to 5,000 employees and millions of transactions daily.',
-            TechnologiesUsed: ['React', 'Node.js', 'PostgreSQL', 'Redis', 'Docker', 'Kubernetes', 'AWS'],
-            Industry: 'Manufacturing',
-            Impact: 'Reduced operational costs by 35% and improved process efficiency by 40%. Consolidated 5 separate systems into a single integrated platform.',
-            StartDate: '2023-06-15T00:00:00Z',
-            CompletionDate: '2024-09-30T00:00:00Z',
-            IsOnCompedia: true,
-            IsCompleted: true,
-            ProjectUrl: 'https://erp-project-example.com',
-            ClientType: 'External',
-            ClientCompanyName: 'Global Manufacturing Solutions Ltd',
-            ProviderCompanyName: 'Your Company'
-          };
-          
-          setProject(mockProject);
-          setLoading(false);
-        }, 1000);
-        
-        // When backend is ready, replace with:
-        // const response = await ProjectService.getProjectById(projectId, token);
-        // setProject(response.data);
+        const response = await ProjectService.getProjectById(projectId, token);
+        const projectData = new ProjectDTO(response.data);
+        setLoading(false);
+        setProject(projectData);
       } catch (err) {
         setError('Failed to load project details. Please try again later.');
         setLoading(false);
@@ -84,14 +61,14 @@ const Project = () => {
     };
 
     fetchProjectDetails();
-  }, [projectId, token]);
+  }, [companyName, projectId, token]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
   const handleBack = () => {
-    navigate('/company/projects/');
+    navigate(`/company/projects/${companyName}`);
   };
 
   const handleEdit = () => {
