@@ -57,8 +57,7 @@ const AppRoutes = () => {
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
 
         {/* Project routes */}
-        {/* <Route path="/company/projects/:companyName" element={<ProjectsPage />} /> */}
-        <Route path="/company/projects" element={<ProjectsPage />} />
+        <Route path="/company/projects/:companyName" element={<ProjectsPage />} />
         <Route path="/company/projects/:projectId" element={<Project />} />
         {/* <Route path="/company/projects/project-requests/:companyName" element={<Project />} /> */}
         <Route path="/company/projects/project-requests" element={<ProjectRequestsPage />} />

@@ -48,34 +48,36 @@ const VisuallyHiddenInput = styled('input')({
 
 const CreateCompanyPage = () => {
   const [companyDetails, setCompanyDetails] = useState({
-    name: '',              
+    companyName: '',              
     description: '',       
-    foundingYear: '',    
-    location: '',           
-    employeeSize: '',       
-    websiteUrl: '',          
-    specialties: '',         
-    industries: '',          
+    foundedYear: '',  
+    address: '',  
+    location: -1,           
+    companySize: '',       
+    website: '',          
+    services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"],
+    partnerships: [],  
+    portfolio: [],  
     phone: '',
-    email: '',         
-    coreExpertise: ''        
+    email: '',                
   });
 
   const [projects, setProjects] = useState([]);
   const [openProjectDialog, setOpenProjectDialog] = useState(false);
   const [currentProject, setCurrentProject] = useState({
-    name: '',
-    description: '',      
-    industry: '',           
+    projectName: '',
+    description: '',                 
     completionDate: '',
-    technologiesUsed: [''],   
-    impact: '',               
-    startDate: '',            
-    isCompleted: true,        
+    technologiesUsed: [''],               
+    startDate: '',  
+    completionDate: '',          
+    isCompleted: true,     
+    isOnCompedia: false,   
     projectUrl: '',      
     clientType: '',
     clientCompanyName: '',
     providerCompanyName: '',
+    services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"],  
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
   
@@ -96,7 +98,7 @@ const CreateCompanyPage = () => {
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
     // Ensure employeeSize is stored as a string
-    if (name === 'employeeSize') {
+    if (name === 'companySize') {
       setCompanyDetails(prev => ({
         ...prev,
         [name]: value.toString()
@@ -133,22 +135,19 @@ const CreateCompanyPage = () => {
     // Ensure all required fields have default values
     const formattedProject = {
       ...currentProject,
-      name: currentProject.name || 'Untitled Project',
       projectName: currentProject.name || 'Untitled Project',
       description: currentProject.description || 'No description provided',
       startDate: currentProject.startDate || new Date().toISOString().split('T')[0],
       completionDate: currentProject.completionDate || new Date().toISOString().split('T')[0],
-      technologiesUsed: Array.isArray(currentProject.technologiesUsed) && 
-                        currentProject.technologiesUsed.length > 0 && 
-                        currentProject.technologiesUsed[0] !== '' 
-                        ? currentProject.technologiesUsed 
-                        : ['Not specified'],
-      isCompleted: currentProject.isCompleted !== undefined ? currentProject.isCompleted : true,
+      technologiesUsed: currentProject.technologiesUsed || [''],
+      isCompleted: true,
       projectUrl: currentProject.projectUrl || 'https://example.com', // Default URL for validation
       clientType: currentProject.clientType || 'Unknown', // Default client type for validation
       // Ensure company objects have valid structure
       clientCompanyName: currentProject.clientCompanyName || 'Unknown Client',
-      providerCompanyName: currentProject.providerCompanyName || 'Unknown Provider'
+      providerCompanyName: currentProject.providerCompanyName || 'Unknown Provider',
+      isOnCompedia: false,
+      services: currentProject.services || ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"]
     };
   
     if (editingProjectIndex !== null) {
@@ -164,18 +163,18 @@ const CreateCompanyPage = () => {
     
     // Reset project dialog
     setCurrentProject({
-      name: '',
+      projectName: '',
       description: '',
-      industry: '',
       clientType: '',
       completionDate: '',
       startDate: '',
-      impact: '',
       technologiesUsed: [''],
       projectUrl: '',
       isCompleted: true,
+      isOnCompedia: false,
       clientCompanyName: '',
-      providerCompanyName: ''
+      providerCompanyName: '',
+      services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"]
     });
     setOpenProjectDialog(false);
   };
@@ -184,19 +183,19 @@ const CreateCompanyPage = () => {
     const project = projects[index];
     
     setCurrentProject({
-        name: project.name || '',
+        projectName: project.projectName || '',
         description: project.description || '',
-        type: project.type || '',
         startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
         completionDate: project.completionDate ? new Date(project.completionDate).toISOString().split('T')[0] : '',
-        impact: project.impact || '',
         technologiesUsed: project.technologiesUsed || [''],
         projectUrl: project.projectUrl || '',
         isCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
+        isOnCompedia: project.isOnCompedia !== undefined ? project.isOnCompedia : false,
         clientType: project.clientType || '',
         // Update these to ensure proper DTO structure
         clientCompanyName: project.clientCompanyName || '',
-        providerCompanyName: project.providerCompanyName || ''
+        providerCompanyName: project.providerCompanyName || '',
+        services: project.services || ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"],
     });
     
     setEditingProjectIndex(index);
@@ -225,10 +224,21 @@ const CreateCompanyPage = () => {
     
     try {
       // Prepare form data for DTO conversion
-      const formData = {
-        companyDetails,
-        projects
-    };
+      companyDetails.portfolio = projects.map(project => ({
+        projectName: project.projectName,
+        description: project.description,
+        startDate: project.startDate,
+        completionDate: project.completionDate,
+        clientType: project.clientType,
+        projectUrl: project.projectUrl,
+        isCompleted: project.isCompleted,
+        isOnCompedia: project.isOnCompedia,
+        clientCompanyName: project.clientCompanyName,
+        providerCompanyName: project.providerCompanyName,
+        technologiesUsed: project.technologiesUsed,
+        services: project.services,
+      }));
+      const formData = companyDetails;
       
       const response = await CompanyService.createCompany(formData, token);
 
@@ -325,8 +335,8 @@ const CreateCompanyPage = () => {
             <TextField
               fullWidth
               label="Company Name"
-              name="name"
-              value={companyDetails.name}
+              name="companyName"
+              value={companyDetails.companyName}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
               required
@@ -342,14 +352,27 @@ const CreateCompanyPage = () => {
               variant="outlined"
               required
               helperText="This will be used for both Address and Location"
+              type="number"
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="address"
+              name="address"
+              value={companyDetails.address}
+              onChange={handleCompanyDetailsChange}
+              variant="outlined"
+              required
+              helperText="This will be used for both Address"
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Founding Year"
-              name="foundingYear"
-              value={companyDetails.foundingYear}
+              label="Founded Year"
+              name="foundedYear"
+              value={companyDetails.foundedYear}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
               required
@@ -359,9 +382,9 @@ const CreateCompanyPage = () => {
           <Grid item xs={12} md={4}>
             <TextField
               fullWidth
-              label="Employee Size"
-              name="employeeSize"
-              value={companyDetails.employeeSize}
+              label="Company Size"
+              name="companySize"
+              value={companyDetails.companySize}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
               type="text"
@@ -372,28 +395,8 @@ const CreateCompanyPage = () => {
             <TextField
               fullWidth
               label="Website URL"
-              name="websiteUrl"
-              value={companyDetails.websiteUrl}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Specialties"
-              name="specialties"
-              value={companyDetails.specialties || ''}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Industries"
-              name="industries"
-              value={companyDetails.industries || ''}
+              name="website"
+              value={companyDetails.website}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
             />
@@ -414,16 +417,6 @@ const CreateCompanyPage = () => {
               label="Email Address"
               name="email"
               value={companyDetails.email || ''}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Core Expertise"
-              name="coreExpertise"
-              value={companyDetails.coreExpertise || ''}
               onChange={handleCompanyDetailsChange}
               variant="outlined"
             />
@@ -465,18 +458,18 @@ const CreateCompanyPage = () => {
             }}
             onClick={() => {
               setCurrentProject({
-                name: '',
+                projectName: '',
                 description: '',
-                industry: '',
                 clientType: '',
                 completionDate: '',
                 startDate: '',
-                impact: '',
                 technologiesUsed: [''],
                 projectUrl: '',
                 isCompleted: true,
+                isOnCompedia: false,
                 clientCompanyName: '',
-                providerCompanyName: ''
+                providerCompanyName: '',
+                services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"]
               });
               setEditingProjectIndex(null);
               setOpenProjectDialog(true);
@@ -498,21 +491,13 @@ const CreateCompanyPage = () => {
               }}
             >
               <Typography variant="h6" gutterBottom>
-                {project.name}
+                {project.projectName}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {project.description}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Chip 
-                    label={project.type || 'Unspecified'} 
-                    size="small" 
-                    sx={{ 
-                      bgcolor: colors.primary[100],
-                      color: colors.primary[700],
-                    }}
-                  />
                   <Typography variant="caption" color="text.secondary">
                     {project.completionDate ? new Date(project.completionDate).toLocaleDateString() : 'No date'}
                   </Typography>
@@ -656,21 +641,11 @@ const CreateCompanyPage = () => {
               <TextField
                 fullWidth
                 label="Project Name"
-                name="name"
-                value={currentProject.name}
+                name="projectName"
+                value={currentProject.projectName}
                 onChange={handleProjectChange}
                 variant="outlined"
                 required
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Industry"
-                name="industry"
-                value={currentProject.industry || ''}
-                onChange={handleProjectChange}
-                variant="outlined"
               />
             </Grid>
             <Grid item xs={12} md={6}>
@@ -733,16 +708,6 @@ const CreateCompanyPage = () => {
                 label="Provider Company"
                 name="providerCompanyName"
                 value={currentProject.providerCompanyName || ''}
-                onChange={handleProjectChange}
-                variant="outlined"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Impact"
-                name="impact"
-                value={currentProject.impact || ''}
                 onChange={handleProjectChange}
                 variant="outlined"
               />

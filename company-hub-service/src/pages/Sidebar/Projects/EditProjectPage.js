@@ -179,7 +179,7 @@ const EditProjectPage = () => {
     setSaving(true);
     
     // Create a ProjectDTO from form data
-    const projectDTO = ProjectDTO.fromFormData(project);
+    const projectDTO = new ProjectDTO(project);
     
     console.log("Project to save:", projectDTO);
     
@@ -198,7 +198,7 @@ const EditProjectPage = () => {
       setError(null);
       
       // Create a ProjectDTO from form data
-      const projectDTO = ProjectDTO.fromFormData(project);
+      const projectDTO = new ProjectDTO(project);
       
       // Update the project
       await ProjectService.updateProject(projectId, projectDTO);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -20,8 +20,11 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { colors } from '../../theme/theme.js';
+import CompanyService from '../../services/CompanyService.js';
+import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO.js';
 
 const ProjectsPage = () => {
+    const { companyName } = useParams();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,67 +36,10 @@ const ProjectsPage = () => {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        // Simulated data for now - using your ProjectDTO structure
-        const mockProjects = [
-          {
-            ProjectId: 1,
-            ProjectName: 'E-commerce Platform',
-            Description: 'A modern e-commerce solution with integrated payment processing',
-            TechnologiesUsed: ['React', 'Node.js', 'MongoDB'],
-            Industry: 'Retail',
-            Impact: 'Increased sales by 30%',
-            StartDate: '2024-03-15T00:00:00Z',
-            CompletionDate: '2025-01-15T00:00:00Z',
-            IsOnCompedia: true,
-            IsCompleted: true,
-            ProjectUrl: 'https://ecommerce-example.com',
-            ClientType: 'External',
-            ClientCompanyName: 'Retail Solutions Inc.',
-            ProviderCompanyName: 'Your Company'
-          },
-          {
-            ProjectId: 2,
-            ProjectName: 'CRM System',
-            Description: 'Customer relationship management system with analytics dashboard',
-            TechnologiesUsed: ['Angular', 'C#', 'SQL Server'],
-            Industry: 'Business Services',
-            Impact: 'Improved customer retention by 25%',
-            StartDate: '2024-10-01T00:00:00Z',
-            CompletionDate: null,
-            IsOnCompedia: false,
-            IsCompleted: false,
-            ProjectUrl: 'https://crm-example.com',
-            ClientType: 'External',
-            ClientCompanyName: 'Business Services Ltd',
-            ProviderCompanyName: 'Your Company'
-          },
-          {
-            ProjectId: 3,
-            ProjectName: 'Mobile Banking App',
-            Description: 'Secure mobile banking application with biometric authentication',
-            TechnologiesUsed: ['Flutter', 'Firebase', 'Swift'],
-            Industry: 'Finance',
-            Impact: 'Reduced transaction time by 40%',
-            StartDate: '2024-11-01T00:00:00Z',
-            CompletionDate: null,
-            IsOnCompedia: false,
-            IsCompleted: false,
-            ProjectUrl: 'https://banking-example.com',
-            ClientType: 'External',
-            ClientCompanyName: 'FinTech Solutions',
-            ProviderCompanyName: 'Your Company'
-          },
-        ];
-        
-        // Simulate API delay
-        setTimeout(() => {
-          setProjects(mockProjects);
-          setLoading(false);
-        }, 800);
-        
-        // When backend is ready, replace with:
-        // const response = await ProjectService.getCompanyProjects(token);
-        // setProjects(response.data);
+        const companyData = await CompanyService.getCompany(companyName, token);
+        console.log("Backend Company Data:", companyData);
+        const companyProfile = new CompanyProfileDTO(companyData);
+        setProjects(companyProfile.projects);
       } catch (err) {
         setError('Failed to load projects. Please try again later.');
         setLoading(false);
@@ -105,7 +51,7 @@ const ProjectsPage = () => {
   }, [token]);
 
   const handleViewProject = (projectId) => {
-    navigate(`/company/projects/${projectId}`);
+    navigate(`/company/projects/${companyName}/${projectId}`);
   };
 
   const handleEditProject = (projectId, e) => {
@@ -129,7 +75,7 @@ const ProjectsPage = () => {
 
   const getPartnerCompanyName = (project) => {
     // Simplified for now to just show one partner company
-    return project.ClientCompanyName || 'No partner company';
+    return project.clientCompanyName || 'No partner company';
   };
 
   if (loading) {
@@ -147,9 +93,9 @@ const ProjectsPage = () => {
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box sx={{ 
           p: 2, 
-          backgroundColor: colors.error.light,
+          backgroundColor: '#ffebee',  // Light red color
           borderRadius: 1,
-          color: colors.error.dark
+          color: '#c62828'  // Dark red color
         }}>
           <Typography>{error}</Typography>
         </Box>
@@ -224,7 +170,7 @@ return (
             ) : (
                 <Grid container spacing={3}>
                     {projects.map((project) => (
-                        <Grid item xs={12} md={6} lg={4} key={project.ProjectId}>
+                        <Grid item xs={12} md={6} lg={4} key={project.projectId}>
                             <Card 
                                 elevation={1} 
                                 sx={{ 
@@ -236,18 +182,18 @@ return (
                                         boxShadow: 3
                                     }
                                 }}
-                                onClick={() => handleViewProject(project.ProjectId)}
+                                onClick={() => handleViewProject(project.projectId)}
                             >
                                 <CardContent>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                                         <Chip 
-                                            label={project.IsCompleted ? 'Completed' : 'Ongoing'} 
-                                            color={getStatusColor(project.IsCompleted)} 
+                                            label={project.isCompleted ? 'Completed' : 'Ongoing'} 
+                                            color={getStatusColor(project.isCompleted)} 
                                             size="small" 
                                         />
                                         <IconButton 
                                             size="small"
-                                            onClick={(e) => handleEditProject(project.ProjectId, e)}
+                                            onClick={(e) => handleEditProject(project.projectId, e)}
                                             sx={{ 
                                                 color: colors.neutral[500],
                                                 '&:hover': { color: colors.primary[500] } 
@@ -258,7 +204,7 @@ return (
                                     </Box>
                                     
                                     <Typography variant="h6" component="div" sx={{ fontWeight: 500, mb: 1 }}>
-                                        {project.ProjectName}
+                                        {project.projectName}
                                     </Typography>
                                     
                                     <Typography 
@@ -273,11 +219,11 @@ return (
                                             WebkitBoxOrient: 'vertical',
                                         }}
                                     >
-                                        {project.Description}
+                                        {project.description}
                                     </Typography>
                                     
                                     <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}>
-                                        {project.TechnologiesUsed.slice(0, 3).map((tech, index) => (
+                                        {project.technologiesUsed.slice(0, 3).map((tech, index) => (
                                             <Chip 
                                                 key={index} 
                                                 label={tech} 
@@ -286,9 +232,9 @@ return (
                                                 sx={{ fontSize: '0.7rem' }}
                                             />
                                         ))}
-                                        {project.TechnologiesUsed.length > 3 && (
+                                        {project.technologiesUsed.length > 3 && (
                                             <Chip 
-                                                label={`+${project.TechnologiesUsed.length - 3}`} 
+                                                label={`+${project.technologiesUsed.length - 3}`} 
                                                 size="small" 
                                                 variant="outlined"
                                                 sx={{ fontSize: '0.7rem' }}
@@ -307,32 +253,24 @@ return (
                                                 {getPartnerCompanyName(project)}
                                             </Typography>
                                         </Box>
-                                        
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Industry:
-                                            </Typography>
-                                            <Typography variant="body2">
-                                                {project.Industry}
-                                            </Typography>
-                                        </Box>
+
                                         
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                             <Typography variant="body2" color="text.secondary">
                                                 Started:
                                             </Typography>
                                             <Typography variant="body2">
-                                                {formatDate(project.StartDate)}
+                                                {formatDate(project.startDate)}
                                             </Typography>
                                         </Box>
                                         
-                                        {project.IsCompleted && (
+                                        {project.isCompleted && (
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                                 <Typography variant="body2" color="text.secondary">
                                                     Completed:
                                                 </Typography>
                                                 <Typography variant="body2">
-                                                    {formatDate(project.CompletionDate)}
+                                                    {formatDate(project.completionDate)}
                                                 </Typography>
                                             </Box>
                                         )}

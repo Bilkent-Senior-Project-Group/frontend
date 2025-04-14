@@ -11,7 +11,7 @@ const createCompany = async (companyData, token) => {
     }
 
     // Convert form data to DTO
-    const companyDTO = CreateCompanyRequestDTO.fromFormData(companyData);
+    const companyDTO = new CreateCompanyRequestDTO(companyData);
 
     // Validate before sending
     const validationErrors = companyDTO.validate();

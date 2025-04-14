@@ -20,14 +20,14 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const CreateProjectPage = () => {
   const [projectDetails, setProjectDetails] = useState({
-    name: '',
+    projectName: '',
     description: '',
-    industry: '',
     clientType: '',
     impact: '',
     technologiesUsed: [''],
     clientCompanyName: '',
-    providerCompanyName: ''
+    providerCompanyName: '',
+    services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"],
   });
 
   // Add states for loading and notifications
@@ -106,8 +106,8 @@ const CreateProjectPage = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!projectDetails.name || projectDetails.name.trim() === '') {
-      errors.name = "Project name is required";
+    if (!projectDetails.projectName || projectDetails.projectName.trim() === '') {
+      errors.projectName = "Project name is required";
     }
     if (!projectDetails.clientCompanyName || projectDetails.clientCompanyName.trim() === '') {
       errors.clientCompanyName = "Client company is required";
@@ -135,9 +135,8 @@ const CreateProjectPage = () => {
     try {
       // Ensure we have the correct format before submission
       const formData = {
-        name: projectDetails.name,
+        projectName: projectDetails.projectName,
         description: projectDetails.description || 'No description provided',
-        industry: projectDetails.industry || '',
         clientType: projectDetails.clientType || 'Unknown',
         impact: projectDetails.impact || '',
         technologiesUsed: projectDetails.technologiesUsed.length > 0 && projectDetails.technologiesUsed[0] !== '' 
@@ -145,6 +144,7 @@ const CreateProjectPage = () => {
           : ['Not specified'],
         clientCompanyName: projectDetails.clientCompanyName,
         providerCompanyName: projectDetails.providerCompanyName,
+        services: projectDetails.services,
       };
       
       const response = await ProjectService.createProject(formData, token);
@@ -226,25 +226,13 @@ const CreateProjectPage = () => {
             <TextField
               fullWidth
               label="Project Name"
-              name="name"
-              value={projectDetails.name}
+              name="projectName"
+              value={projectDetails.projectName}
               onChange={handleProjectDetailsChange}
               variant="outlined"
               required
-              error={!!validationErrors.name}
-              helperText={validationErrors.name}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Industry"
-              name="industry"
-              value={projectDetails.industry}
-              onChange={handleProjectDetailsChange}
-              variant="outlined"
-              error={!!validationErrors.industry}
-              helperText={validationErrors.industry}
+              error={!!validationErrors.projectName}
+              helperText={validationErrors.projectName}
             />
           </Grid>
           <Grid item xs={12} md={6}>

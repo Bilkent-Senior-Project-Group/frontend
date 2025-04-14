@@ -10,7 +10,7 @@ const createProject = async (projectData, token) => {
     }
     
     // Convert form data to DTO
-    const projectDTO = ProjectRequestDTO.fromFormData(projectData);
+    const projectDTO = new ProjectRequestDTO(projectData);
 
     const response = await axios.post(
       `${API_URL}/api/Project/CreateProjectRequestByName`, 
@@ -46,40 +46,40 @@ const createProject = async (projectData, token) => {
   }
 };
 
-const getCompanyProjects = async (token) => {
-  try {
-    if (!token) {
-      throw new Error('You must be logged in to view projects');
-    }
+// const getCompanyProjects = async (token) => {
+//   try {
+//     if (!token) {
+//       throw new Error('You must be logged in to view projects');
+//     }
     
-    const response = await axios.get(
-      `${API_URL}/api/Project/GetCompanyProjects`,
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    );
+//     const response = await axios.get(
+//       `${API_URL}/api/Project/GetCompanyProjects`,
+//       {
+//         headers: {
+//           'Authorization': `Bearer ${token}`,
+//         },
+//       }
+//     );
     
-    console.log('Projects fetched successfully:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error details:', error.response || error);
+//     console.log('Projects fetched successfully:', response.data);
+//     return response.data;
+//   } catch (error) {
+//     console.error('Error details:', error.response || error);
     
-    if (error.response?.status === 401) {
-      console.error('Authentication error: Your session may have expired. Please log in again.');
-      throw new Error('Your session has expired. Please log in again.');
-    }
+//     if (error.response?.status === 401) {
+//       console.error('Authentication error: Your session may have expired. Please log in again.');
+//       throw new Error('Your session has expired. Please log in again.');
+//     }
     
-    const message = error.response?.data?.message ||
-      error.response?.data?.title ||
-      error.response?.data ||
-      "Failed to fetch projects.";
+//     const message = error.response?.data?.message ||
+//       error.response?.data?.title ||
+//       error.response?.data ||
+//       "Failed to fetch projects.";
       
-    console.error('Error fetching projects:', message);
-    throw new Error(message);
-  }
-};
+//     console.error('Error fetching projects:', message);
+//     throw new Error(message);
+//   }
+// };
 
 const getProjectById = async (projectId, token) => {
   try {
@@ -88,7 +88,7 @@ const getProjectById = async (projectId, token) => {
     }
     
     const response = await axios.get(
-      `${API_URL}/api/Project/${projectId}`,
+      `${API_URL}/api/Project/GetProject/${projectId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -123,7 +123,7 @@ const updateProject = async (projectId, projectData, token) => {
     }
     
     // Convert form data to DTO
-    const projectDTO = ProjectRequestDTO.fromFormData(projectData);
+    const projectDTO = new ProjectRequestDTO(projectData);
 
     const response = await axios.put(
       `${API_URL}/api/Project/${projectId}`, 
@@ -155,14 +155,14 @@ const updateProject = async (projectId, projectData, token) => {
   }
 };
 
-const getProjectRequests = async (token) => {
+const getProjectRequests = async (projectId, token) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to view project requests');
     }
     
     const response = await axios.get(
-      `${API_URL}/api/Project/GetProjectRequests`,
+      `${API_URL}/api/Project/GetProjectRequestsOfCompany/${projectId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -192,14 +192,14 @@ const getProjectRequests = async (token) => {
 
 // input projectId might be changed to projectRequestId
 // in the future
-const approveProjectRequest = async (projectId, token) => {
+const approveProjectRequest = async (requestId, token) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to view project requests');
     }
     
     const response = await axios.post(
-      `${API_URL}/api/Project/ApproveProjectRequest/${projectId}`,
+      `${API_URL}/api/Project/ApproveProjectRequest/${requestId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -308,7 +308,7 @@ const markProjectAsCompleted = async (projectId, token) => {
 
 const ProjectService = {
     createProject,
-    getCompanyProjects,
+    // getCompanyProjects,
     getProjectById,
     updateProject,
     getProjectRequests, 
