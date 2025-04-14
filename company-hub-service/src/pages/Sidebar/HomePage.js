@@ -24,12 +24,15 @@ import { Search, MapPin, Filter, ChevronDown, CheckCircle } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig';
+import { useNavigate } from 'react-router-dom';
 
 const FilterSearchPage = () => {
+  const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [locationResults, setLocationResults] = useState([]);
   const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedLocationIds, setSelectedLocationIds] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [activeIndustryTab, setActiveIndustryTab] = useState(0);
@@ -86,6 +89,7 @@ const FilterSearchPage = () => {
     const locationString = `${location.city}, ${location.country}`;
     if (!selectedLocations.includes(locationString)) {
       setSelectedLocations([...selectedLocations, locationString]);
+      setSelectedLocationIds([...selectedLocationIds, location.id]);
     }
     setLocationQuery('');
     setLocationResults([]);
@@ -100,13 +104,33 @@ const FilterSearchPage = () => {
   };
 
   const handleSearch = () => {
-    const query = {
-      text: searchText,
-      locations: selectedLocations,
-      services: selectedServices,
+    // Create the search payload according to FreeTextSearchDTO
+    const searchPayload = {
+      searchQuery: searchText,
+      locations: selectedLocationIds.length > 0 ? selectedLocationIds : null,
+      serviceIds: selectedServices.length > 0 ? selectedServices : null
     };
-    console.log('Search query:', query);
-    // Hook into actual search endpoint
+
+    // Convert to query parameters for the URL
+    const queryParams = new URLSearchParams();
+    queryParams.set('q', searchText);
+    
+    // Add locations as comma separated string with display names and IDs
+    if (selectedLocations.length > 0) {
+      // Store both the display name and ID for each location
+      const locationParams = selectedLocations.map((loc, index) => 
+        `${loc}:${selectedLocationIds[index]}`
+      );
+      queryParams.set('loc', locationParams.join('|'));
+    }
+    
+    // Add services as comma separated string
+    if (selectedServices.length > 0) {
+      queryParams.set('srv', selectedServices.join(','));
+    }
+    
+    // Navigate to the search results page with query parameters
+    navigate(`/search-results?${queryParams.toString()}`);
   };
 
   const getSelectedServiceCount = () => {
@@ -229,11 +253,18 @@ const FilterSearchPage = () => {
           )}
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {selectedLocations.map((loc) => (
+            {selectedLocations.map((loc, index) => (
               <Chip 
                 key={loc} 
                 label={loc} 
-                onDelete={() => setSelectedLocations(selectedLocations.filter(l => l !== loc))} 
+                onDelete={() => {
+                  const newLocations = [...selectedLocations];
+                  const newLocationIds = [...selectedLocationIds];
+                  newLocations.splice(index, 1);
+                  newLocationIds.splice(index, 1);
+                  setSelectedLocations(newLocations);
+                  setSelectedLocationIds(newLocationIds);
+                }} 
                 sx={{ 
                   borderRadius: '16px',
                   bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
