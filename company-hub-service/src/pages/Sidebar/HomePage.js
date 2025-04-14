@@ -1,359 +1,417 @@
-import React, {useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  TextField,
-  Button,
   Container,
-  Paper,
-  InputAdornment,
   Grid,
+  Chip,
+  TextField,
+  InputAdornment,
+  Button,
+  Paper,
+  CircularProgress,
+  Tabs,
+  Tab,
+  FormControlLabel,
+  Checkbox,
   Card,
   CardContent,
-  Chip,
-  CircularProgress,
-  Rating,
-  Divider
+  Divider,
+  IconButton,
+  alpha
 } from '@mui/material';
-import { Search, MapPin, Users, Building } from 'lucide-react';
-import { colors } from '../../theme/theme';
-import { useNavigate } from 'react-router-dom';
-import CompanyService from '../../services/CompanyService';
-import { useAuth } from "../../contexts/AuthContext";
+import { Search, MapPin, Filter, ChevronDown, CheckCircle } from 'lucide-react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import axios from 'axios';
+import { API_URL } from '../../config/apiConfig';
 
-const HomePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [featuredCompanies, setFeaturedCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  //will be commented out
-  useEffect(() => {
-    console.log("User Info:", user || "No user found");
-  }, [user]);
+const FilterSearchPage = () => {
+  const [searchText, setSearchText] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState([]);
+  const [selectedLocations, setSelectedLocations] = useState([]);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [activeIndustryTab, setActiveIndustryTab] = useState(0);
+  const [servicesByIndustry, setServicesByIndustry] = useState([]);
+  const [showServicePanel, setShowServicePanel] = useState(false);
 
   useEffect(() => {
-    // Fetch featured companies when component mounts
-    fetchFeaturedCompanies();
+    const fetchServices = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/Company/GetAllServices`);
+        
+        const grouped = res.data.map(group => ({
+          industry: group[0].industry.name,
+          services: group.map(s => ({ id: s.id, name: s.name })),
+        }));
+        setServicesByIndustry(grouped);
+      } catch (err) {
+        console.error('Failed to fetch services', err);
+      }
+    };
+
+    fetchServices();
   }, []);
 
-  const fetchFeaturedCompanies = async () => {
+  // Location search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (locationQuery.length >= 2) {
+        searchLocations(locationQuery);
+      } else {
+        setLocationResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [locationQuery]);
+
+  const searchLocations = async (query) => {
+    if (query.length < 2) return;
+    
+    setLoadingLocations(true);
     try {
-      setLoading(true);
-      // Use the service method instead of direct fetch
-      const companies = await CompanyService.getFeaturedCompanies();
-      console.log("Companies fetched:", companies); // Log for debugging
-      setFeaturedCompanies(companies);
-      setError(null);
-    } catch (err) {
-      console.error("Failed to fetch featured companies:", err);
-      setError(err.message || "Failed to load featured companies. Please try again later.");
+      const response = await axios.get(`${API_URL}/api/Company/LocationSearch?term=${query}`);
+      setLocationResults(response.data);
+    } catch (error) {
+      console.error('Error searching locations', error);
+      setLocationResults([]);
     } finally {
-      setLoading(false);
+      setLoadingLocations(false);
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Handle search logic
-    if (searchQuery.trim()) {
-      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
+  const handleAddLocation = (location) => {
+    const locationString = `${location.city}, ${location.country}`;
+    if (!selectedLocations.includes(locationString)) {
+      setSelectedLocations([...selectedLocations, locationString]);
     }
+    setLocationQuery('');
+    setLocationResults([]);
   };
 
-  // Function to display company specialties as chips
-  const renderSpecialties = (specialtiesString) => {
-    if (!specialtiesString) return null;
-    
-    // Split the specialties string into an array
-    const specialties = specialtiesString.split(',').map(s => s.trim()).filter(s => s);
-    
-    return (
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
-        {specialties.slice(0, 3).map((specialty, index) => (
-          <Chip 
-            key={index} 
-            label={specialty} 
-            size="small" 
-            sx={{ 
-              bgcolor: colors.primary[600],
-              color: 'white',
-              borderRadius: '16px'
-            }} 
-          />
-        ))}
-        {specialties.length > 3 && (
-          <Chip 
-            label={`+${specialties.length - 3} more`} 
-            size="small" 
-            variant="outlined" 
-            sx={{ borderRadius: '16px' }}
-          />
-        )}
-      </Box>
+  const toggleService = (serviceId) => {
+    setSelectedServices((prev) =>
+      prev.includes(serviceId)
+        ? prev.filter((id) => id !== serviceId)
+        : [...prev, serviceId]
     );
   };
 
-  // Function to get company size as a readable string
-  const getCompanySizeText = (size) => {
-    if (!size) return 'Unknown size';
-    
-    return size;
+  const handleSearch = () => {
+    const query = {
+      text: searchText,
+      locations: selectedLocations,
+      services: selectedServices,
+    };
+    console.log('Search query:', query);
+    // Hook into actual search endpoint
   };
 
-  // Function to get first two letters for logo placeholder
-  const getNameInitials = (name) => {
-    if (!name) return '??';
-    const words = name.split(' ');
-    if (words.length === 1) {
-      return name.substring(0, 2).toUpperCase();
-    }
-    return (words[0].charAt(0) + (words[1] ? words[1].charAt(0) : words[0].charAt(1))).toUpperCase();
-  };
-
-  // Generate random rating for demo purposes (remove in production)
-  const getRandomRating = () => {
-    return (Math.random() * 2 + 3).toFixed(1); // Random rating between 3.0 and 5.0
+  const getSelectedServiceCount = () => {
+    return selectedServices.length;
   };
 
   return (
-    <Box>
-      {/* Hero Section */}
-      <Box 
+    <Container maxWidth="sm" sx={{ py: 4 }}>
+      
+      <Typography variant="h4" fontWeight={700} gutterBottom color="text.primary">
+        Discover the best companies
+      </Typography>
+      
+      {/* Main Card Container */}
+      <Card 
+        elevation={1} 
         sx={{ 
-          background: `linear-gradient(45deg, ${colors.primary[700]} 30%, ${colors.primary[500]} 90%)`,
-          color: 'white',
-          py: 8,
-          mb: 6
+          mb: 3,
+          borderRadius: 2,
+          overflow: 'hidden',
+          border: '1px solid',
+          borderColor: 'divider'
         }}
       >
-        <Container maxWidth="lg">
-          <Box sx={{ maxWidth: 800, mx: 'auto', textAlign: 'center' }}>
-            <Typography 
-              variant="h2" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                fontWeight: 700,
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                mb: 3,
-                color: 'white'
-              }}
-            >
-              Find Companies by searching the description that you want
-            </Typography>
-            
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                mb: 4,
-                color: colors.neutral[100],
-                fontWeight: 400
-              }}
-            >
-              Enter skills, projects, company name etc.
-            </Typography>
-
-            <Paper
-              component="form"
-              onSubmit={handleSearch}
-              elevation={3}
-              sx={{
-                p: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                maxWidth: 600,
-                mx: 'auto',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              }}
-            >
-              <TextField
-                fullWidth
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '& fieldset': { border: 'none' },
+        {/* Section 1: Keyword Search */}
+        <CardContent sx={{ pt: 3, pb: 3 }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom color="text.primary">
+            What do you need?
+          </Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Describe what you're looking for..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={20} color="#9e9e9e" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 1,
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 2,
+                },
+              },
+            }}
+          />
+        </CardContent>
+        
+        <Divider />
+        
+        {/* Section 2: Location */}
+        <CardContent sx={{ pt: 3, pb: 3 }}>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom color="text.primary">
+            Where?
+          </Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Add a location..."
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MapPin size={20} color="#9e9e9e" />
+                </InputAdornment>
+              ),
+              endAdornment: loadingLocations ? <CircularProgress size={20} /> : null,
+            }}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 1,
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 2,
+                },
+              },
+            }}
+          />
+          
+          {locationResults.length > 0 && (
+            <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
+              {locationResults.map((loc) => (
+                <Box
+                  key={loc.id}
+                  sx={{ 
+                    px: 2, 
+                    py: 1.5, 
+                    cursor: 'pointer', 
+                    '&:hover': { 
+                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
+                    },
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:last-child': {
+                      borderBottom: 'none'
+                    }
+                  }}
+                  onClick={() => handleAddLocation(loc)}
+                >
+                  <Typography variant="body2">{loc.city}, {loc.country}</Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+          
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {selectedLocations.map((loc) => (
+              <Chip 
+                key={loc} 
+                label={loc} 
+                onDelete={() => setSelectedLocations(selectedLocations.filter(l => l !== loc))} 
+                sx={{ 
+                  borderRadius: '16px',
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                  color: 'primary.main',
+                  fontWeight: 500,
+                  '& .MuiChip-deleteIcon': {
+                    color: 'primary.main',
+                    '&:hover': {
+                      color: 'primary.dark',
+                    },
                   },
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search color={colors.neutral[400]} />
-                    </InputAdornment>
-                  ),
-                }}
               />
-              <Button 
-                variant="contained" 
-                size="large"
-                type="submit"
-                sx={{
-                  px: 4,
-                  py: 1.5,
-                }}
-              >
-                Search
-              </Button>
-            </Paper>
-
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                mt: 2,
-                color: colors.neutral[200]
+            ))}
+          </Box>
+        </CardContent>
+        
+        <Divider />
+        
+        {/* Section 3: Services */}
+        <CardContent sx={{ pt: 3, pb: 3 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              cursor: 'pointer',
+              mb: showServicePanel ? 2 : 0
+            }}
+            onClick={() => setShowServicePanel(!showServicePanel)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                Services
+              </Typography>
+              {getSelectedServiceCount() > 0 && (
+                <Chip
+                  size="small"
+                  label={`${getSelectedServiceCount()} selected`}
+                  sx={{ 
+                    ml: 1.5, 
+                    height: 24, 
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    fontWeight: 500,
+                  }}
+                />
+              )}
+            </Box>
+            <IconButton 
+              size="small"
+              sx={{
+                transition: 'transform 0.2s',
+                transform: showServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
               }}
             >
-              You can enter a plain text, the results will be inferred from the text.
-            </Typography>
+              <ExpandMoreIcon />
+            </IconButton>
           </Box>
-        </Container>
-      </Box>
 
-      {/* Featured Companies Section */}
-      <Container maxWidth="lg">
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            mb: 4,
-            fontWeight: 600,
-            color: colors.neutral[800]
-          }}
-        >
-          Featured Companies
-        </Typography>
-        
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Typography color="error" align="center">{error}</Typography>
-        ) : featuredCompanies.length === 0 ? (
-          <Typography align="center" sx={{ py: 4, color: colors.neutral[600] }}>
-            No featured companies available at this time.
-          </Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {featuredCompanies.map((company) => (
-              <Grid item xs={12} md={4} key={company.CompanyId}>
-                <Card 
-                  elevation={2}
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 6,
-                      cursor: 'pointer'
-                    },
+          {showServicePanel && (
+            <Box>
+              <Tabs
+                value={activeIndustryTab}
+                onChange={(e, newValue) => setActiveIndustryTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  mb: 2,
+                  minHeight: '44px',
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    borderRadius: '3px 3px 0 0',
+                  },
+                  '& .MuiTab-root': {
+                    minHeight: '44px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    px: 2,
+                  },
+                }}
+              >
+                {servicesByIndustry.map((group, index) => (
+                  <Tab key={index} label={group.industry} />
+                ))}
+              </Tabs>
+
+              {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    maxHeight: '200px', 
+                    overflowY: 'auto', 
+                    p: 1,
+                    bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
                   }}
-                  onClick={() => navigate(`/company/${company.name.replace(/\s+/g, '')}`)}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                      <Box
-                        sx={{
-                          width: 60,
-                          height: 60,
-                          borderRadius: 2,
-                          backgroundColor: colors.primary[100],
-                          color: colors.primary[700],
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mr: 2,
-                          fontWeight: 'bold',
-                          fontSize: '1.2rem',
-                          flexShrink: 0
-                        }}
-                      >
-                        {getNameInitials(company.name)}
-                      </Box>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" gutterBottom>
-                          {company.name || 'Unnamed Company'}
-                        </Typography>
-                        
-                        {/* Display rating */}
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Rating 
-                            value={parseFloat(getRandomRating())} 
-                            precision={0.1} 
-                            readOnly 
-                            size="small" 
-                          />
-                          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                            {getRandomRating()}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                    
-                    <Divider sx={{ my: 2 }} />
-                    
-                    {/* Location */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <MapPin size={16} color={colors.neutral[500]} />
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {company.location || 'Location not specified'}
-                      </Typography>
-                    </Box>
-                    
-                    {/* Company Size */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <Users size={16} color={colors.neutral[500]} />
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                        {getCompanySizeText(company.companySize)}
-                      </Typography>
-                    </Box>
-                    
-                    {/* Founded Year */}
-                    {company.foundedYear > 0 && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Building size={16} color={colors.neutral[500]} />
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                          Founded: {company.foundedYear}
-                        </Typography>
-                      </Box>
-                    )}
-                    
-                    {company.description && (
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary" 
-                        paragraph
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          minHeight: '40px',
-                          mb: 2
-                        }}
-                      >
-                        {company.description}
-                      </Typography>
-                    )}
+                  <Grid container spacing={1}>
+                    {servicesByIndustry[activeIndustryTab].services.map((service) => {
+                      const isSelected = selectedServices.includes(service.id);
+                      return (
+                        <Grid item xs={6} key={service.id}>
+                          <Paper
+                            elevation={0}
+                            onClick={() => toggleService(service.id)}
+                            sx={{
+                              p: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                              bgcolor: isSelected 
+                                ? (theme) => alpha(theme.palette.primary.main, 0.1) 
+                                : 'background.paper',
+                              border: '1px solid',
+                              borderColor: isSelected ? 'primary.main' : 'divider',
+                              borderRadius: 1,
+                              '&:hover': {
+                                bgcolor: isSelected 
+                                  ? (theme) => alpha(theme.palette.primary.main, 0.15) 
+                                  : (theme) => alpha(theme.palette.primary.main, 0.05),
+                              },
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              color="primary"
+                              size="small"
+                              sx={{ p: 0.5, mr: 1 }}
+                            />
+                            <Typography
+                              variant="body2"
+                              fontWeight={isSelected ? 600 : 400}
+                              color={isSelected ? 'primary.main' : 'text.primary'}
+                              sx={{ fontSize: '0.85rem' }}
+                            >
+                              {service.name}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Paper>
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
 
-                    {renderSpecialties(company.specialties)}
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Container>
-    </Box>
+      {/* Search Button */}
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth
+        disabled={!searchText && selectedLocations.length === 0 && selectedServices.length === 0}
+        sx={{
+          py: 1.5,
+          fontSize: '1rem',
+          fontWeight: 600,
+          borderRadius: 2,
+          boxShadow: 2,
+          '&:hover': {
+            boxShadow: 4,
+          },
+          textTransform: 'none',
+          opacity: (!searchText && selectedLocations.length === 0 && selectedServices.length === 0) ? 0.7 : 1,
+        }}
+        onClick={handleSearch}
+      >
+        Show matching providers
+      </Button>
+    </Container>
   );
 };
 
-export default HomePage;
+export default FilterSearchPage;
