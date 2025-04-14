@@ -53,16 +53,20 @@ const SearchResultsPage = () => {
   const [locationResults, setLocationResults] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
 
+  const [displayedQuery, setDisplayedQuery] = useState('');
+
   // Track active filters count for badge
   const getActiveFiltersCount = () => {
     return selectedLocationIds.length + selectedServiceIds.length;
   };
 
   // Parse query parameters on load
+  // Add this to the initial data fetching
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const currentQuery = queryParams.get('q') || '';
     setSearchQuery(currentQuery);
+    setDisplayedQuery(currentQuery);
     
     // Parse locations from URL
     const locationParam = queryParams.get('loc');
@@ -93,16 +97,32 @@ const SearchResultsPage = () => {
     fetchInitialData(currentQuery, locationIds, serviceIds);
   }, [location.search]);
 
-  // Fetch all necessary data in parallel
+  // Modify the fetchInitialData to fetch service names even before showing filters
   const fetchInitialData = async (query, locationIds, serviceIds) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Fetch services for filter panel
-      const servicesPromise = axios.get(`${API_URL}/api/Company/GetAllServices`);
+      // Fetch services for filter panel - Make this the first async call
+      const servicesResponse = await axios.get(`${API_URL}/api/Company/GetAllServices`);
       
-      // Build search payload - note: sending locationIds as integers for the API
+      // Process services data
+      const grouped = servicesResponse.data.map(group => ({
+        industry: group[0].industry.name,
+        services: group.map(s => ({ id: s.id, name: s.name })),
+      }));
+      setServicesByIndustry(grouped);
+      
+      // Build a map of service IDs to names - Do this immediately after fetching services
+      const serviceNamesMap = {};
+      grouped.forEach(group => {
+        group.services.forEach(service => {
+          serviceNamesMap[service.id] = service.name;
+        });
+      });
+      setServiceNames(serviceNamesMap);
+      
+      // Build search payload
       const searchPayload = {
         searchQuery: query,
         locations: locationIds?.length > 0 ? locationIds : null,
@@ -112,29 +132,7 @@ const SearchResultsPage = () => {
       console.log("Search payload:", searchPayload);
       
       // Execute search 
-      const searchPromise = axios.post(`${API_URL}/api/Company/FreeTextSearch`, searchPayload);
-      
-      // Wait for all requests to complete
-      const [servicesResponse, searchResponse] = await Promise.all([
-        servicesPromise, 
-        searchPromise
-      ]);
-      
-      // Process services data
-      const grouped = servicesResponse.data.map(group => ({
-        industry: group[0].industry.name,
-        services: group.map(s => ({ id: s.id, name: s.name })),
-      }));
-      setServicesByIndustry(grouped);
-      
-      // Build a map of service IDs to names
-      const serviceNamesMap = {};
-      grouped.forEach(group => {
-        group.services.forEach(service => {
-          serviceNamesMap[service.id] = service.name;
-        });
-      });
-      setServiceNames(serviceNamesMap);
+      const searchResponse = await axios.post(`${API_URL}/api/Company/FreeTextSearch`, searchPayload);
       
       // Process search results
       setCompanies(searchResponse.data.results || []);
@@ -147,9 +145,11 @@ const SearchResultsPage = () => {
   };
 
   // Submit search with current filters
-  // Submit search with current filters
   const handleSearch = (e) => {
     e.preventDefault();
+    
+    // Update the displayed query when search is submitted
+    setDisplayedQuery(searchQuery);
     
     // Build query parameters
     const queryParams = new URLSearchParams();
@@ -430,16 +430,16 @@ const SearchResultsPage = () => {
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
-          Top Companies {searchQuery && `for "${searchQuery}"`}
-        </Typography>
+      <Typography variant="h4" sx={{ mb: 1, fontWeight: 600 }}>
+        Top Companies {displayedQuery && `for "${displayedQuery}"`}
+      </Typography>
 
         {/* Loading state */}
         {loading && (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10 }}>
             <CircularProgress size={48} thickness={4} sx={{ color: colors.primary[500], mb: 2 }} />
             <Typography variant="h6" sx={{ color: colors.neutral[700], fontWeight: 500 }}>
-              Searching for companies{searchQuery && ` matching "${searchQuery}"`}...
+              Searching for companies{displayedQuery && ` matching "${displayedQuery}"`}...
             </Typography>
             <Typography variant="body2" sx={{ color: colors.neutral[500], mt: 1 }}>
               Please wait while we find the best matches for you.
@@ -500,18 +500,42 @@ const SearchResultsPage = () => {
                         {company.Name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <MapPin size={14} style={{ marginRight: 4, verticalAlign: 'text-bottom' }} />
                         {company.Location}
                       </Typography>
-              
+                
+                      {/* Add Services Display */}
+                      {company.Services && company.Services.length > 0 && (
+                        <Box sx={{ mb: 2 }}>
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {company.Services.map((service) => (
+                              <Chip 
+                                key={service} 
+                                label={service} 
+                                size="small"
+                                sx={{ 
+                                  bgcolor: alpha(colors.primary[500], 0.1),
+                                  color: colors.primary[700],
+                                  fontWeight: 500,
+                                  borderRadius: '16px',
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+                      
+                      {/* Keep Specialties if available */}
                       {company.Specialties && (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                           {company.Specialties.split(',').map((spec) => (
                             <Chip key={spec.trim()} label={spec.trim()} variant="outlined" size="small" />
                           ))}
                         </Box>
                       )}
                     </Grid>
-              
+                
                     <Grid item xs={12} md={3} sx={{ textAlign: { xs: 'left', md: 'right' } }}>
                       <Box sx={{ display: 'inline-block', backgroundColor: colors.primary[100], px: 2, py: 1, borderRadius: 2 }}>
                         <Typography variant="caption" sx={{ color: colors.primary[800], fontWeight: 500 }}>
