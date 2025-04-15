@@ -17,13 +17,8 @@ import {
   ListItemText,
   ListItemIcon,
   Stack,
-<<<<<<< HEAD
-  LinearProgress
-=======
   LinearProgress,
->>>>>>> improvement
 } from '@mui/material';
-import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
@@ -171,16 +166,10 @@ const CompanyPage = () => {
                     )}
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
-<<<<<<< HEAD
-                    <Rating value={reviewMockCompany.rating} readOnly precision={0.1} />
-                    <Typography variant="body1" sx={{ ml: 1 }}>
-                      {reviewMockCompany.rating} ({reviewMockCompany.reviews} reviews)
-=======
                     <Rating value={company.overallRating} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ ml: 1 }}>
                       {company.overallRating} ({5} reviews)  
                       {/* reviews sayısı backendden gelmeli*/}
->>>>>>> improvement
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
