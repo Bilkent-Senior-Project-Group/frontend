@@ -449,6 +449,27 @@ const RootLayout = () => {
                           }}
                         />
                       </ListItem>
+
+                      <ListItem
+                        button
+                        onClick={() => navigate(`/company/projects/${company.companyName.replace(/\s+/g, '')}`)}
+                        sx={{ 
+                          pl: 6,
+                          py: 0.5,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <ListItemIcon>
+                          <FileTextIcon size={16} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Projects"
+                          primaryTypographyProps={{ 
+                            fontSize: '0.85rem',
+                            color: 'text.secondary'
+                          }}
+                        />
+                      </ListItem>
                     </List>
                   </Collapse>
                 </React.Fragment>

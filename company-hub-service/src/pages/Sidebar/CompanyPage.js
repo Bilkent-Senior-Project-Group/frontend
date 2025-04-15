@@ -17,21 +17,41 @@ import {
   ListItemText,
   ListItemIcon,
   Stack,
+<<<<<<< HEAD
   LinearProgress
+=======
+  LinearProgress,
+>>>>>>> improvement
 } from '@mui/material';
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import { useParams, useNavigate } from 'react-router-dom';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import CompanyService  from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 
-
 const CompanyPage = () => {
   const { companyName } = useParams();
   const navigate = useNavigate();
-  const [company, setCompany] = useState(null);
+  const [company, setCompany] = useState({
+    companyId: null,
+    name: '',
+    description: '',
+    services: [],
+    verified: false,
+    projects: [],
+    location: -1,
+    website: '',
+    partnerships: [],
+    companySize: '',
+    foundedYear: new Date().getFullYear(),
+    address: '',
+    phone: '',
+    email: '',
+    overallRating: 0,
+  });
   const [activeTab, setActiveTab] = useState(0);
     const {token} = useAuth();
 
@@ -151,9 +171,16 @@ const CompanyPage = () => {
                     )}
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+<<<<<<< HEAD
                     <Rating value={reviewMockCompany.rating} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ ml: 1 }}>
                       {reviewMockCompany.rating} ({reviewMockCompany.reviews} reviews)
+=======
+                    <Rating value={company.overallRating} readOnly precision={0.1} />
+                    <Typography variant="body1" sx={{ ml: 1 }}>
+                      {company.overallRating} ({5} reviews)  
+                      {/* reviews sayısı backendden gelmeli*/}
+>>>>>>> improvement
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
@@ -288,43 +315,72 @@ const CompanyPage = () => {
               </PieChart>
                 </Box>
                 
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-                  Key Expertise
+                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  Projects Overview
                 </Typography>
-                {/* {company.coreExpertise.map((skill, index) => (
-                  <Box key={index} sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body1">{skill.skill}</Typography>
-                      <Typography variant="body1">{skill.level}%</Typography>
-                    </Box>
-                    <Box 
-                      sx={{ 
-                        height: 8, 
-                        backgroundColor: colors.neutral[200],
-                        borderRadius: 4,
-                        overflow: 'hidden'
-                      }}
-                    >
-                      <Box 
-                        sx={{ 
-                          height: '100%', 
-                          width: `${skill.level}%`,
-                          backgroundColor: colors.primary[500],
-                          borderRadius: 4
+                <Stack spacing={3}>
+                    {company.projects.map((project, index) => (
+                    <Box key={index}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
+                          {''}
+                          {/* yukarısı düzeltilecek */}
+                        </Typography>
+                        <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
+                          {''}%
+                          {/* yukarısı düzeltilecek */}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={10}
+                        /* yukarısı düzeltilecek */
+                        sx={{
+                          height: 10,
+                          borderRadius: 5,
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: project.color,
+                          },
                         }}
                       />
                     </Box>
-                  </Box>
-                ))} */}
-                {company.coreExpertise.map((skill, index) => (
-                  <Box key={index} sx={{ mb: 2 }}>
-                    <Typography variant="body1">{skill}</Typography>
-                  </Box>
-                ))}
+                  ))}
+                </Stack>
+              
+            
+                {/*<Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+                  Services Breakdown
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <PieChart width={300} height={300}> 
+                <Pie
+                  data={company.services}
+                  cx={150}
+                  cy={100}
+                  innerRadius={60}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {company.services.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={[
+                        colors.primary[500],
+                        colors.primary[400],
+                        colors.primary[300],
+                        colors.primary[600], 
+                      ][index % 4]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend/>
+              </PieChart>
+                </Box>*/}
 
                 
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-                  Key Clients
+                  Partnerships
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {company.partnerships.map((client, index) => (
@@ -380,27 +436,6 @@ const CompanyPage = () => {
                     
                     <Divider sx={{ my: 2 }} />
                     
-                    <Typography variant="h6" gutterBottom>
-                      Services Offered
-                    </Typography>
-                    <List disablePadding>
-                      {/* {company.services.map((service, index) => (
-                        <ListItem key={index} disableGutters>
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            <Check size={18} color={colors.primary[500]} />
-                          </ListItemIcon>
-                          <ListItemText primary={service} />
-                        </ListItem>
-                      ))} */}
-                      {company.specialties.split(',').map((specialty, index) => (
-                        <ListItem key={index} disableGutters>
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            <Check size={18} color={colors.primary[500]} />
-                          </ListItemIcon>
-                          <ListItemText primary={specialty.trim()} />
-                        </ListItem>
-                      ))}
-                    </List>
                   </CardContent>
                 </Card>
               </Grid>
@@ -423,14 +458,7 @@ const CompanyPage = () => {
                       <ListItemText primary={service} />
                     </ListItem>
                   ))} */}
-                  {company.specialties.split(',').map((specialty, index) => (
-                    <ListItem key={index} disableGutters>
-                      <ListItemIcon sx={{ minWidth: 36 }}>
-                        <Check size={18} color={colors.primary[500]} />
-                      </ListItemIcon>
-                      <ListItemText primary={specialty.trim()} />
-                    </ListItem>
-                  ))}
+                  
                 </List>
               </Grid>
             </Grid>
@@ -449,30 +477,7 @@ const CompanyPage = () => {
                     {company.projects.map((project, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                          {project.imageUrl ? (
-                            <Box 
-                              sx={{ 
-                                height: 200, 
-                                backgroundImage: `url(${project.imageUrl})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center'
-                              }}
-                            />
-                          ) : (
-                            <Box 
-                              sx={{ 
-                                height: 200, 
-                                backgroundColor: colors.neutral[200],
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                            >
-                              <Typography variant="body2" color="text.secondary">
-                                No image available
-                              </Typography>
-                            </Box>
-                          )}
+                          
                           <CardContent sx={{ flexGrow: 1 }}>
                             <Typography variant="h6" gutterBottom>
                               {project.projectName}
@@ -482,31 +487,31 @@ const CompanyPage = () => {
                               {project.description}
                             </Typography>
                             
-                            {(project.startDate || project.endDate) && (
+                            {(project.startDate || project.completionDate) && (
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <Calendar size={16} color={colors.neutral[500]} />
                                 <Typography variant="body2" sx={{ ml: 1 }} color="text.secondary">
                                   {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Unknown'} - 
-                                  {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Present'}
+                                  {project.completionDate ? new Date(project.completionDate).toLocaleDateString() : 'Present'}
                                 </Typography>
                               </Box>
                             )}
                             
-                            {project.client && (
+                            {project.clientCompanyName && (
                               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                <strong>Client:</strong> {project.client}
+                                <strong>Client Company Name:</strong> {project.clientCompanyName}
                               </Typography>
                             )}
                             
-                            {project.technologies && (Array.isArray(project.technologies) ? 
-                              project.technologies.length > 0 : project.technologies) && (
+                            {project.technologiesUsed && (Array.isArray(project.technologiesUsed) ? 
+                              project.technologiesUsed.length > 0 : project.technologiesUsed) && (
                               <Box sx={{ mt: 2 }}>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                  <strong>Technologies:</strong>
+                                  <strong>Technologies Used:</strong>
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                  {Array.isArray(project.technologies) ? (
-                                    project.technologies.map((tech, techIndex) => (
+                                  {Array.isArray(project.technologiesUsed) ? (
+                                    project.technologiesUsed.map((tech, techIndex) => (
                                       <Chip 
                                         key={techIndex} 
                                         label={tech} 
@@ -515,7 +520,7 @@ const CompanyPage = () => {
                                       />
                                     ))
                                   ) : (
-                                    <Typography variant="body2">{project.technologies}</Typography>
+                                    <Typography variant="body2">{project.technologiesUsed}</Typography>
                                   )}
                                 </Box>
                               </Box>

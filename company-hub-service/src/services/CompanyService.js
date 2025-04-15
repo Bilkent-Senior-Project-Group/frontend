@@ -11,7 +11,7 @@ const createCompany = async (companyData, token) => {
     }
 
     // Convert form data to DTO
-    const companyDTO = CreateCompanyRequestDTO.fromFormData(companyData);
+    const companyDTO = new CreateCompanyRequestDTO(companyData);
 
     // Validate before sending
     const validationErrors = companyDTO.validate();
@@ -144,11 +144,46 @@ const getCompanyPeople = async (companyId, token) => {
   }
 }
 
+const searchCompaniesByName = async (query, token) => {
+  try {
+    if (!query || query.trim() === '') {
+      return []; // Return empty array for empty queries
+    }
+
+    const response = await axios.get(
+      `${API_URL}/api/Company/SearchCompaniesByName`,
+      {
+        params: { query },
+        headers: {
+
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        }
+      }
+    );
+    console.log('Company search results:', response.data);
+    return response.data; // Returns array of {companyId, companyName}
+  }
+  catch (error) {
+    console.error('Error searching companies:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to search companies. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+};
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
   getCompany,
-  getCompanyPeople
+  getCompanyPeople,
+  searchCompaniesByName
 };
 
 export default CompanyService;

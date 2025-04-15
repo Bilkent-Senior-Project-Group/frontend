@@ -35,8 +35,8 @@ export const AuthProvider = ({ children }) => {
 
     if (storedToken && storedUser) {
       try {
-        if (isTokenExpired(storedToken)) {
-          console.log("Token expired, logging out...");
+        if (!isTokenValid(storedToken)) {
+          console.log("Token is not valid, logging out...");
           logout();
         } else {
           setToken(storedToken);
@@ -72,14 +72,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(updatedUser)); // Save updated user in localStorage
   };
 
-  const isTokenExpired = (token) => {
-    if (!token) return true;
+  const isTokenValid = async (token) => {
+    if (!token) return false;
   
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiryInSeconds = payload.exp;
-      const expiryInMs = expiryInSeconds * 1000;
-      return Date.now() > expiryInMs;
+      // const response = await AuthService.validateToken(token);
+      const response = {status: 200}; // Mock response for testing
+      if (response.status === 200) {
+        return true;
+      } else {
+        return false;
+      }
     } catch (err) {
       console.error("Failed to decode token", err);
       return true;
@@ -88,7 +91,7 @@ export const AuthProvider = ({ children }) => {
   
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isTokenExpired }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isTokenValid }}>
       {children}
     </AuthContext.Provider>
   );
