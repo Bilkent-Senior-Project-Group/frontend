@@ -25,6 +25,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext.js';
 
 const FilterSearchPage = () => {
   const navigate = useNavigate();
@@ -38,6 +39,10 @@ const FilterSearchPage = () => {
   const [activeIndustryTab, setActiveIndustryTab] = useState(0);
   const [servicesByIndustry, setServicesByIndustry] = useState([]);
   const [showServicePanel, setShowServicePanel] = useState(false);
+  const [userCompanies, setUserCompanies] = useState([]);
+  const [similarCompanies, setSimilarCompanies] = useState({});
+  const [loadingSimilarCompanies, setLoadingSimilarCompanies] = useState(false);
+  const { user, logout, token } = useAuth();
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -56,6 +61,75 @@ const FilterSearchPage = () => {
 
     fetchServices();
   }, []);
+
+  // useEffect to fetch user's companies and similar companies
+  useEffect(() => {
+    const fetchUserCompanies = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/Company/GetCompaniesOfUser/${user?.id}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        const fetchedCompanies = response.data.map((company) => ({
+          id: company.companyId,
+          name: company.companyName,
+          projects: company.projects,
+        }));
+        setUserCompanies(fetchedCompanies);
+
+        // Pass the fetched companies directly, not the state variable
+        if (fetchedCompanies && fetchedCompanies.length > 0) {
+          fetchSimilarCompanies(fetchedCompanies);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user companies', err);
+      }
+    };
+
+    // Only fetch if user is logged in
+    if (user?.id) {
+      fetchUserCompanies();
+    }
+  }, [user]);
+
+  const fetchSimilarCompanies = async (companies) => {
+    setLoadingSimilarCompanies(true);
+    
+    try {
+      const similarCompaniesData = {};
+      
+      // For each company, fetch similar companies
+      for (const company of companies) {
+        // This will be replaced with actual API call when backend is ready
+        // const response = await axios.get(`${API_URL}/api/Company/GetSimilarCompanies/${company.companyId}`);
+        // similarCompaniesData[company.companyId] = response.data;
+        
+        // Mock data for development
+        similarCompaniesData[company.companyId] = [
+          {
+            companyId: 101,
+            name: `Company 1`,
+            services: ["Web Development", "UI/UX Design"],
+            location: "New York, USA"
+          },
+        ];
+      }
+      
+      setSimilarCompanies(similarCompaniesData);
+    } catch (err) {
+      console.error('Failed to fetch similar companies', err);
+    } finally {
+      setLoadingSimilarCompanies(false);
+    }
+  };
+
+  const navigateToCompanyProfile = (companyName) => {
+    navigate(`/company/${companyName}`);
+  };
 
   // Location search effect
   useEffect(() => {
@@ -441,6 +515,82 @@ const FilterSearchPage = () => {
       >
         Show matching providers
       </Button>
+
+        {/* Similar Companies Section */}
+      {userCompanies.length > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography variant="h5" fontWeight={700} gutterBottom color="text.primary" sx={{ mb: 3 }}>
+            Recommended For You
+          </Typography>
+
+          {userCompanies.map((company) => (
+            <Box key={company.id} sx={{ mb: 4 }}>
+              <Typography variant="h6" fontWeight={600} gutterBottom color="text.primary" sx={{ mb: 2 }}>
+                Companies like {company.name}
+              </Typography>
+
+              {loadingSimilarCompanies ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+                  <CircularProgress />
+                </Box>
+              ) : similarCompanies[company.companyId]?.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {similarCompanies[company.companyId].map((similarCompany) => (
+                    <Card 
+                      key={similarCompany.companyId}
+                      sx={{ 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': { 
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3
+                        },
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 2
+                      }}
+                      onClick={() => navigateToCompanyProfile(similarCompany.companyId)}
+                    >
+                      <CardContent sx={{ p: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={600}>
+                          {similarCompany.name}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                          <MapPin size={16} color="#757575" />
+                          <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                            {similarCompany.location}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                          {similarCompany.services.map((service, idx) => (
+                            <Chip 
+                              key={idx}
+                              label={service}
+                              size="small"
+                              sx={{ 
+                                borderRadius: '12px',
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                                color: 'text.primary',
+                                fontSize: '0.75rem'
+                              }}
+                            />
+                          ))}
+                        </Box>
+                        </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  No similar companies found for {company.name}.
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </Box>
+      )}
     </Container>
   );
 };
