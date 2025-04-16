@@ -53,8 +53,8 @@ const ProjectsPage = () => {
     fetchProjects();
   }, [token, companyName]);
 
-  const handleViewProject = (projectId, companyName) => {
-    navigate(`/company/projects/${companyName}/${projectId}`);
+  const handleViewProject = (projectId) => {
+    navigate(`/company/projects/${projectId}`);
   };
 
   const handleEditProject = (projectId, e) => {
