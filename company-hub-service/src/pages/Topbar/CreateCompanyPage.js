@@ -516,252 +516,223 @@ const CreateCompanyPage = () => {
               variant="outlined"
             />
           </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder={selectedLocation ? selectedLocation : "Add a location..."}
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MapPin size={20} color="#9e9e9e" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <>
+                    {selectedLocation && (
+                      <IconButton 
+                        size="small" 
+                        onClick={clearSelectedLocation}
+                        sx={{ mr: 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                    {loadingLocations && <CircularProgress size={20} />}
+                  </>
+                ),
+              }}
+              sx={{
+                mb: 2,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                    borderWidth: 1,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                    borderWidth: 2,
+                  },
+                  ...(selectedLocation && {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    fontWeight: 500,
+                  }),
+                },
+              }}
+            />
+            {locationResults.length > 0 && (
+              <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
+                {locationResults.map((loc) => (
+                  <Box
+                    key={loc.id}
+                    sx={{ 
+                      px: 2, 
+                      py: 1.5, 
+                      cursor: 'pointer', 
+                      '&:hover': { 
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
+                      },
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': {
+                        borderBottom: 'none'
+                      }
+                    }}
+                    onClick={() => handleAddLocation(loc)}
+                  >
+                    <Typography variant="body2">{loc.city}, {loc.country}</Typography>
+                  </Box>
+                ))}
+              </Paper>
+            )}
+          </Grid>
+
+          {/* Services Selection Component - Moved inside the Company Details Paper */}
+          <Grid item xs={12}>
+            <Box sx={{ width: '100%' }}>
+              {/* Section 3: Services */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  mb: showServicePanel ? 2 : 0
+                }}
+                onClick={() => setShowServicePanel(!showServicePanel)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="h6" fontWeight={600} color={colors.neutral[700]}>
+                    Services
+                  </Typography>
+                  {getSelectedServiceCount() > 0 && (
+                    <Chip
+                      size="small"
+                      label={`${getSelectedServiceCount()} selected`}
+                      sx={{ 
+                        ml: 1.5, 
+                        height: 24, 
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                        fontWeight: 500,
+                      }}
+                    />
+                  )}
+                </Box>
+                <IconButton 
+                  size="small"
+                  sx={{
+                    transition: 'transform 0.2s',
+                    transform: showServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
+                  }}
+                >
+                  <ExpandMoreIcon />
+                </IconButton>
+              </Box>
+
+              {showServicePanel && (
+                <Box>
+                  <Tabs
+                    value={activeIndustryTab}
+                    onChange={(e, newValue) => setActiveIndustryTab(newValue)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{
+                      mb: 2,
+                      minHeight: '44px',
+                      '& .MuiTabs-indicator': {
+                        height: 3,
+                        borderRadius: '3px 3px 0 0',
+                      },
+                      '& .MuiTab-root': {
+                        minHeight: '44px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        fontSize: '0.9rem',
+                        px: 2,
+                      },
+                    }}
+                  >
+                    {servicesByIndustry.map((group, index) => (
+                      <Tab key={index} label={group.industry} />
+                    ))}
+                  </Tabs>
+
+                  {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
+                    <Box 
+                      sx={{ 
+                        maxHeight: '200px', 
+                        overflowY: 'auto', 
+                        p: 1,
+                        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Grid container spacing={1}>
+                        {servicesByIndustry[activeIndustryTab].services.map((service) => {
+                          const isSelected = selectedServices.includes(service.id);
+                          return (
+                            <Grid item xs={6} key={service.id}>
+                              <Paper
+                                elevation={0}
+                                onClick={() => toggleService(service.id)}
+                                sx={{
+                                  p: 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  cursor: 'pointer',
+                                  bgcolor: isSelected 
+                                    ? (theme) => alpha(theme.palette.primary.main, 0.1) 
+                                    : 'background.paper',
+                                  border: '1px solid',
+                                  borderColor: isSelected ? 'primary.main' : 'divider',
+                                  borderRadius: 1,
+                                  '&:hover': {
+                                    bgcolor: isSelected 
+                                      ? (theme) => alpha(theme.palette.primary.main, 0.15) 
+                                      : (theme) => alpha(theme.palette.primary.main, 0.05),
+                                  },
+                                  transition: 'all 0.2s',
+                                }}
+                              >
+                                <Checkbox
+                                  checked={isSelected}
+                                  color="primary"
+                                  size="small"
+                                  sx={{ p: 0.5, mr: 1 }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={isSelected ? 600 : 400}
+                                  color={isSelected ? 'primary.main' : 'text.primary'}
+                                  sx={{ fontSize: '0.85rem' }}
+                                >
+                                  {service.name}
+                                </Typography>
+                              </Paper>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
+                  )}
+                </Box>
+              )}
+            </Box>
+          </Grid>
+          
         </Grid>
       </Paper>
 
-      {/* Location Search Component */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 4, 
-          mb: 4, 
-          borderRadius: 3,
-          border: `1px solid ${colors.neutral[200]}`,
-        }}
-      >
-        {/* Section 2: Location */}
-        <CardContent sx={{ pt: 0, pb: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ mb: 3, color: colors.neutral[700] }}>
-            Locations
-          </Typography>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder={selectedLocation ? selectedLocation : "Add a location..."}
-            value={locationQuery}
-            onChange={(e) => setLocationQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <MapPin size={20} color="#9e9e9e" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <>
-                  {selectedLocation && (
-                    <IconButton 
-                      size="small" 
-                      onClick={clearSelectedLocation}
-                      sx={{ mr: 0.5 }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                  {loadingLocations && <CircularProgress size={20} />}
-                </>
-              ),
-            }}
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'primary.main',
-                  borderWidth: 1,
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'primary.main',
-                  borderWidth: 2,
-                },
-                ...(selectedLocation && {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  fontWeight: 500,
-                }),
-              },
-            }}
-          />
-          
-          {locationResults.length > 0 && (
-            <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
-              {locationResults.map((loc) => (
-                <Box
-                  key={loc.id}
-                  sx={{ 
-                    px: 2, 
-                    py: 1.5, 
-                    cursor: 'pointer', 
-                    '&:hover': { 
-                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
-                    },
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': {
-                      borderBottom: 'none'
-                    }
-                  }}
-                  onClick={() => handleAddLocation(loc)}
-                >
-                  <Typography variant="body2">{loc.city}, {loc.country}</Typography>
-                </Box>
-              ))}
-            </Paper>
-          )}
-          
-          <Typography 
-            variant="caption" 
-            color="text.secondary" 
-            sx={{ display: 'block', mt: 1 }}
-          >
-            Note: You can select only one location for your company.
-          </Typography>
-        </CardContent>
-      </Paper>
 
-      {/* Services Selection Component */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 4, 
-          mb: 4, 
-          borderRadius: 3,
-          border: `1px solid ${colors.neutral[200]}`,
-        }}
-      >
-        {/* Section 3: Services */}
-        <CardContent sx={{ pt: 0, pb: 3 }}>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              cursor: 'pointer',
-              mb: showServicePanel ? 2 : 0
-            }}
-            onClick={() => setShowServicePanel(!showServicePanel)}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="h6" fontWeight={600} color={colors.neutral[700]}>
-                Services
-              </Typography>
-              {getSelectedServiceCount() > 0 && (
-                <Chip
-                  size="small"
-                  label={`${getSelectedServiceCount()} selected`}
-                  sx={{ 
-                    ml: 1.5, 
-                    height: 24, 
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    fontWeight: 500,
-                  }}
-                />
-              )}
-            </Box>
-            <IconButton 
-              size="small"
-              sx={{
-                transition: 'transform 0.2s',
-                transform: showServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}
-            >
-              <ExpandMoreIcon />
-            </IconButton>
-          </Box>
-
-          {showServicePanel && (
-            <Box>
-              <Tabs
-                value={activeIndustryTab}
-                onChange={(e, newValue) => setActiveIndustryTab(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  mb: 2,
-                  minHeight: '44px',
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
-                  },
-                  '& .MuiTab-root': {
-                    minHeight: '44px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    px: 2,
-                  },
-                }}
-              >
-                {servicesByIndustry.map((group, index) => (
-                  <Tab key={index} label={group.industry} />
-                ))}
-              </Tabs>
-
-              {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
-                    maxHeight: '200px', 
-                    overflowY: 'auto', 
-                    p: 1,
-                    bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Grid container spacing={1}>
-                    {servicesByIndustry[activeIndustryTab].services.map((service) => {
-                      const isSelected = selectedServices.includes(service.id);
-                      return (
-                        <Grid item xs={6} key={service.id}>
-                          <Paper
-                            elevation={0}
-                            onClick={() => toggleService(service.id)}
-                            sx={{
-                              p: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                              bgcolor: isSelected 
-                                ? (theme) => alpha(theme.palette.primary.main, 0.1) 
-                                : 'background.paper',
-                              border: '1px solid',
-                              borderColor: isSelected ? 'primary.main' : 'divider',
-                              borderRadius: 1,
-                              '&:hover': {
-                                bgcolor: isSelected 
-                                  ? (theme) => alpha(theme.palette.primary.main, 0.15) 
-                                  : (theme) => alpha(theme.palette.primary.main, 0.05),
-                              },
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              color="primary"
-                              size="small"
-                              sx={{ p: 0.5, mr: 1 }}
-                            />
-                            <Typography
-                              variant="body2"
-                              fontWeight={isSelected ? 600 : 400}
-                              color={isSelected ? 'primary.main' : 'text.primary'}
-                              sx={{ fontSize: '0.85rem' }}
-                            >
-                              {service.name}
-                            </Typography>
-                          </Paper>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Paper>
-              )}
-            </Box>
-          )}
-        </CardContent>
-      </Paper>
+      
 
       {/* Projects Section - Keeping it the same */}
       <Paper 
