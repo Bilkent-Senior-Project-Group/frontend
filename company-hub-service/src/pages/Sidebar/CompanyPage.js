@@ -26,6 +26,7 @@ import { colors } from '../../theme/theme';
 import CompanyService  from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
+import { useMemo } from 'react';
 
 const CompanyPage = () => {
   const { companyName } = useParams();
@@ -48,13 +49,17 @@ const CompanyPage = () => {
     overallRating: 0,
   });
   const [activeTab, setActiveTab] = useState(0);
-    const {token} = useAuth();
+  const {token} = useAuth();
 
   const fetchCompany = async () => {
     try {
       const companyData = await CompanyService.getCompany(companyName, token);
       console.log("Backend Company Data:", companyData);
       const companyProfile = new CompanyProfileDTO(companyData);
+
+      companyProfile.services.forEach((service) => {
+        service.percentage = 33.3; //to be deleted after percentage comes correctly
+      })
       
       // Use the DTO instead of raw data
       setCompany(companyProfile);
@@ -74,6 +79,34 @@ const CompanyPage = () => {
   const handleBack = () => {
     navigate(-1);
   };
+
+  const serviceStats = useMemo(() => {
+    const countMap = {};
+    let total = 0;
+  
+    company.projects?.forEach((project) => {
+      project.services?.forEach((service) => {
+        const key = service.id;
+        total++;
+        if (countMap[key]) {
+          countMap[key].count += 1;
+        } else {
+          countMap[key] = {
+            id: service.id,
+            name: service.name,
+            count: 1,
+          };
+        }
+      });
+    });
+  
+    return Object.values(countMap).map((service, index) => ({
+      ...service,
+      percentage: ((service.count / total) * 100).toFixed(1),
+    }));
+  }, [company]);
+
+  console.log("Service Stats:", serviceStats);
 
   if (!company) {
     return (
@@ -168,7 +201,7 @@ const CompanyPage = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
                     <Rating value={company.overallRating} readOnly precision={0.1} />
                     <Typography variant="body1" sx={{ ml: 1 }}>
-                      {company.overallRating} ({5} reviews)  
+                    {company.overallRating === 0 ? '' : company.overallRating} ({5} reviews)  
                       {/* reviews sayısı backendden gelmeli*/}
                     </Typography>
                   </Box>
@@ -243,16 +276,17 @@ const CompanyPage = () => {
                   {company.description}
                 </Typography>
         
-          
+                {company.projects && company.projects.length > 0 && (
+                <>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
                   Projects Overview
                 </Typography>
                 <Stack spacing={3}>
-                    {companyData.projects.map((project, index) => (
+                    {serviceStats.map((project, index) => (
                     <Box key={index}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
-                          {project.type}
+                          {project.name}
                         </Typography>
                         <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
                           {project.percentage}%
@@ -272,102 +306,45 @@ const CompanyPage = () => {
                     </Box>
                   ))}
                 </Stack>
+                </>
+                )}
               
-            
+                {company.services && company.services.length > 0 && (
+                <>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                   Services Breakdown
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <PieChart width={300} height={300}> {/* Increase the height to accommodate the legend */}
-                <Pie
-                  data={companyData.services}
-                  cx={150}
-                  cy={100}
-                  innerRadius={60}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {companyData.services.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={[
-                        colors.primary[500],
-                        colors.primary[400],
-                        colors.primary[300],
-                        colors.primary[600], {/* Added an additional color for the 4th item */}
-                      ][index % 4]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend/>
-              </PieChart>
+                  <PieChart width={300} height={300}>
+                    <Pie
+                      data={company.services}
+                      cx={150}
+                      cy={100}
+                      innerRadius={60}
+                      outerRadius={80}
+                      dataKey="percentage"
+                      nameKey="serviceName"
+                      // label={({ serviceName, percentage }) => `${serviceName} (${percentage}%)`}
+                    >
+                      {company.services.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={[
+                            colors.primary[500],
+                            colors.primary[400],
+                            colors.primary[300],
+                            colors.primary[600], // Add more colors if needed
+                          ][index % 4]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
                 </Box>
-                
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  Projects Overview
-                </Typography>
-                <Stack spacing={3}>
-                    {company.projects.map((project, index) => (
-                    <Box key={index}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
-                          {''}
-                          {/* yukarısı düzeltilecek */}
-                        </Typography>
-                        <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
-                          {''}%
-                          {/* yukarısı düzeltilecek */}
-                        </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={10}
-                        /* yukarısı düzeltilecek */
-                        sx={{
-                          height: 10,
-                          borderRadius: 5,
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: project.color,
-                          },
-                        }}
-                      />
-                    </Box>
-                  ))}
-                </Stack>
-              
-            
-                {/*<Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-                  Services Breakdown
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <PieChart width={300} height={300}> 
-                <Pie
-                  data={company.services}
-                  cx={150}
-                  cy={100}
-                  innerRadius={60}
-                  outerRadius={80}
-                  dataKey="value"
-                >
-                  {company.services.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={[
-                        colors.primary[500],
-                        colors.primary[400],
-                        colors.primary[300],
-                        colors.primary[600], 
-                      ][index % 4]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend/>
-              </PieChart>
-                </Box>*/}
+                </>
+                )}
 
-                
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                   Partnerships
                 </Typography>
