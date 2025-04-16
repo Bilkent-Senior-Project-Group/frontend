@@ -123,7 +123,7 @@ const CreateCompanyPage = () => {
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let year = currentYear; year >= 1800; year--) {
+    for (let year = currentYear; year >= 1900; year--) {
       years.push(year);
     }
     return years;
@@ -495,7 +495,7 @@ const CreateCompanyPage = () => {
                   </MenuItem>
                 ))}
               </Select>
-              <FormHelperText>Must be between 1800 and current year</FormHelperText>
+              <FormHelperText>Must be between 1900 and current year</FormHelperText>
             </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>

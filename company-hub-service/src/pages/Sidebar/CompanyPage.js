@@ -116,33 +116,6 @@ const CompanyPage = () => {
     );
   }
 
-  const companyData = {
-    projects: [
-      {
-        type: "Web Development",
-        percentage: 40,
-      },
-      {
-        type: "Mobile Apps",
-        percentage: 30,
-      },
-      {
-        type: "Digital Marketing",
-        percentage: 20,
-      },
-      {
-        type: "Cloud Solutions",
-        percentage: 10,
-      }
-    ],
-    services: [
-      { name: "Web Development", value: 40 },
-      { name: "Mobile Apps", value: 30 },
-      { name: "Digital Marketing", value: 20 },
-      { name: "Cloud Solutions", value: 10 }
-    ]
-  };
-
   const reviewMockCompany = {
     rating: 3.6,
     reviews: 132,
@@ -215,7 +188,7 @@ const CompanyPage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Users size={16} />
                       <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.companySize} employees
+                        {company.companySize}
                       </Typography>
                     </Box>
                   </Box>
