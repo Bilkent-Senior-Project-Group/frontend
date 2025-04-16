@@ -16,15 +16,22 @@ import {
   DialogActions,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
+  Tabs,
+  Tab,
+  Checkbox,
+  InputAdornment,
+  CardContent,
 } from '@mui/material';
 import { 
   Upload as UploadIcon, 
   Delete as DeleteIcon, 
   Add as AddIcon, 
-  Edit as EditIcon 
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
+import { MapPin } from 'lucide-react';
 import { colors } from '../../theme/theme';
 
 // Import the CompanyPDFExtractor component
@@ -33,6 +40,9 @@ import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CompanyService from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+import { API_URL } from '../../config/apiConfig.js';
+
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -55,7 +65,7 @@ const CreateCompanyPage = () => {
     location: -1,           
     companySize: '',       
     website: '',          
-    services: ["6d3f7103-8670-4f9e-92cc-08f3a37c8239"],
+    services: [],
     partnerships: [],  
     portfolio: [],  
     phone: '',
@@ -94,6 +104,89 @@ const CreateCompanyPage = () => {
   const [validationErrors, setValidationErrors] = useState({});
   const [error, setError] = useState(null);
   const {token, user, updateUser } = useAuth();
+  const [servicesByIndustry, setServicesByIndustry] = useState([]);
+  const [activeIndustryTab, setActiveIndustryTab] = useState(0);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [showServicePanel, setShowServicePanel] = useState(false);
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocationIds, setSelectedLocationIds] = useState(-1);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/Company/GetAllServices`);
+        
+        const grouped = res.data.map(group => ({
+          industry: group[0].industry.name,
+          services: group.map(s => ({ id: s.id, name: s.name })),
+        }));
+        setServicesByIndustry(grouped);
+      } catch (err) {
+        console.error('Failed to fetch services', err);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Location search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (locationQuery.length >= 2) {
+        searchLocations(locationQuery);
+      } else {
+        setLocationResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [locationQuery]);
+
+  const searchLocations = async (query) => {
+    if (query.length < 2) return;
+    
+    setLoadingLocations(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/Company/LocationSearch?term=${query}`);
+      setLocationResults(response.data);
+    } catch (error) {
+      console.error('Error searching locations', error);
+      setLocationResults([]);
+    } finally {
+      setLoadingLocations(false);
+    }
+  };
+
+  const handleAddLocation = (location) => {
+    // Change to store only the single selected location
+    setSelectedLocation(`${location.city}, ${location.country}`);
+    // Store just the single location ID
+    setSelectedLocationIds(location.id);
+    setLocationQuery('');
+    setLocationResults([]);
+  };
+
+  const clearSelectedLocation = () => {
+    setSelectedLocation(null);
+    // Also clear the location ID when clearing the selection
+    setSelectedLocationIds(-1);
+  };
+
+  const toggleService = (serviceId) => {
+    setSelectedServices((prev) =>
+      prev.includes(serviceId)
+        ? prev.filter((id) => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
+  const getSelectedServiceCount = () => {
+    return selectedServices.length;
+  };
+
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -135,7 +228,7 @@ const CreateCompanyPage = () => {
     // Ensure all required fields have default values
     const formattedProject = {
       ...currentProject,
-      projectName: currentProject.name || 'Untitled Project',
+      projectName: currentProject.projectName || 'Untitled Project',
       description: currentProject.description || 'No description provided',
       startDate: currentProject.startDate || new Date().toISOString().split('T')[0],
       completionDate: currentProject.completionDate || new Date().toISOString().split('T')[0],
@@ -224,21 +317,25 @@ const CreateCompanyPage = () => {
     
     try {
       // Prepare form data for DTO conversion
-      companyDetails.portfolio = projects.map(project => ({
-        projectName: project.projectName,
-        description: project.description,
-        startDate: project.startDate,
-        completionDate: project.completionDate,
-        clientType: project.clientType,
-        projectUrl: project.projectUrl,
-        isCompleted: project.isCompleted,
-        isOnCompedia: project.isOnCompedia,
-        clientCompanyName: project.clientCompanyName,
-        providerCompanyName: project.providerCompanyName,
-        technologiesUsed: project.technologiesUsed,
-        services: project.services,
-      }));
-      const formData = companyDetails;
+      const formData = {
+        ...companyDetails,
+        services: selectedServices, // Use the selected services from the new UI
+        location: selectedLocationIds, // Add the selected location IDs
+        portfolio: projects.map(project => ({
+          projectName: project.projectName,
+          description: project.description,
+          startDate: project.startDate,
+          completionDate: project.completionDate,
+          clientType: project.clientType,
+          projectUrl: project.projectUrl,
+          isCompleted: project.isCompleted,
+          isOnCompedia: project.isOnCompedia,
+          clientCompanyName: project.clientCompanyName,
+          providerCompanyName: project.providerCompanyName,
+          technologiesUsed: project.technologiesUsed,
+          services: project.services,
+        }))
+      };
       
       const response = await CompanyService.createCompany(formData, token);
 
@@ -345,31 +442,6 @@ const CreateCompanyPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Location"
-              name="location"
-              value={companyDetails.location}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-              required
-              helperText="This will be used for both Address and Location"
-              type="number"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="address"
-              name="address"
-              value={companyDetails.address}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-              required
-              helperText="This will be used for both Address"
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
               label="Founded Year"
               name="foundedYear"
               value={companyDetails.foundedYear}
@@ -379,7 +451,18 @@ const CreateCompanyPage = () => {
               helperText="Must be between 1800 and 2100"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={companyDetails.address}
+              onChange={handleCompanyDetailsChange}
+              variant="outlined"
+              required
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Company Size"
@@ -391,7 +474,7 @@ const CreateCompanyPage = () => {
               helperText="Enter number of employees (e.g., '100' or '100-500')"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Website URL"
@@ -436,6 +519,251 @@ const CreateCompanyPage = () => {
         </Grid>
       </Paper>
 
+      {/* Location Search Component */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 4, 
+          mb: 4, 
+          borderRadius: 3,
+          border: `1px solid ${colors.neutral[200]}`,
+        }}
+      >
+        {/* Section 2: Location */}
+        <CardContent sx={{ pt: 0, pb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 3, color: colors.neutral[700] }}>
+            Locations
+          </Typography>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder={selectedLocation ? selectedLocation : "Add a location..."}
+            value={locationQuery}
+            onChange={(e) => setLocationQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <MapPin size={20} color="#9e9e9e" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <>
+                  {selectedLocation && (
+                    <IconButton 
+                      size="small" 
+                      onClick={clearSelectedLocation}
+                      sx={{ mr: 0.5 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                  {loadingLocations && <CircularProgress size={20} />}
+                </>
+              ),
+            }}
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 1,
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'primary.main',
+                  borderWidth: 2,
+                },
+                ...(selectedLocation && {
+                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                  color: 'primary.main',
+                  fontWeight: 500,
+                }),
+              },
+            }}
+          />
+          
+          {locationResults.length > 0 && (
+            <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
+              {locationResults.map((loc) => (
+                <Box
+                  key={loc.id}
+                  sx={{ 
+                    px: 2, 
+                    py: 1.5, 
+                    cursor: 'pointer', 
+                    '&:hover': { 
+                      backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
+                    },
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    '&:last-child': {
+                      borderBottom: 'none'
+                    }
+                  }}
+                  onClick={() => handleAddLocation(loc)}
+                >
+                  <Typography variant="body2">{loc.city}, {loc.country}</Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+          
+          <Typography 
+            variant="caption" 
+            color="text.secondary" 
+            sx={{ display: 'block', mt: 1 }}
+          >
+            Note: You can select only one location for your company.
+          </Typography>
+        </CardContent>
+      </Paper>
+
+      {/* Services Selection Component */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 4, 
+          mb: 4, 
+          borderRadius: 3,
+          border: `1px solid ${colors.neutral[200]}`,
+        }}
+      >
+        {/* Section 3: Services */}
+        <CardContent sx={{ pt: 0, pb: 3 }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              cursor: 'pointer',
+              mb: showServicePanel ? 2 : 0
+            }}
+            onClick={() => setShowServicePanel(!showServicePanel)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="h6" fontWeight={600} color={colors.neutral[700]}>
+                Services
+              </Typography>
+              {getSelectedServiceCount() > 0 && (
+                <Chip
+                  size="small"
+                  label={`${getSelectedServiceCount()} selected`}
+                  sx={{ 
+                    ml: 1.5, 
+                    height: 24, 
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                    color: 'primary.main',
+                    fontWeight: 500,
+                  }}
+                />
+              )}
+            </Box>
+            <IconButton 
+              size="small"
+              sx={{
+                transition: 'transform 0.2s',
+                transform: showServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
+              }}
+            >
+              <ExpandMoreIcon />
+            </IconButton>
+          </Box>
+
+          {showServicePanel && (
+            <Box>
+              <Tabs
+                value={activeIndustryTab}
+                onChange={(e, newValue) => setActiveIndustryTab(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  mb: 2,
+                  minHeight: '44px',
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    borderRadius: '3px 3px 0 0',
+                  },
+                  '& .MuiTab-root': {
+                    minHeight: '44px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    px: 2,
+                  },
+                }}
+              >
+                {servicesByIndustry.map((group, index) => (
+                  <Tab key={index} label={group.industry} />
+                ))}
+              </Tabs>
+
+              {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
+                <Paper 
+                  elevation={0} 
+                  sx={{ 
+                    maxHeight: '200px', 
+                    overflowY: 'auto', 
+                    p: 1,
+                    bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                  }}
+                >
+                  <Grid container spacing={1}>
+                    {servicesByIndustry[activeIndustryTab].services.map((service) => {
+                      const isSelected = selectedServices.includes(service.id);
+                      return (
+                        <Grid item xs={6} key={service.id}>
+                          <Paper
+                            elevation={0}
+                            onClick={() => toggleService(service.id)}
+                            sx={{
+                              p: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              cursor: 'pointer',
+                              bgcolor: isSelected 
+                                ? (theme) => alpha(theme.palette.primary.main, 0.1) 
+                                : 'background.paper',
+                              border: '1px solid',
+                              borderColor: isSelected ? 'primary.main' : 'divider',
+                              borderRadius: 1,
+                              '&:hover': {
+                                bgcolor: isSelected 
+                                  ? (theme) => alpha(theme.palette.primary.main, 0.15) 
+                                  : (theme) => alpha(theme.palette.primary.main, 0.05),
+                              },
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              color="primary"
+                              size="small"
+                              sx={{ p: 0.5, mr: 1 }}
+                            />
+                            <Typography
+                              variant="body2"
+                              fontWeight={isSelected ? 600 : 400}
+                              color={isSelected ? 'primary.main' : 'text.primary'}
+                              sx={{ fontSize: '0.85rem' }}
+                            >
+                              {service.name}
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Paper>
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Paper>
+
+      {/* Projects Section - Keeping it the same */}
       <Paper 
         elevation={0} 
         sx={{ 

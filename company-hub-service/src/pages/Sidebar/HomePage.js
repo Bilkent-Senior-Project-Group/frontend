@@ -23,7 +23,7 @@ import {
 import { Search, MapPin, Filter, ChevronDown, CheckCircle } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
-import { API_URL } from '../../config/apiConfig';
+import { API_URL } from '../../config/apiConfig.js';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.js';
 
