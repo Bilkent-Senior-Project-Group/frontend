@@ -21,6 +21,7 @@ import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import SearchResultsPage from '../pages/SearchResultsPage';
 import { useAuth } from '../contexts/AuthContext';
+import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
 
 
 const AppRoutes = () => {
@@ -50,6 +51,7 @@ const AppRoutes = () => {
         {/* Company routes */}
         <Route path="/company/:companyName" element={<CompanyPage />} />
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
+        <Route path="/company/analytics/:companyName" element={<AnalyticsPage />} />
         <Route
           path="/admin"
           element={

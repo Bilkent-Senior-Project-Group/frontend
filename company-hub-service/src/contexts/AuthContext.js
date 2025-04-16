@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthService from "../services/AuthService"; // Import AuthService for API calls
 
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -33,6 +34,9 @@ export const AuthProvider = ({ children }) => {
       if (response.status === 200) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        
+
         setToken(response.data.token);
         setUser(response.data.user);
         console.log("Login successful response is:", response.data);
