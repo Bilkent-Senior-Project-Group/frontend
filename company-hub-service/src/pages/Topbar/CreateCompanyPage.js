@@ -34,7 +34,8 @@ import {
   Delete as DeleteIcon, 
   Add as AddIcon, 
   Edit as EditIcon,
-  ExpandMore as ExpandMoreIcon
+  ExpandMore as ExpandMoreIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { styled, alpha } from '@mui/material/styles';
 import { MapPin } from 'lucide-react';
@@ -731,147 +732,234 @@ const CreateCompanyPage = () => {
             )}
           </Grid>
 
-          {/* Services Selection Component - Moved inside the Company Details Paper */}
           <Grid item xs={12}>
-            <Box sx={{ width: '100%' }}>
-              {/* Section 3: Services */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  mb: showServicePanel ? 2 : 0
+            <Box
+              sx={{ 
+                mb: 2,
+                p: 0
+              }}
+            >
+              <Typography variant="h6" fontWeight={600} color={colors.neutral[700]} sx={{ mb: 2 }}>
+                Services
+              </Typography>
+              
+              <Box
+                sx={{
+                  border: '1px solid rgba(0, 0, 0, 0.23)',  // Match TextField border style
+                  borderRadius: 1,
+                  p: 2,
+                  minHeight: 56,
+                  '&:hover': {
+                    borderColor: 'rgba(0, 0, 0, 0.87)',
+                  },
+                  '&:focus-within': {
+                    borderColor: 'primary.main',
+                    borderWidth: 2,
+                  },
                 }}
-                onClick={() => setShowServicePanel(!showServicePanel)}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="h6" fontWeight={600} color={colors.neutral[700]}>
-                    Services
-                  </Typography>
-                  {getSelectedServiceCount() > 0 && (
-                    <Chip
-                      size="small"
-                      label={`${getSelectedServiceCount()} selected`}
-                      sx={{ 
-                        ml: 1.5, 
-                        height: 24, 
-                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                        color: 'primary.main',
-                        fontWeight: 500,
-                      }}
-                    />
-                  )}
-                </Box>
-                <IconButton 
-                  size="small"
-                  sx={{
-                    transition: 'transform 0.2s',
-                    transform: showServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
-                  }}
-                >
-                  <ExpandMoreIcon />
-                </IconButton>
-              </Box>
-
-              {showServicePanel && (
-                <Box>
-                  <Tabs
-                    value={activeIndustryTab}
-                    onChange={(e, newValue) => setActiveIndustryTab(newValue)}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                    sx={{
-                      mb: 2,
-                      minHeight: '44px',
-                      '& .MuiTabs-indicator': {
-                        height: 3,
-                        borderRadius: '3px 3px 0 0',
-                      },
-                      '& .MuiTab-root': {
-                        minHeight: '44px',
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        fontSize: '0.9rem',
-                        px: 2,
-                      },
+                {/* Display selected services as chips */}
+                {selectedServices.length > 0 && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 0.75, 
+                    mb: 2
+                  }}>
+                    {selectedServices.map(serviceId => {
+                      // Find service name from all services
+                      let serviceName = serviceId;
+                      servicesByIndustry.forEach(industry => {
+                        const service = industry.services.find(s => s.id === serviceId);
+                        if (service) {
+                          serviceName = service.name;
+                        }
+                      });
+                      
+                      return (
+                        <Chip
+                          key={serviceId}
+                          label={serviceName}
+                          size="small"
+                          onDelete={() => toggleService(serviceId)}
+                          sx={{
+                            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                            color: 'primary.main',
+                            fontWeight: 500,
+                            borderRadius: 1.5,
+                          }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+                
+                {/* Add service and clear all buttons in same row */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 1,
+                  justifyContent: selectedServices.length > 0 ? 'space-between' : 'center',
+                  alignItems: 'center' 
+                }}>
+                  <Button
+                    onClick={() => setShowServicePanel(true)}
+                    startIcon={<AddIcon />}
+                    variant="outlined"
+                    color="primary"
+                    size="medium"
+                    sx={{ 
+                      borderRadius: 1,
+                      borderStyle: 'dashed',
+                      flexGrow: 0
                     }}
                   >
-                    {servicesByIndustry.map((group, index) => (
-                      <Tab key={index} label={group.industry} />
-                    ))}
-                  </Tabs>
-
-                  {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
-                    <Box 
-                      sx={{ 
-                        maxHeight: '200px', 
-                        overflowY: 'auto', 
-                        p: 1,
-                        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                      }}
+                    {selectedServices.length > 0 ? 'Add More Services' : 'Add Services'}
+                  </Button>
+                  
+                  {selectedServices.length > 0 && (
+                    <Button
+                      onClick={() => setSelectedServices([])}
+                      color="error"
+                      size="small"
+                      variant="text"
+                      sx={{ flexGrow: 0 }}
                     >
-                      <Grid container spacing={1}>
-                        {servicesByIndustry[activeIndustryTab].services.map((service) => {
-                          const isSelected = selectedServices.includes(service.id);
-                          return (
-                            <Grid item xs={6} key={service.id}>
-                              <Paper
-                                elevation={0}
-                                onClick={() => toggleService(service.id)}
-                                sx={{
-                                  p: 1,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  cursor: 'pointer',
-                                  bgcolor: isSelected 
-                                    ? (theme) => alpha(theme.palette.primary.main, 0.1) 
-                                    : 'background.paper',
-                                  border: '1px solid',
-                                  borderColor: isSelected ? 'primary.main' : 'divider',
-                                  borderRadius: 1,
-                                  '&:hover': {
-                                    bgcolor: isSelected 
-                                      ? (theme) => alpha(theme.palette.primary.main, 0.15) 
-                                      : (theme) => alpha(theme.palette.primary.main, 0.05),
-                                  },
-                                  transition: 'all 0.2s',
-                                }}
-                              >
-                                <Checkbox
-                                  checked={isSelected}
-                                  color="primary"
-                                  size="small"
-                                  sx={{ p: 0.5, mr: 1 }}
-                                />
-                                <Typography
-                                  variant="body2"
-                                  fontWeight={isSelected ? 600 : 400}
-                                  color={isSelected ? 'primary.main' : 'text.primary'}
-                                  sx={{ fontSize: '0.85rem' }}
-                                >
-                                  {service.name}
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                          );
-                        })}
-                      </Grid>
-                    </Box>
+                      Clear All
+                    </Button>
                   )}
                 </Box>
-              )}
+              </Box>
             </Box>
           </Grid>
-          
         </Grid>
       </Paper>
 
+      {/* Services Selection Dialog */}
+      <Dialog
+        open={showServicePanel}
+        onClose={() => setShowServicePanel(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Select Services</Typography>
+            <IconButton onClick={() => setShowServicePanel(false)} size="small">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              {selectedServices.length} services selected
+            </Typography>
+            {selectedServices.length > 0 && (
+              <Button
+                onClick={() => setSelectedServices([])}
+                color="error"
+                size="small"
+                variant="text"
+              >
+                Clear All Services
+              </Button>
+            )}
+          </Box>
+          
+          <Tabs
+            value={activeIndustryTab}
+            onChange={(e, newValue) => setActiveIndustryTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              mb: 2,
+              minHeight: '44px',
+              '& .MuiTabs-indicator': {
+                height: 3,
+                borderRadius: '3px 3px 0 0',
+              },
+              '& .MuiTab-root': {
+                minHeight: '44px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                px: 2,
+              },
+            }}
+          >
+            {servicesByIndustry.map((group, index) => (
+              <Tab key={index} label={group.industry} />
+            ))}
+          </Tabs>
 
-      
+          {servicesByIndustry.length > 0 && activeIndustryTab < servicesByIndustry.length && (
+            <Box 
+              sx={{ 
+                maxHeight: '400px', 
+                overflowY: 'auto', 
+                p: 1,
+                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              <Grid container spacing={1}>
+                {servicesByIndustry[activeIndustryTab].services.map((service) => {
+                  const isSelected = selectedServices.includes(service.id);
+                  return (
+                    <Grid item xs={6} key={service.id}>
+                      <Paper
+                        elevation={0}
+                        onClick={() => toggleService(service.id)}
+                        sx={{
+                          p: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          bgcolor: isSelected 
+                            ? (theme) => alpha(theme.palette.primary.main, 0.1) 
+                            : 'background.paper',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'primary.main' : 'divider',
+                          borderRadius: 1,
+                          '&:hover': {
+                            bgcolor: isSelected 
+                              ? (theme) => alpha(theme.palette.primary.main, 0.15) 
+                              : (theme) => alpha(theme.palette.primary.main, 0.05),
+                          },
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          color="primary"
+                          size="small"
+                          sx={{ p: 0.5, mr: 1 }}
+                        />
+                        <Typography
+                          variant="body2"
+                          fontWeight={isSelected ? 600 : 400}
+                          color={isSelected ? 'primary.main' : 'text.primary'}
+                          sx={{ fontSize: '0.85rem' }}
+                        >
+                          {service.name}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowServicePanel(false)} color="primary">
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Projects Section - Keeping it the same */}
       <Paper 
@@ -982,8 +1070,12 @@ const CreateCompanyPage = () => {
                             sx={{ 
                               height: 20, 
                               fontSize: '0.7rem',
-                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
                               color: 'primary.main',
+                              fontWeight: 500,
+                              borderRadius: 1,
+                              mr: 0.5,
+                              mb: 0.5
                             }}
                           />
                         );
@@ -991,22 +1083,6 @@ const CreateCompanyPage = () => {
                     </Box>
                   </Box>
                 )}
-              </Box>
-              <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                <IconButton 
-                  size="small" 
-                  onClick={() => handleEditProject(index)}
-                  sx={{ mr: 1 }}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton 
-                  size="small" 
-                  onClick={() => handleDeleteProject(index)}
-                  color="error"
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
               </Box>
             </Paper>
           </Grid>
