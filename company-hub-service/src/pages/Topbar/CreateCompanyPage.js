@@ -22,6 +22,11 @@ import {
   Checkbox,
   InputAdornment,
   CardContent,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText
 } from '@mui/material';
 import { 
   Upload as UploadIcon, 
@@ -113,6 +118,28 @@ const CreateCompanyPage = () => {
   const [locationResults, setLocationResults] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedLocationIds, setSelectedLocationIds] = useState(-1);
+
+  // Generate years from 1800 to current year
+  const generateYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = currentYear; year >= 1800; year--) {
+      years.push(year);
+    }
+    return years;
+  };
+
+  // Company size options
+  const companySizeOptions = [
+    "1-10 employees",
+    "11-50 employees",
+    "51-200 employees",
+    "201-500 employees",
+    "501-1000 employees",
+    "1001-5000 employees",
+    "5001-10000 employees",
+    "10000+ employees"
+  ];
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -439,7 +466,7 @@ const CreateCompanyPage = () => {
               required
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Founded Year"
@@ -450,6 +477,26 @@ const CreateCompanyPage = () => {
               required
               helperText="Must be between 1800 and 2100"
             />
+          </Grid> */}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth variant="outlined" required>
+              <InputLabel id="founded-year-label">Founded Year</InputLabel>
+              <Select
+                labelId="founded-year-label"
+                id="foundedYear"
+                name="foundedYear"
+                value={companyDetails.foundedYear || ''}
+                onChange={handleCompanyDetailsChange}
+                label="Founded Year"
+              >
+                {generateYearOptions().map((year) => (
+                  <MenuItem key={year} value={year}>
+                    {year}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>Must be between 1800 and current year</FormHelperText>
+            </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
@@ -462,7 +509,7 @@ const CreateCompanyPage = () => {
               required
             />
           </Grid>
-          <Grid item xs={12} md={6}>
+          {/* <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Company Size"
@@ -473,6 +520,26 @@ const CreateCompanyPage = () => {
               type="text"
               helperText="Enter number of employees (e.g., '100' or '100-500')"
             />
+          </Grid> */}
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth variant="outlined" required>
+              <InputLabel id="company-size-label">Company Size</InputLabel>
+              <Select
+                labelId="company-size-label"
+                id="companySize"
+                name="companySize"
+                value={companyDetails.companySize || ''}
+                onChange={handleCompanyDetailsChange}
+                label="Company Size"
+              >
+                {companySizeOptions.map((size) => (
+                  <MenuItem key={size} value={size}>
+                    {size}
+                  </MenuItem>
+                ))}
+              </Select>
+              <FormHelperText>Select the range that matches your company's employee count</FormHelperText>
+            </FormControl>
           </Grid>
           <Grid item xs={12} md={6}>
             <TextField
