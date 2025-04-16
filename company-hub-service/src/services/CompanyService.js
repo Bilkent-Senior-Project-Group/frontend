@@ -92,16 +92,20 @@ const getFeaturedCompanies = async () => {
 
 const getCompany = async (companyName, token) => {
   try {
+    // Check if token is an object with userId or just a string
+    const userId = token.userId;
+    
     const response = await axios.get(
-      `${API_URL}/api/Company/GetCompany/${companyName}`,
+      `${API_URL}/api/Company/GetCompany/${companyName}/${userId}`,
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${typeof token === 'string' ? token : token.token}`
         }
       }
     );
     console.log('Company data:', response.data);
+    console.log('User ID:', userId);
     return response.data;
   }
   catch (error) {

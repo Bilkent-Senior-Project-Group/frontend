@@ -34,7 +34,8 @@ import {
   FileText as FileTextIcon,
   Plus as PlusIcon,       // Rename import to PlusIcon
   ChevronUp as ChevronUpIcon,   // Rename import to ChevronUpIcon
-  HelpCircle as HelpCircleIcon   // Rename import to HelpCircleIcon  
+  HelpCircle as HelpCircleIcon,   // Rename import to HelpCircleIcon  
+  ActivityIcon as AnalyticsIcon,
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
@@ -438,6 +439,26 @@ const RootLayout = () => {
                         </ListItemIcon>
                         <ListItemText 
                           primary="Projects"
+                          primaryTypographyProps={{ 
+                            fontSize: '0.85rem',
+                            color: 'text.secondary'
+                          }}
+                        />
+                      </ListItem>
+                      <ListItem
+                        button
+                        onClick={() => navigate(`/company/analytics/${company.companyName.replace(/\s+/g, '')}`)}
+                        sx={{ 
+                          pl: 6,
+                          py: 0.5,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <ListItemIcon>
+                          <AnalyticsIcon size={16} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Analytics"
                           primaryTypographyProps={{ 
                             fontSize: '0.85rem',
                             color: 'text.secondary'

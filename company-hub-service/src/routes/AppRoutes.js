@@ -25,6 +25,7 @@ import Project from '../pages/Sidebar/Projects/Project';
 import ProjectRequestsPage from '../pages/Sidebar/Projects/ProjectRequestsPage';
 import EditProjectPage from '../pages/Sidebar/Projects/EditProjectPage';
 import { useAuth } from '../contexts/AuthContext';
+import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
 
 
 const AppRoutes = () => {
@@ -65,6 +66,7 @@ const AppRoutes = () => {
         <Route path="/company/projects/edit-project" element={<EditProjectPage />} />
 
         {/* Admin Routes */}
+        <Route path="/company/analytics/:companyName" element={<AnalyticsPage />} />
         <Route
           path="/admin"
           element={
