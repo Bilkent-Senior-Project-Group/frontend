@@ -90,6 +90,11 @@ const RootLayout = () => {
     handleUserMenuClose();
     navigate('/settings');
   };
+
+  const handleUserProfileClick = () => {
+    handleUserMenuClose();
+    navigate('/profile/' + user.userName);
+  };
   
   const handleAddMenuOpen = (event) => {
     setAddMenuAnchorEl(event.currentTarget);
@@ -239,6 +244,13 @@ const RootLayout = () => {
               horizontal: 'right',
             }}
           >
+            <MenuItem onClick={handleUserProfileClick}>
+              <ListItemIcon>
+                <User size={18} />
+              </ListItemIcon>
+              <Typography variant="inherit">Profile</Typography>
+            </MenuItem>
+            <Divider />
             <MenuItem onClick={handleSettingsClick}>
               <ListItemIcon>
                 <Settings size={18} />

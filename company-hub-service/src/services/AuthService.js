@@ -37,6 +37,19 @@ const forgotPassword = async (email) => {
   }
 };
 
+  const resetPassword = async (email, token, newPassword) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/Account/ResetPassword`, {
+        email,
+        token,
+        newPassword
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : new Error('Password reset failed');
+    }
+  };
+
 const logout = async (token) => {
   try {
     const response = await axios.post(`${API_URL}/api/Account/Logout`,null, {
@@ -51,4 +64,4 @@ const logout = async (token) => {
   }
 }
 
-export default { signup, login, checkEmailExistence, forgotPassword, logout };
+export default { signup, login, checkEmailExistence, forgotPassword, resetPassword, logout };

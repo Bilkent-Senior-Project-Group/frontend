@@ -26,6 +26,8 @@ import ProjectRequestsPage from '../pages/Sidebar/Projects/ProjectRequestsPage';
 import EditProjectPage from '../pages/Sidebar/Projects/EditProjectPage';
 import { useAuth } from '../contexts/AuthContext';
 import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
+import UserProfilePage from '../pages/Topbar/UserProfilePage';
+import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
 
 
 const AppRoutes = () => {
@@ -40,6 +42,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
@@ -52,6 +55,7 @@ const AppRoutes = () => {
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route path="/profile/:username" element={<UserProfilePage />} />
 
         {/* Company routes */}
         <Route path="/company/:companyName" element={<CompanyPage />} />
