@@ -6,7 +6,6 @@ const AnalyticsService = {
   getSearchQueries: async (companyId) => {
     try {
       const response = await axios.get(`${API_URL}/api/analytics/GetSearchQueries/${companyId}`);
-      console.log('Search queries:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching search queries:', error);
