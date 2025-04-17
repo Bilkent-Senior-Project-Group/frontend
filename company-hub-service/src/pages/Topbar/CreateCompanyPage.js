@@ -43,6 +43,8 @@ import { colors } from '../../theme/theme';
 
 // Import the CompanyPDFExtractor component
 import CompanyPDFExtractor from '../../components/CompanyPDFExtractor';
+import CountryCodeSelector from '../../components/CountryCodeSelector';
+import { validatePhoneNumber } from '../../utils/phoneUtils';
 
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import CompanyService from '../../services/CompanyService';
@@ -447,8 +449,64 @@ const CreateCompanyPage = () => {
 
   };
 
+  const validateForm = () => {
+    const errors = {};
+    
+    // Company name validation
+    if (!companyDetails.companyName || companyDetails.companyName.trim() === '') {
+      errors.companyName = "Company name is required";
+    }
+    
+    // Founded year validation
+    if (!companyDetails.foundedYear) {
+      errors.foundedYear = "Founded year is required";
+    }
+    
+    // Address validation
+    if (!companyDetails.address || companyDetails.address.trim() === '') {
+      errors.address = "Address is required";
+    }
+    
+    // Phone validation
+    if (companyDetails.phone && !validatePhoneNumber(companyDetails.phone)) {
+      errors.phone = "Please enter a valid phone number";
+    }
+    
+    // Email validation
+    if (companyDetails.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(companyDetails.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+    
+    // Location validation
+    if (selectedLocationIds === -1) {
+      errors.location = "Please select a location";
+    }
+    
+    return errors;
+  };
+
   const handleSubmit = async () => {
-    // Reset states
+    // Validate form first
+    const formErrors = validateForm();
+    
+    // If there are validation errors, set them and stop submission
+    if (Object.keys(formErrors).length > 0) {
+      setValidationErrors(formErrors);
+      
+      // Show notification for validation errors
+      setNotification({
+        open: true,
+        message: 'Please fix the validation errors before submitting',
+        severity: 'error'
+      });
+      
+      // Scroll to the top to show errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      return;
+    }
+    
+    // Reset states if validation passes
     setValidationErrors({});
     setError(null);
     setIsLoading(true);
@@ -663,13 +721,20 @@ const CreateCompanyPage = () => {
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Phone Number"
-              name="phone"
+            <CountryCodeSelector
               value={companyDetails.phone || ''}
-              onChange={handleCompanyDetailsChange}
+              onChange={(value) => {
+                setCompanyDetails(prev => ({
+                  ...prev,
+                  phone: value
+                }));
+              }}
+              label="Phone Number"
+              error={!!validationErrors.phone}
+              helperText={validationErrors.phone}
               variant="outlined"
+              fullWidth
+              size="medium"
             />
           </Grid>
           <Grid item xs={12} md={6}>
