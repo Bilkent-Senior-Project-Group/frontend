@@ -96,7 +96,7 @@ const getCompany = async (companyName, token) => {
     const userId = token.userId;
     
     const response = await axios.get(
-      `${API_URL}/api/Company/GetCompany/${companyName}/${userId}`,
+      `${API_URL}/api/Company/GetCompany/${companyName}`,
       {
         headers: {
           'Content-Type': 'application/json',

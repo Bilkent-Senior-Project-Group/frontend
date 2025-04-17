@@ -49,12 +49,13 @@ const AnalyticsPage = () => {
     useEffect(() => {
         const fetchCompanyData = async () => {
             try {
-                const response = await AnalyticsService.getSearchQueries(companyId);
+                const response = await AnalyticsService.getSearchQueries(companyId, token);
                 if (!response) {
                     setError("No data found");
                     return;
                 }
-                setSearchQueries(response.searchQueries || []);
+                console.log("Search Queries:", response);
+                setSearchQueries(response);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
                     setSearchQueries([]);
@@ -84,7 +85,7 @@ const AnalyticsPage = () => {
     
         if (companyId) {
             fetchCompanyData();
-            fetchProfileViews();
+           fetchProfileViews();
         }
     }, [companyId, token]);
 
@@ -320,6 +321,151 @@ const AnalyticsPage = () => {
     const monthlyData = getMonthlyViewCounts();
     const mostEffectiveQuery = getMostEffectiveQuery();
 
+    
+
+
+
+    const calculateMostEffectiveWords = () => {
+        if (!searchQueries || searchQueries.length === 0) return "No queries found";
+        
+        const wordCounts = {};
+        
+        searchQueries.forEach(query => {
+            const words = query.queryText.toLowerCase().split(/\s+/);
+            words.forEach(word => {
+                // Remove any punctuation from the word
+                const cleanWord = word.replace(/[^\w]/g, '');
+                if (cleanWord) {
+                    wordCounts[cleanWord] = (wordCounts[cleanWord] || 0) + 1;
+                }
+            });
+        });
+        
+        // Sort words by frequency (highest first)
+        const sortedWords = Object.entries(wordCounts)
+            .sort((a, b) => b[1] - a[1]);
+            
+        // Get the most frequent word for the existing functionality
+        const mostFrequentWord = sortedWords.length > 0 ? sortedWords[0] : ["none", 0];
+        
+        return {
+            mostEffectiveWord: `Most effective word: "${mostFrequentWord[0]}" with ${mostFrequentWord[1]} occurrences.`,
+            allWords: sortedWords
+        };
+    }
+
+    const { mostEffectiveWord, allWords } = calculateMostEffectiveWords();
+    // Render search words as a bubble chart
+    const renderSearchWordsBubbleChart = () => {
+        if (allWords && typeof allWords !== 'string' && allWords.length > 0) {
+            // Get top 10 words for the visualization
+            const topWords = allWords.slice(0, 10);
+            
+            // Find max count for scaling
+            const maxCount = Math.max(...topWords.map(item => item[1]));
+            
+            // Calculate positioning with less overlap
+            const positions = [];
+            const calculatePosition = (index, totalItems) => {
+                // Use a grid-like layout with some randomness
+                const columns = Math.ceil(Math.sqrt(totalItems));
+                const row = Math.floor(index / columns);
+                const col = index % columns;
+                
+                // Add slight randomness to make it look more organic
+                const baseX = (col / columns) * 80 + 10;
+                const baseY = (row / Math.ceil(totalItems / columns)) * 80 + 10;
+                
+                // Add small random offset
+                const xOffset = Math.random() * 10 - 5;
+                const yOffset = Math.random() * 10 - 5;
+                
+                return {
+                    left: baseX + xOffset,
+                    top: baseY + yOffset
+                };
+            };
+            
+            // Pre-calculate positions
+            topWords.forEach((_, index) => {
+                positions.push(calculatePosition(index, topWords.length));
+            });
+            
+            return (
+                <Box sx={{ 
+                    position: 'relative', 
+                    height: 300, 
+                    width: '100%', 
+                    mt: 3,
+                    border: '1px solid #eee',
+                    borderRadius: 2,
+                    padding: 2,
+                    overflow: 'hidden'
+                }}>
+                    <Typography variant="caption" sx={{ position: 'absolute', bottom: 5, right: 10, color: 'text.secondary' }}>
+                        Bubble size and color intensity indicate frequency
+                    </Typography>
+                    
+                    {topWords.map(([word, count], index) => {
+                        // Calculate size based on count (between 40px and 120px)
+                        const size = 40 + (count / maxCount) * 80;
+                        
+                        // Calculate color intensity based on frequency
+                        const intensity = Math.max(0.5, count / maxCount);
+                        
+                        // Get pre-calculated position
+                        const { left, top } = positions[index];
+                        
+                        return (
+                            <Box 
+                                key={index}
+                                sx={{
+                                    position: 'absolute',
+                                    left: `${left}%`,
+                                    top: `${top}%`,
+                                    width: size,
+                                    height: size,
+                                    borderRadius: '50%',
+                                    backgroundColor: theme => theme.palette.primary.main,
+                                    opacity: intensity,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: 1,
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    fontSize: Math.min(0.65 + (count / maxCount) * 0.5, 1) + 'rem',
+                                    boxShadow: '0px 2px 4px rgba(0,0,0,0.15)',
+                                    zIndex: Math.floor(count / maxCount * 10),
+                                    transition: 'all 0.3s',
+                                    '&:hover': {
+                                        transform: 'scale(1.1)',
+                                        boxShadow: '0px 4px 8px rgba(0,0,0,0.2)',
+                                        zIndex: 20
+                                    }
+                                }}
+                                title={`${word}: ${count} occurrences`}
+                            >
+                                {word}
+                            </Box>
+                        );
+                    })}
+                    
+                    <Box sx={{ position: 'absolute', bottom: 5, left: 10, display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'primary.main', opacity: 0.5, mr: 1 }}></Box>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>Low frequency</Typography>
+                        <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: 'primary.main', opacity: 1, mx: 1 }}></Box>
+                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>High frequency</Typography>
+                    </Box>
+                </Box>
+            );
+        }
+        
+        return <Typography variant="body2">No search words data available</Typography>;
+    };
+
+
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
             <Typography variant="h4" gutterBottom>
@@ -369,44 +515,64 @@ const AnalyticsPage = () => {
                                 </Box>
                             )}
                             
-                            {/* Monthly Chart */}
+
                             {selectedTab === 2 && (
                                 <Box>
                                     <Typography variant="subtitle1">Monthly Unique Visitors</Typography>
-                                    {monthlyData.length > 0 ? renderChartWithNormalization(monthlyData, 'month') : 
+                                    {monthlyData && monthlyData.length > 0 ? renderChartWithNormalization(monthlyData, 'month') : 
                                         <Typography variant="body2">No monthly data available</Typography>}
                                 </Box>
                             )}
                         </Box>
                     </Paper>
-                    
-                    {/* Most Effective Search Query */}
+
                     <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
-                        <Typography variant="h6" gutterBottom>Most Effective Search Query</Typography>
+                        <Typography variant="h6" gutterBottom>Search Term Visualization</Typography>
                         <Typography variant="body1">
-                            "{mostEffectiveQuery}"
+                            Top 10 most frequent search terms that led users to your company.
                         </Typography>
+                        {renderSearchWordsBubbleChart()}
                     </Paper>
-                </Box>
-            )}
-        
-                {searchQueries.length > 0 && (
+                    
+
                     <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
                         <Typography variant="h6" gutterBottom>Search Queries Analysis</Typography>
                         <Typography variant="body1">
-                            {searchQueries.length} search query{searchQueries.length > 1 ? "ies" : "y"} found.
+                            {searchQueries && searchQueries.length ? `${searchQueries.length} search quer${searchQueries.length > 1 ? "ies" : "y"} found.` : "No search queries found."}
                         </Typography>
                         <Box sx={{ mt: 2 }}>
-                            {searchQueries.map((query, index) => (
+                            {searchQueries && searchQueries.length > 0 ? searchQueries.map((query, index) => (
                                 <Paper key={index} elevation={1} sx={{ padding: 2, marginY: 1 }}>
                                     <Typography variant="body1">Query: "{query.queryText}"</Typography>
                                     <Typography variant="body2">Date: {new Date(query.searchDate).toLocaleDateString()}</Typography>
                                 </Paper>
-                            ))}
+                            )) : (
+                                <Typography variant="body2">No search queries available</Typography>
+                            )}
                         </Box>
                     </Paper>
-                )}
-            </Container>
+                    
+                    <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
+                        <Typography variant="h6" gutterBottom>Most Effective Search Words</Typography>
+                        <Typography variant="body1">
+                            {mostEffectiveWord}
+                        </Typography>
+                        <Box sx={{ mt: 2, maxHeight: 300, overflow: 'auto' }}>
+                            {allWords && typeof allWords !== 'string' && allWords.length > 0 ? (
+                                allWords.slice(0, 10).map(([word, count], index) => (
+                                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                                        <Typography variant="body2">"{word}"</Typography>
+                                        <Typography variant="body2">{count} occurrence{count !== 1 ? 's' : ''}</Typography>
+                                    </Box>
+                                ))
+                            ) : (
+                                <Typography variant="body2">No search words data available</Typography>
+                            )}
+                        </Box>
+                    </Paper>
+                </Box>
+            )}
+        </Container>
     );
 }
 export default AnalyticsPage;
