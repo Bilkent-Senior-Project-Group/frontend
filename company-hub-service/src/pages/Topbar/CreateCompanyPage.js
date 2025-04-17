@@ -124,8 +124,7 @@ const CreateCompanyPage = () => {
   const [currentProject, setCurrentProject] = useState({
     projectName: '',
     description: '',                 
-    completionDate: '',
-    technologiesUsed: [], // Change from [''] to []
+    technologiesUsed: [],
     startDate: '',  
     completionDate: '',          
     isCompleted: true,     
@@ -134,7 +133,9 @@ const CreateCompanyPage = () => {
     clientType: '',
     clientCompanyName: '',
     providerCompanyName: '',
-    services: [], // Also change this from [''] to []
+    services: [],
+    clientInputValue: '',
+    providerInputValue: '',
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
   
@@ -200,9 +201,9 @@ const CreateCompanyPage = () => {
 
   useEffect(() => {
     const fetchClientCompanies = async () => {
-      if (clientInputValue.length >= 2) {
+      if (currentProject.clientInputValue && currentProject.clientInputValue.length >= 2) {
         try {
-          const companies = await CompanyService.searchCompaniesByName(clientInputValue);
+          const companies = await CompanyService.searchCompaniesByName(currentProject.clientInputValue);
           setClientCompanyOptions(companies);
         } catch (error) {
           console.error("Error fetching client companies:", error);
@@ -215,13 +216,13 @@ const CreateCompanyPage = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [clientInputValue]);
+  }, [currentProject.clientInputValue]);
 
   useEffect(() => {
     const fetchProviderCompanies = async () => {
-      if (providerInputValue.length >= 2) {
+      if (currentProject.providerInputValue && currentProject.providerInputValue.length >= 2) {
         try {
-          const companies = await CompanyService.searchCompaniesByName(providerInputValue);
+          const companies = await CompanyService.searchCompaniesByName(currentProject.providerInputValue);
           setProviderCompanyOptions(companies);
         } catch (error) {
           console.error("Error fetching provider companies:", error);
@@ -234,7 +235,7 @@ const CreateCompanyPage = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [providerInputValue]);
+  }, [currentProject.providerInputValue]);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -359,26 +360,42 @@ const CreateCompanyPage = () => {
   };
 
   const handleCreateProject = () => {
-    // Only provide defaults if the value is actually empty
+    // Get the company name from the form
+    const companyBeingCreated = companyDetails.companyName;
+    
+    // Prepare project data with default values if needed
     const formattedProject = {
-      ...currentProject,
       projectName: currentProject.projectName || 'Untitled Project',
       description: currentProject.description || 'No description provided',
       startDate: currentProject.startDate || new Date().toISOString().split('T')[0],
       completionDate: currentProject.completionDate || new Date().toISOString().split('T')[0],
-      technologiesUsed: currentProject.technologiesUsed || [],
+      technologiesUsed: [...(currentProject.technologiesUsed || [])], // Create a deep copy of the array
       isCompleted: true,
-      projectUrl: currentProject.projectUrl || 'https://example.com',
+      projectUrl: currentProject.projectUrl || '',
       clientType: currentProject.clientType || 'Unknown',
-      // Don't override values that the user has set
-      clientCompanyName: currentProject.clientCompanyName,
-      providerCompanyName: currentProject.providerCompanyName,
+      // Use input value if no company name is selected from dropdown
+      clientCompanyName: currentProject.clientCompanyName || currentProject.clientInputValue || 'Unknown Client',
+      providerCompanyName: currentProject.providerCompanyName || currentProject.providerInputValue || 'Unknown Provider',
       isOnCompedia: false,
-      services: addProjectSelectedServices || []
+      services: [...addProjectSelectedServices] // Create a deep copy of the array
     };
-
+    
+    // Check if the company being created is used in either role
+    const isCreatedCompanyUsed = 
+      formattedProject.clientCompanyName === companyBeingCreated || 
+      formattedProject.providerCompanyName === companyBeingCreated;
+      
+    // If company being created is not used in either role, show a notification
+    if (!isCreatedCompanyUsed && companyBeingCreated) {
+      setNotification({
+        open: true,
+        message: `Note: This project doesn't include "${companyBeingCreated}" as either client or provider.`,
+        severity: 'info'
+      });
+    }
+  
     if (editingProjectIndex !== null) {
-      // Editing existing project
+      // Editing existing project - preserve the project's identity but update fields
       const updatedProjects = [...projects];
       updatedProjects[editingProjectIndex] = formattedProject;
       setProjects(updatedProjects);
@@ -401,8 +418,11 @@ const CreateCompanyPage = () => {
       isOnCompedia: false,
       clientCompanyName: '',
       providerCompanyName: '',
+      clientInputValue: '',  // Clear input values too
+      providerInputValue: '', // Clear input values too
       services: []
     });
+    
     // Reset the project service selections
     setAddProjectSelectedServices([]);
     setAddProjectShowServicePanel(false);
@@ -422,10 +442,11 @@ const CreateCompanyPage = () => {
         isCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
         isOnCompedia: project.isOnCompedia !== undefined ? project.isOnCompedia : false,
         clientType: project.clientType || '',
-        // Update these to ensure proper DTO structure
         clientCompanyName: project.clientCompanyName || '',
         providerCompanyName: project.providerCompanyName || '',
         services: project.services || [],
+        clientInputValue: project.clientCompanyName || '', // Initialize with company name
+        providerInputValue: project.providerCompanyName || '', // Initialize with company name
     });
     
     // Set the selected services for editing
@@ -480,6 +501,20 @@ const CreateCompanyPage = () => {
     // Location validation
     if (selectedLocationIds === -1) {
       errors.location = "Please select a location";
+    }
+    
+    // Validate that projects include the company being created
+    if (projects.length > 0) {
+      const companyBeingCreated = companyDetails.companyName;
+      const hasCompanyInProjects = projects.some(
+        project => 
+          project.clientCompanyName === companyBeingCreated || 
+          project.providerCompanyName === companyBeingCreated
+      );
+      
+      if (!hasCompanyInProjects) {
+        errors.projects = `At least one project must include "${companyBeingCreated}" as either client or provider.`;
+      }
     }
     
     return errors;
@@ -1081,6 +1116,8 @@ const CreateCompanyPage = () => {
               '&:hover': { bgcolor: colors.primary[600] }
             }}
             onClick={() => {
+              
+              // Initialize with empty defaults
               setCurrentProject({
                 projectName: '',
                 description: '',
@@ -1095,6 +1132,8 @@ const CreateCompanyPage = () => {
                 providerCompanyName: '',
                 services: []
               });
+              
+              // Reset editing state
               setEditingProjectIndex(null);
               setOpenProjectDialog(true);
             }}
@@ -1391,21 +1430,18 @@ const CreateCompanyPage = () => {
               <Autocomplete
                 options={clientCompanyOptions}
                 getOptionLabel={(option) => option.companyName || ''}
-                inputValue={clientInputValue}
-                onInputChange={(event, newInputValue) => {
-                  setClientInputValue(newInputValue);
-                  // Also update the current project with typed input
-                  if (newInputValue && !event?.target?.classList?.contains('MuiAutocomplete-clearIndicator')) {
-                    setCurrentProject(prev => ({
-                      ...prev,
-                      clientCompanyName: newInputValue
-                    }));
-                  }
-                }}
-                onChange={(event, newValue) => {
+                inputValue={currentProject.clientInputValue || ''}
+                onInputChange={(_, newInputValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    clientCompanyName: newValue?.companyName || clientInputValue
+                    clientInputValue: newInputValue,
+                    clientCompanyName: newInputValue
+                  }));
+                }}
+                onChange={(_, newValue) => {
+                  setCurrentProject(prev => ({
+                    ...prev,
+                    clientCompanyName: newValue?.companyName || ''
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
@@ -1427,21 +1463,18 @@ const CreateCompanyPage = () => {
               <Autocomplete
                 options={providerCompanyOptions}
                 getOptionLabel={(option) => option.companyName || ''}
-                inputValue={providerInputValue}
-                onInputChange={(event, newInputValue) => {
-                  setProviderInputValue(newInputValue);
-                  // Also update the current project with typed input
-                  if (newInputValue && !event?.target?.classList?.contains('MuiAutocomplete-clearIndicator')) {
-                    setCurrentProject(prev => ({
-                      ...prev,
-                      providerCompanyName: newInputValue
-                    }));
-                  }
-                }}
-                onChange={(event, newValue) => {
+                inputValue={currentProject.providerInputValue || ''}
+                onInputChange={(_, newInputValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    providerCompanyName: newValue?.companyName || providerInputValue
+                    providerInputValue: newInputValue,
+                    providerCompanyName: newInputValue
+                  }));
+                }}
+                onChange={(_, newValue) => {
+                  setCurrentProject(prev => ({
+                    ...prev,
+                    providerCompanyName: newValue?.companyName || ''
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
