@@ -50,6 +50,44 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig.js';
 
+const technologyOptions = [
+  // Programming Languages
+  "Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "PHP", "Ruby", "Swift", "Kotlin", "Rust",
+  
+  // Frameworks & Libraries - Frontend
+  "React", "Angular", "Vue.js", "Svelte", "Next.js", "Nuxt.js",
+  
+  // Frameworks & Libraries - Backend
+  "Node.js", "Express.js", "Django", "Flask", "Spring Boot", "ASP.NET Core", "Laravel", "Ruby on Rails", "FastAPI",
+  
+  // Frameworks & Libraries - Mobile
+  "React Native", "Flutter", "SwiftUI", "Android SDK",
+  
+  // Databases
+  "PostgreSQL", "MySQL", "SQLite", "MongoDB", "Redis", "Firebase Realtime DB", "Firestore", "Microsoft SQL Server", "Cassandra", "Neo4j",
+  
+  // Cloud & DevOps
+  "AWS", "Microsoft Azure", "Google Cloud Platform", "Docker", "Kubernetes", "Jenkins", "GitHub Actions", "GitLab CI/CD", "Vercel", "Netlify", "Heroku",
+  
+  // AI/ML & Data
+  "TensorFlow", "PyTorch", "Scikit-learn", "OpenCV", "Pandas", "NumPy", "Hugging Face Transformers", "Keras", "spaCy", "LangChain", "OpenAI API", "NLTK",
+  
+  // Tools & Miscellaneous
+  "Git", "GitHub", "GitLab", "Figma", "Postman", "Swagger", "OpenAPI", "Elasticsearch", "RabbitMQ", "Apache Kafka", "REST API", "GraphQL", "WebSockets"
+];
+
+// Add this constant near the top of your file with the other constants
+const clientTypeOptions = [
+  "Startup",
+  "Small Business",
+  "Medium-Sized Enterprise (SME)",
+  "Large Corporation",
+  "Non-Governmental Organization (NGO)",
+  "Government Agency",
+  "Educational Institution",
+  "Research Institute",
+  "Other"
+];
 
 const VisuallyHiddenInput = styled('input')({
   clip: 'rect(0 0 0 0)',
@@ -85,7 +123,7 @@ const CreateCompanyPage = () => {
     projectName: '',
     description: '',                 
     completionDate: '',
-    technologiesUsed: [''],               
+    technologiesUsed: [], // Change from [''] to []
     startDate: '',  
     completionDate: '',          
     isCompleted: true,     
@@ -94,7 +132,7 @@ const CreateCompanyPage = () => {
     clientType: '',
     clientCompanyName: '',
     providerCompanyName: '',
-    services: [''],  
+    services: [], // Also change this from [''] to []
   });
   const [editingProjectIndex, setEditingProjectIndex] = useState(null);
   
@@ -319,22 +357,22 @@ const CreateCompanyPage = () => {
   };
 
   const handleCreateProject = () => {
-    // Ensure all required fields have default values
+    // Only provide defaults if the value is actually empty
     const formattedProject = {
       ...currentProject,
       projectName: currentProject.projectName || 'Untitled Project',
       description: currentProject.description || 'No description provided',
       startDate: currentProject.startDate || new Date().toISOString().split('T')[0],
       completionDate: currentProject.completionDate || new Date().toISOString().split('T')[0],
-      technologiesUsed: currentProject.technologiesUsed || [''],
+      technologiesUsed: currentProject.technologiesUsed || [],
       isCompleted: true,
-      projectUrl: currentProject.projectUrl || 'https://example.com', // Default URL for validation
-      clientType: currentProject.clientType || 'Unknown', // Default client type for validation
-      // Ensure company objects have valid structure
-      clientCompanyName: currentProject.clientCompanyName || 'Unknown Client',
-      providerCompanyName: currentProject.providerCompanyName || 'Unknown Provider',
+      projectUrl: currentProject.projectUrl || 'https://example.com',
+      clientType: currentProject.clientType || 'Unknown',
+      // Don't override values that the user has set
+      clientCompanyName: currentProject.clientCompanyName,
+      providerCompanyName: currentProject.providerCompanyName,
       isOnCompedia: false,
-      services: addProjectSelectedServices || [] // Use the selected services from the project dialog
+      services: addProjectSelectedServices || []
     };
 
     if (editingProjectIndex !== null) {
@@ -355,13 +393,13 @@ const CreateCompanyPage = () => {
       clientType: '',
       completionDate: '',
       startDate: '',
-      technologiesUsed: [''],
+      technologiesUsed: [],
       projectUrl: '',
       isCompleted: true,
       isOnCompedia: false,
       clientCompanyName: '',
       providerCompanyName: '',
-      services: ['']
+      services: []
     });
     // Reset the project service selections
     setAddProjectSelectedServices([]);
@@ -377,7 +415,7 @@ const CreateCompanyPage = () => {
         description: project.description || '',
         startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
         completionDate: project.completionDate ? new Date(project.completionDate).toISOString().split('T')[0] : '',
-        technologiesUsed: project.technologiesUsed || [''],
+        technologiesUsed: project.technologiesUsed || [],
         projectUrl: project.projectUrl || '',
         isCompleted: project.isCompleted !== undefined ? project.isCompleted : true,
         isOnCompedia: project.isOnCompedia !== undefined ? project.isOnCompedia : false,
@@ -385,7 +423,7 @@ const CreateCompanyPage = () => {
         // Update these to ensure proper DTO structure
         clientCompanyName: project.clientCompanyName || '',
         providerCompanyName: project.providerCompanyName || '',
-        services: project.services || [''],
+        services: project.services || [],
     });
     
     // Set the selected services for editing
@@ -733,12 +771,7 @@ const CreateCompanyPage = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Box
-              sx={{ 
-                mb: 2,
-                p: 0
-              }}
-            >
+            <Box sx={{ width: '100%' }}>
               <Typography variant="h6" fontWeight={600} color={colors.neutral[700]} sx={{ mb: 2 }}>
                 Services
               </Typography>
@@ -989,13 +1022,13 @@ const CreateCompanyPage = () => {
                 clientType: '',
                 completionDate: '',
                 startDate: '',
-                technologiesUsed: [''],
+                technologiesUsed: [],
                 projectUrl: '',
                 isCompleted: true,
                 isOnCompedia: false,
                 clientCompanyName: '',
                 providerCompanyName: '',
-                services: ['']
+                services: []
               });
               setEditingProjectIndex(null);
               setOpenProjectDialog(true);
@@ -1016,6 +1049,44 @@ const CreateCompanyPage = () => {
                 borderRadius: 2,
               }}
             >
+              {/* Add control buttons at top-right */}
+              <Box sx={{ 
+                position: 'absolute', 
+                top: 8, 
+                right: 8, 
+                display: 'flex', 
+                gap: 0.5 
+              }}>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleEditProject(index)}
+                  sx={{ 
+                    p: 0.5,
+                    color: 'primary.main',
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                    '&:hover': {
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15)
+                    }
+                  }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleDeleteProject(index)}
+                  sx={{ 
+                    p: 0.5,
+                    color: 'error.main',
+                    bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
+                    '&:hover': {
+                      bgcolor: (theme) => alpha(theme.palette.error.main, 0.15)
+                    }
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
               <Typography variant="h6" gutterBottom>
                 {project.projectName}
               </Typography>
@@ -1029,7 +1100,7 @@ const CreateCompanyPage = () => {
                   </Typography>
                 </Box>
                 
-                {project.technologiesUsed && project.technologiesUsed.length > 0 && project.technologiesUsed[0] && (
+                {project.technologiesUsed && project.technologiesUsed.length > 0 && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="caption" color="text.secondary">
                       Technologies: {project.technologiesUsed.join(', ')}
@@ -1046,7 +1117,7 @@ const CreateCompanyPage = () => {
                 )}
                 
                 {/* Add this section to display selected services */}
-                {project.services && project.services.length > 0 && project.services[0] && (
+                {project.services && project.services.length > 0 && (
                   <Box sx={{ mt: 1 }}>
                     <Typography variant="caption" color="text.secondary" fontWeight={500}>
                       Services: 
@@ -1198,14 +1269,24 @@ const CreateCompanyPage = () => {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Client Type"
-                name="clientType"
-                value={currentProject.clientType || ''}
-                onChange={handleProjectChange}
-                variant="outlined"
-              />
+              <FormControl fullWidth variant="outlined">
+                <InputLabel id="client-type-label">Client Type</InputLabel>
+                <Select
+                  labelId="client-type-label"
+                  id="clientType"
+                  name="clientType"
+                  value={currentProject.clientType || ''}
+                  onChange={handleProjectChange}
+                  label="Client Type"
+                >
+                  {clientTypeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>Select the type of client for this project</FormHelperText>
+              </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -1248,11 +1329,18 @@ const CreateCompanyPage = () => {
                 inputValue={clientInputValue}
                 onInputChange={(event, newInputValue) => {
                   setClientInputValue(newInputValue);
+                  // Also update the current project with typed input
+                  if (newInputValue && !event?.target?.classList?.contains('MuiAutocomplete-clearIndicator')) {
+                    setCurrentProject(prev => ({
+                      ...prev,
+                      clientCompanyName: newInputValue
+                    }));
+                  }
                 }}
                 onChange={(event, newValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    clientCompanyName: newValue?.companyName || ''
+                    clientCompanyName: newValue?.companyName || clientInputValue
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
@@ -1277,11 +1365,18 @@ const CreateCompanyPage = () => {
                 inputValue={providerInputValue}
                 onInputChange={(event, newInputValue) => {
                   setProviderInputValue(newInputValue);
+                  // Also update the current project with typed input
+                  if (newInputValue && !event?.target?.classList?.contains('MuiAutocomplete-clearIndicator')) {
+                    setCurrentProject(prev => ({
+                      ...prev,
+                      providerCompanyName: newInputValue
+                    }));
+                  }
                 }}
                 onChange={(event, newValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    providerCompanyName: newValue?.companyName || ''
+                    providerCompanyName: newValue?.companyName || providerInputValue
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
@@ -1315,155 +1410,165 @@ const CreateCompanyPage = () => {
             {/* Services Selection Component for add project */}
             <Grid item xs={12}>
               <Box sx={{ width: '100%' }}>
-                {/* Section 3: Services */}
-                <Box 
-                  sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    mb: addProjectShowServicePanel ? 2 : 0
+                <Typography variant="h6" fontWeight={600} color={colors.neutral[700]} sx={{ mb: 2 }}>
+                  Services
+                </Typography>
+                
+                <Box
+                  sx={{
+                    border: '1px solid rgba(0, 0, 0, 0.23)',  // Match TextField border style
+                    borderRadius: 1,
+                    p: 2,
+                    minHeight: 56,
+                    '&:hover': {
+                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                    },
+                    '&:focus-within': {
+                      borderColor: 'primary.main',
+                      borderWidth: 2,
+                    },
                   }}
-                  onClick={() => setAddProjectShowServicePanel(!addProjectShowServicePanel)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={600} color={colors.neutral[700]}>
-                      Services
-                    </Typography>
-                    {getAddProjectSelectedServiceCount() > 0 && (
-                      <Chip
-                        size="small"
-                        label={`${getAddProjectSelectedServiceCount()} selected`}
-                        sx={{ 
-                          ml: 1.5, 
-                          height: 24, 
-                          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                          color: 'primary.main',
-                          fontWeight: 500,
-                        }}
-                      />
-                    )}
-                  </Box>
-                  <IconButton 
-                    size="small"
-                    sx={{
-                      transition: 'transform 0.2s',
-                      transform: addProjectShowServicePanel ? 'rotate(180deg)' : 'rotate(0deg)',
-                    }}
-                  >
-                    <ExpandMoreIcon />
-                  </IconButton>
-                </Box>
-
-                {addProjectShowServicePanel && (
-                  <Box>
-                    <Tabs
-                      value={addProjectActiveIndustryTab}
-                      onChange={(e, newValue) => setAddProjectActiveIndustryTab(newValue)}
-                      variant="scrollable"
-                      scrollButtons="auto"
-                      sx={{
-                        mb: 2,
-                        minHeight: '44px',
-                        '& .MuiTabs-indicator': {
-                          height: 3,
-                          borderRadius: '3px 3px 0 0',
-                        },
-                        '& .MuiTab-root': {
-                          minHeight: '44px',
-                          textTransform: 'none',
-                          fontWeight: 600,
-                          fontSize: '0.9rem',
-                          px: 2,
-                        },
+                  {/* Display selected services as chips */}
+                  {addProjectSelectedServices.length > 0 && (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: 0.75, 
+                      mb: 2
+                    }}>
+                      {addProjectSelectedServices.map(serviceId => {
+                        // Find service name from all services
+                        let serviceName = serviceId;
+                        addProjectServicesByIndustry.forEach(industry => {
+                          const service = industry.services.find(s => s.id === serviceId);
+                          if (service) {
+                            serviceName = service.name;
+                          }
+                        });
+                        
+                        return (
+                          <Chip
+                            key={serviceId}
+                            label={serviceName}
+                            size="small"
+                            onDelete={() => addProjectToggleService(serviceId)}
+                            sx={{
+                              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              color: 'primary.main',
+                              fontWeight: 500,
+                              borderRadius: 1.5,
+                            }}
+                          />
+                        );
+                      })}
+                    </Box>
+                  )}
+                  
+                  {/* Add service and clear all buttons in same row */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 1,
+                    justifyContent: addProjectSelectedServices.length > 0 ? 'space-between' : 'center',
+                    alignItems: 'center' 
+                  }}>
+                    <Button
+                      onClick={() => setAddProjectShowServicePanel(true)}
+                      startIcon={<AddIcon />}
+                      variant="outlined"
+                      color="primary"
+                      size="medium"
+                      sx={{ 
+                        borderRadius: 1,
+                        borderStyle: 'dashed',
+                        flexGrow: 0
                       }}
                     >
-                      {addProjectServicesByIndustry.map((group, index) => (
-                        <Tab key={index} label={group.industry} />
-                      ))}
-                    </Tabs>
-
-                    {addProjectServicesByIndustry.length > 0 && addProjectActiveIndustryTab < addProjectServicesByIndustry.length && (
-                      <Box 
-                        sx={{ 
-                          maxHeight: '200px', 
-                          overflowY: 'auto', 
-                          p: 1,
-                          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                        }}
+                      {addProjectSelectedServices.length > 0 ? 'Add More Services' : 'Add Services'}
+                    </Button>
+                    
+                    {addProjectSelectedServices.length > 0 && (
+                      <Button
+                        onClick={() => setAddProjectSelectedServices([])}
+                        color="error"
+                        size="small"
+                        variant="text"
+                        sx={{ flexGrow: 0 }}
                       >
-                        <Grid container spacing={1}>
-                          {addProjectServicesByIndustry[addProjectActiveIndustryTab].services.map((service) => {
-                            const isSelected = addProjectSelectedServices.includes(service.id);
-                            return (
-                              <Grid item xs={6} key={service.id}>
-                                <Paper
-                                  elevation={0}
-                                  onClick={() => addProjectToggleService(service.id)}
-                                  sx={{
-                                    p: 1,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    bgcolor: isSelected 
-                                      ? (theme) => alpha(theme.palette.primary.main, 0.1) 
-                                      : 'background.paper',
-                                    border: '1px solid',
-                                    borderColor: isSelected ? 'primary.main' : 'divider',
-                                    borderRadius: 1,
-                                    '&:hover': {
-                                      bgcolor: isSelected 
-                                        ? (theme) => alpha(theme.palette.primary.main, 0.15) 
-                                        : (theme) => alpha(theme.palette.primary.main, 0.05),
-                                    },
-                                    transition: 'all 0.2s',
-                                  }}
-                                >
-                                  <Checkbox
-                                    checked={isSelected}
-                                    color="primary"
-                                    size="small"
-                                    sx={{ p: 0.5, mr: 1 }}
-                                  />
-                                  <Typography
-                                    variant="body2"
-                                    fontWeight={isSelected ? 600 : 400}
-                                    color={isSelected ? 'primary.main' : 'text.primary'}
-                                    sx={{ fontSize: '0.85rem' }}
-                                  >
-                                    {service.name}
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                            );
-                          })}
-                        </Grid>
-                      </Box>
+                        Clear All
+                      </Button>
                     )}
                   </Box>
-                )}
+                </Box>
               </Box>
             </Grid>
 
             <Grid item xs={12}>
-              {/* This could be replaced with a more sophisticated component for adding multiple technologies */}
-              <TextField
-                fullWidth
-                label="Technologies Used (comma separated)"
-                name="technologiesUsed"
-                value={currentProject.technologiesUsed?.join(', ') || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
+              <Typography variant="subtitle1" gutterBottom>
+                Technologies Used
+              </Typography>
+              <Autocomplete
+                multiple
+                id="technologies-autocomplete"
+                options={technologyOptions}
+                freeSolo
+                value={currentProject.technologiesUsed || []}
+                onChange={(event, newValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    technologiesUsed: value.split(',').map(tech => tech.trim())
+                    technologiesUsed: newValue.map(item => item.trim()).filter(item => item !== '')
                   }));
                 }}
-                variant="outlined"
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      label={option}
+                      {...getTagProps({ index })}
+                      key={index}
+                      size="small"
+                      sx={{
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                        color: 'primary.main',
+                        fontWeight: 500,
+                        borderRadius: 1.5,
+                      }}
+                    />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    placeholder={currentProject.technologiesUsed?.length > 0 ? "" : "Add technologies..."}
+                    fullWidth
+                  />
+                )}
+                filterOptions={(options, params) => {
+                  const filtered = options.filter(option => 
+                    option.toLowerCase().includes(params.inputValue.toLowerCase())
+                  );
+                  
+                  // Add the option to add a new value if it's not in our list
+                  const isExisting = options.some(
+                    option => option.toLowerCase() === params.inputValue.toLowerCase()
+                  );
+                  
+                  if (params.inputValue !== '' && !isExisting) {
+                    filtered.push(params.inputValue);
+                  }
+                  
+                  return filtered;
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    paddingLeft: 1,
+                    '& input': { paddingTop: 1, paddingBottom: 1 }
+                  }
+                }}
               />
+              <FormHelperText>
+                Start typing to see suggestions or add your own technologies
+              </FormHelperText>
             </Grid>
           </Grid>
         </DialogContent>
@@ -1476,6 +1581,134 @@ const CreateCompanyPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Project Services Selection Dialog */}
+      <Dialog
+        open={addProjectShowServicePanel}
+        onClose={() => setAddProjectShowServicePanel(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Select Project Services</Typography>
+            <IconButton onClick={() => setAddProjectShowServicePanel(false)} size="small">
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              {addProjectSelectedServices.length} services selected
+            </Typography>
+            {addProjectSelectedServices.length > 0 && (
+              <Button
+                onClick={() => setAddProjectSelectedServices([])}
+                color="error"
+                size="small"
+                variant="text"
+              >
+                Clear All Services
+              </Button>
+            )}
+          </Box>
+          
+          <Tabs
+            value={addProjectActiveIndustryTab}
+            onChange={(e, newValue) => setAddProjectActiveIndustryTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              mb: 2,
+              minHeight: '44px',
+              '& .MuiTabs-indicator': {
+                height: 3,
+                borderRadius: '3px 3px 0 0',
+              },
+              '& .MuiTab-root': {
+                minHeight: '44px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+                px: 2,
+              },
+            }}
+          >
+            {addProjectServicesByIndustry.map((group, index) => (
+              <Tab key={index} label={group.industry} />
+            ))}
+          </Tabs>
+
+          {addProjectServicesByIndustry.length > 0 && addProjectActiveIndustryTab < addProjectServicesByIndustry.length && (
+            <Box 
+              sx={{ 
+                maxHeight: '400px', 
+                overflowY: 'auto', 
+                p: 1,
+                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.5),
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+              }}
+            >
+              <Grid container spacing={1}>
+                {addProjectServicesByIndustry[addProjectActiveIndustryTab].services.map((service) => {
+                  const isSelected = addProjectSelectedServices.includes(service.id);
+                  return (
+                    <Grid item xs={6} key={service.id}>
+                      <Paper
+                        elevation={0}
+                        onClick={() => addProjectToggleService(service.id)}
+                        sx={{
+                          p: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          cursor: 'pointer',
+                          bgcolor: isSelected 
+                            ? (theme) => alpha(theme.palette.primary.main, 0.1) 
+                            : 'background.paper',
+                          border: '1px solid',
+                          borderColor: isSelected ? 'primary.main' : 'divider',
+                          borderRadius: 1,
+                          '&:hover': {
+                            bgcolor: isSelected 
+                              ? (theme) => alpha(theme.palette.primary.main, 0.15) 
+                              : (theme) => alpha(theme.palette.primary.main, 0.05),
+                          },
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          color="primary"
+                          size="small"
+                          sx={{ p: 0.5, mr: 1 }}
+                        />
+                        <Typography
+                          variant="body2"
+                          fontWeight={isSelected ? 600 : 400}
+                          color={isSelected ? 'primary.main' : 'text.primary'}
+                          sx={{ fontSize: '0.85rem' }}
+                        >
+                          {service.name}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddProjectShowServicePanel(false)} color="primary">
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Notifications */}
       <Snackbar 
         open={notification.open} 
