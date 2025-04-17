@@ -66,6 +66,7 @@ export class CompanyProfileDTO {
     this.city = data.city || '';
     this.country = data.country || '';
     this.totalReviews = data.totalReviews || 0;
+    this.logoUrl = data.logoUrl || '';
   }
 
 }

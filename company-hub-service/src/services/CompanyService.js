@@ -210,13 +210,88 @@ const getProjectsOfCompany = async (companyId, token) => {
   }
 }
 
+const uploadLogo = async (companyId, logoFile, token) => {
+  try {
+    if (!companyId) {
+      throw new Error('Company ID is required');
+    }
+    
+    if (!logoFile || !(logoFile instanceof File)) {
+      throw new Error('A valid image file is required');
+    }
+    
+    // Check if the file is a PNG
+    if (!logoFile.type.includes('png')) {
+      throw new Error('Only PNG images are supported');
+    }
+
+    const formData = new FormData();
+    formData.append('file', logoFile);
+
+    const response = await axios.post(
+      `${API_URL}/api/Company/UploadLogo/${companyId}`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        }
+      }
+    );
+
+    console.log('Logo uploaded successfully:', response.data);
+    return response.data; // Usually contains the URL of the uploaded logo
+  } catch (error) {
+    console.error('Error uploading logo:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to upload company logo. Please check your file and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
+const getCompaniesOfUser = async (userId, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetCompaniesOfUser/${userId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('User companies data:', response.data);
+    return response.data; // Returns array of {companyId, companyName}
+  }
+  catch (error) {
+    console.error('Error in getCompaniesOfUser:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch user companies. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
   getCompany,
   getCompanyPeople,
   searchCompaniesByName,
-  getProjectsOfCompany
+  getProjectsOfCompany,
+  uploadLogo,
+  getCompaniesOfUser
 };
 
 export default CompanyService;
