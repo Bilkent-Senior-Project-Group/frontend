@@ -18,6 +18,7 @@ export class CreateCompanyRequestDTO {
     this.portfolio = data.portfolio || [];
     this.services = data.services || [];
     this.partnerships = data.partnerships || [];
+    this.addedOnPage = true;
   }
 
   /**
@@ -38,11 +39,6 @@ export class CreateCompanyRequestDTO {
     // [Range] validation
     if (this.foundedYear < 1800 || this.foundedYear > 2100) {
       errors.foundedYear = "Foundation year must be between 1800 and 2100";
-    }
-    
-    // [EnsureAtLeastOneProject] validation
-    if (!this.portfolio || this.portfolio.length === 0) {
-      errors.portfolio = "At least one project is required";
     }
     
     return errors;

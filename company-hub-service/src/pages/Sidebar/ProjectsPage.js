@@ -22,6 +22,7 @@ import { useAuth } from '../../contexts/AuthContext.js';
 import { colors } from '../../theme/theme.js';
 import CompanyService from '../../services/CompanyService.js';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO.js';
+import ProjectDTO from '../../DTO/project/ProjectDTO.js'
 
 const ProjectsPage = () => {
     const { companyName } = useParams();
@@ -31,30 +32,35 @@ const ProjectsPage = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-  useEffect(() => {
-    
+useEffect(() => {
     const fetchProjects = async () => {
-      try {
-        setLoading(true);
-        const companyData = await CompanyService.getCompany(companyName, token);
-        console.log("Backend Company Data:", companyData);
-        const companyProfile = new CompanyProfileDTO(companyData);
-        setProjects(companyProfile.projects);
-      } catch (err) {
-        setError('Failed to load projects. Please try again later.');
-        setLoading(false);
-        console.error('Error fetching projects:', err);
-      }
-        finally {
+        try {
+            setLoading(true);
+            const companyData = await CompanyService.getCompany(companyName, token);
+            console.log("Backend Company Data:", companyData);
+            const companyProfile = new CompanyProfileDTO(companyData);
+            const companyId = companyProfile.companyId;
+            const response = await CompanyService.getProjectsOfCompany(companyId, token);
+
+            if (response) {
+                const projectDTOs = response.map(project => new ProjectDTO(project));
+                setProjects(projectDTOs);
+            } else {
+                setError('Unexpected response format from server.');
+            }
+        } catch (err) {
+            setError('Failed to load projects. Please try again later.');
+            console.error('Error fetching projects:', err);
+        } finally {
             setLoading(false);
         }
     };
 
     fetchProjects();
-  }, [token, companyName]);
+}, [token, companyName]);
 
   const handleViewProject = (projectId) => {
-    navigate(`/company/projects/${projectId}`);
+    navigate(`/company/projects/${companyName}/${projectId}`);
   };
 
   const handleEditProject = (projectId, e) => {
@@ -108,14 +114,14 @@ const ProjectsPage = () => {
 
 return (
     <Box>
-    
-            <Box 
-                sx={{ 
-                    backgroundColor: colors.neutral[100],
-                    py: 4,
-                    borderBottom: `1px solid ${colors.neutral[300]}`
-                }}
-            >
+        <Box 
+            sx={{ 
+                backgroundColor: colors.neutral[100],
+                py: 4,
+                borderBottom: `1px solid ${colors.neutral[300]}`
+            }}
+        >
+            <Container maxWidth="lg">
                 <Container maxWidth="lg">
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
@@ -140,6 +146,7 @@ return (
                     </Box>
                     </Box>
                 </Container>
+            </Container>
             </Box>
 
             {/* Projects List */}

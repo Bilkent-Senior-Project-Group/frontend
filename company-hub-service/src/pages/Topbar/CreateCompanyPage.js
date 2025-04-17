@@ -670,18 +670,6 @@ const CreateCompanyPage = () => {
               required
             />
           </Grid>
-          {/* <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Founded Year"
-              name="foundedYear"
-              value={companyDetails.foundedYear}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-              required
-              helperText="Must be between 1800 and 2100"
-            />
-          </Grid> */}
           <Grid item xs={12} md={6}>
             <FormControl fullWidth variant="outlined" required>
               <InputLabel id="founded-year-label">Founded Year</InputLabel>
@@ -705,26 +693,79 @@ const CreateCompanyPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Address"
-              name="address"
-              value={companyDetails.address}
-              onChange={handleCompanyDetailsChange}
               variant="outlined"
+              placeholder={selectedLocation ? selectedLocation : "Select a location..."}
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MapPin size={20} color="#9e9e9e" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <>
+                    {selectedLocation && (
+                      <IconButton 
+                        size="small" 
+                        onClick={clearSelectedLocation}
+                        sx={{ mr: 0.5 }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                    {loadingLocations && <CircularProgress size={20} />}
+                  </>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'white', // Changed to white background
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                    borderWidth: 1,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'primary.main',
+                    borderWidth: 2,
+                  },
+                  ...(selectedLocation && {
+                    backgroundColor: 'white', // Keep white even when selected
+                    color: 'primary.main',
+                    fontWeight: 500,
+                  }),
+                },
+              }}
               required
+              error={!!validationErrors.location}
+              helperText={validationErrors.location || "Required - Type to search"}
             />
+            {locationResults.length > 0 && (
+              <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
+                {locationResults.map((loc) => (
+                  <Box
+                    key={loc.id}
+                    sx={{ 
+                      px: 2, 
+                      py: 1.5, 
+                      cursor: 'pointer', 
+                      '&:hover': { 
+                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
+                      },
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': {
+                        borderBottom: 'none'
+                      }
+                    }}
+                    onClick={() => handleAddLocation(loc)}
+                  >
+                    <Typography variant="body2">{loc.city}, {loc.country}</Typography>
+                  </Box>
+                ))}
+              </Paper>
+            )}
           </Grid>
-          {/* <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Company Size"
-              name="companySize"
-              value={companyDetails.companySize}
-              onChange={handleCompanyDetailsChange}
-              variant="outlined"
-              type="text"
-              helperText="Enter number of employees (e.g., '100' or '100-500')"
-            />
-          </Grid> */}
           <Grid item xs={12} md={6}>
             <FormControl fullWidth variant="outlined" required>
               <InputLabel id="company-size-label">Company Size</InputLabel>
@@ -775,6 +816,17 @@ const CreateCompanyPage = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
+              label="Address"
+              name="address"
+              value={companyDetails.address}
+              onChange={handleCompanyDetailsChange}
+              variant="outlined"
+              required
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
               label="Email Address"
               name="email"
               value={companyDetails.email || ''}
@@ -794,82 +846,6 @@ const CreateCompanyPage = () => {
               variant="outlined"
             />
           </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder={selectedLocation ? selectedLocation : "Add a location..."}
-              value={locationQuery}
-              onChange={(e) => setLocationQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <MapPin size={20} color="#9e9e9e" />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <>
-                    {selectedLocation && (
-                      <IconButton 
-                        size="small" 
-                        onClick={clearSelectedLocation}
-                        sx={{ mr: 0.5 }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                    {loadingLocations && <CircularProgress size={20} />}
-                  </>
-                ),
-              }}
-              sx={{
-                mb: 2,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                    borderWidth: 1,
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                    borderWidth: 2,
-                  },
-                  ...(selectedLocation && {
-                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                    color: 'primary.main',
-                    fontWeight: 500,
-                  }),
-                },
-              }}
-            />
-            {locationResults.length > 0 && (
-              <Paper elevation={2} sx={{ borderRadius: 1, mb: 2, maxHeight: 150, overflowY: 'auto' }}>
-                {locationResults.map((loc) => (
-                  <Box
-                    key={loc.id}
-                    sx={{ 
-                      px: 2, 
-                      py: 1.5, 
-                      cursor: 'pointer', 
-                      '&:hover': { 
-                        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08)
-                      },
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:last-child': {
-                        borderBottom: 'none'
-                      }
-                    }}
-                    onClick={() => handleAddLocation(loc)}
-                  >
-                    <Typography variant="body2">{loc.city}, {loc.country}</Typography>
-                  </Box>
-                ))}
-              </Paper>
-            )}
-          </Grid>
-
           <Grid item xs={12}>
             <Box sx={{ width: '100%' }}>
               <Typography variant="h6" fontWeight={600} color={colors.neutral[700]} sx={{ mb: 2 }}>

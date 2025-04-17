@@ -182,12 +182,41 @@ const searchCompaniesByName = async (query, token) => {
   }
 };
 
+const getProjectsOfCompany = async (companyId, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetProjectsOfCompany/${companyId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('Company projects data:', response.data);
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error in getProjectsOfCompany:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch company projects. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
   getCompany,
   getCompanyPeople,
-  searchCompaniesByName
+  searchCompaniesByName,
+  getProjectsOfCompany
 };
 
 export default CompanyService;

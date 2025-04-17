@@ -56,11 +56,6 @@ const CompanyPage = () => {
       const companyData = await CompanyService.getCompany(companyName, token);
       console.log("Backend Company Data:", companyData);
       const companyProfile = new CompanyProfileDTO(companyData);
-
-      companyProfile.services.forEach((service) => {
-        service.percentage = 33.3; //to be deleted after percentage comes correctly
-      })
-      
       // Use the DTO instead of raw data
       setCompany(companyProfile);
     } catch (error) {
@@ -171,18 +166,23 @@ const CompanyPage = () => {
                       />
                     )}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
-                    <Rating value={company.overallRating} readOnly precision={0.1} />
-                    <Typography variant="body1" sx={{ ml: 1 }}>
-                    {company.overallRating === 0 ? '' : company.overallRating} ({5} reviews)  
-                      {/* reviews sayısı backendden gelmeli*/}
+                  {company.totalReviews > 0 ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                      <Rating value={company.overallRating} readOnly precision={0.1} />
+                      <Typography variant="body1" sx={{ ml: 1 }}>
+                        {company.overallRating} ({company.totalReviews} reviews)
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body1" sx={{ my: 1 }}>
+                      No Reviews
                     </Typography>
-                  </Box>
+                  )}
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Map size={16} />
                       <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.location}
+                        {company.city}, {company.country}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -297,7 +297,6 @@ const CompanyPage = () => {
                       outerRadius={80}
                       dataKey="percentage"
                       nameKey="serviceName"
-                      // label={({ serviceName, percentage }) => `${serviceName} (${percentage}%)`}
                     >
                       {company.services.map((_, index) => (
                         <Cell
@@ -311,7 +310,7 @@ const CompanyPage = () => {
                         />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => `${value}%`} />
                     <Legend />
                   </PieChart>
                 </Box>
@@ -407,25 +406,18 @@ const CompanyPage = () => {
           {activeTab === 2 && (
             <Grid container spacing={4}>
               <Grid item xs={12}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  Portfolio
-                </Typography>
-                
                 {company.projects && company.projects.length > 0 ? (
                   <Grid container spacing={3}>
                     {company.projects.map((project, index) => (
                       <Grid item xs={12} md={6} key={index}>
                         <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                          
                           <CardContent sx={{ flexGrow: 1 }}>
                             <Typography variant="h6" gutterBottom>
                               {project.projectName}
                             </Typography>
-                            
                             <Typography variant="body2" color="text.secondary" paragraph>
                               {project.description}
                             </Typography>
-                            
                             {(project.startDate || project.completionDate) && (
                               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                 <Calendar size={16} color={colors.neutral[500]} />
@@ -435,37 +427,41 @@ const CompanyPage = () => {
                                 </Typography>
                               </Box>
                             )}
-                            
                             {project.clientCompanyName && (
                               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                 <strong>Client Company Name:</strong> {project.clientCompanyName}
                               </Typography>
                             )}
-                            
-                            {project.technologiesUsed && (Array.isArray(project.technologiesUsed) ? 
-                              project.technologiesUsed.length > 0 : project.technologiesUsed) && (
+                            {project.providerCompanyName && (
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                <strong>Provider Company Name:</strong> {project.providerCompanyName}
+                              </Typography>
+                            )}
+                            {project.services && project.services.length > 0 && (
                               <Box sx={{ mt: 2 }}>
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                  <strong>Technologies Used:</strong>
+                                  <strong>Services:</strong>
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                  {Array.isArray(project.technologiesUsed) ? (
-                                    project.technologiesUsed.map((tech, techIndex) => (
-                                      <Chip 
-                                        key={techIndex} 
-                                        label={tech} 
-                                        size="small" 
-                                        sx={{ backgroundColor: colors.neutral[100] }}
-                                      />
-                                    ))
-                                  ) : (
-                                    <Typography variant="body2">{project.technologiesUsed}</Typography>
-                                  )}
+                                  {project.services.map((service, serviceIndex) => (
+                                    <Chip 
+                                      key={serviceIndex} 
+                                      label={service.name} 
+                                      size="small" 
+                                      sx={{ 
+                                        backgroundColor: colors.primary[500], 
+                                        color: 'white',
+                                        '&:hover': {
+                                          backgroundColor: colors.primary[700],
+                                          color: 'white',
+                                        },
+                                      }}
+                                    />
+                                  ))}
                                 </Box>
                               </Box>
                             )}
                           </CardContent>
-                          
                           {project.projectUrl && (
                             <Box sx={{ p: 2, pt: 0 }}>
                               <Button 
@@ -491,8 +487,6 @@ const CompanyPage = () => {
               </Grid>
             </Grid>
           )}
-          
-          {/* Reviews Tab */}
           {activeTab === 3 && (
             <Grid container spacing={4}>
               <Grid item xs={12} md={8}>
