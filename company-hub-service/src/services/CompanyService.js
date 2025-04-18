@@ -315,6 +315,64 @@ const deleteLogo = async (companyId, token) => {
   }
 }
 
+const editCompanyProfile = async (companyData, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to edit a company profile');
+    }
+    
+    // If companyData is coming as FormData, we can use it directly
+    // Otherwise, if it's a regular object, convert it to FormData if needed
+    let formData = companyData;
+    if (!(companyData instanceof FormData)) {
+      formData = new FormData();
+      
+      // Add all properties from companyData to formData
+      // For nested objects and arrays, we need to stringify them
+      Object.keys(companyData).forEach(key => {
+        if (companyData[key] !== null && companyData[key] !== undefined) {
+          if (typeof companyData[key] === 'object') {
+            formData.append(key, JSON.stringify(companyData[key]));
+          } else {
+            formData.append(key, companyData[key]);
+          }
+        }
+      });
+    }
+
+    const response = await axios.post(
+      `${API_URL}/api/Company/ModifyCompanyProfile`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    console.log('Company profile updated successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating company profile:', error.response || error);
+
+    // Handle 401 Unauthorized errors specifically
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to update company profile. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+};
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
@@ -324,7 +382,8 @@ const CompanyService = {
   getProjectsOfCompany,
   uploadLogo,
   deleteLogo,
-  getCompaniesOfUser
+  getCompaniesOfUser,
+  editCompanyProfile
 };
 
 export default CompanyService;

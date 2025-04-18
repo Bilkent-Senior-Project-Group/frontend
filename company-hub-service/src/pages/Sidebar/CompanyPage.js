@@ -265,6 +265,10 @@ const CompanyPage = () => {
     );
   }
 
+  
+  const getStatusColor = (isCompleted) => {
+    return isCompleted ? 'success' : 'primary';
+  };
   const tabs = [
     { label: "Overview", id: 0 },
     { label: "Portfolio", id: 1 }
@@ -596,12 +600,30 @@ const CompanyPage = () => {
       </Dialog>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+        <Box sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider', 
+          mb: 4,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="company tabs">
             {tabs.map((tab) => (
               <Tab key={tab.id} label={tab.label} />
             ))}
           </Tabs>
+          
+          {isCompanyOwner && (
+            <Button
+              variant="outlined"
+              startIcon={<Edit size={16} />}
+              onClick={() => navigate(`/company/edit-company/${company.name}`)}
+              size="small"
+            >
+              Edit Company
+            </Button>
+          )}
         </Box>
 
         <Box>
@@ -712,9 +734,17 @@ const CompanyPage = () => {
                           sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
                         >
                           <CardContent sx={{ flexGrow: 1 }}>
-                            <Typography variant="h6" gutterBottom>
-                              {project.projectName}
-                            </Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                              <Typography variant="h6" gutterBottom>
+                                {project.projectName}
+                              </Typography>
+                              <Chip 
+                                  label={project.isCompleted ? 'Completed' : 'Ongoing'} 
+                                  color={getStatusColor(project.isCompleted)} 
+                                  size="small" 
+                              />
+                            </Box>
+                            
                             <Typography variant="body2" color="text.secondary" paragraph>
                               {project.description}
                             </Typography>
