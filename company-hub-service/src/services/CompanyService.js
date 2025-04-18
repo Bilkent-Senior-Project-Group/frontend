@@ -283,6 +283,38 @@ const getCompaniesOfUser = async (userId, token) => {
   }
 }
 
+const deleteLogo = async (companyId, token) => {    
+  try {
+    if (!companyId) {
+      throw new Error('Company ID is required');
+    }
+
+    const response = await axios.delete(
+      `${API_URL}/api/Company/DeleteLogo/${companyId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    console.log('Logo deleted successfully:', response.data);
+    return response.data; // Usually contains a success message
+  } catch (error) {
+    console.error('Error deleting logo:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to delete company logo. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
@@ -291,6 +323,7 @@ const CompanyService = {
   searchCompaniesByName,
   getProjectsOfCompany,
   uploadLogo,
+  deleteLogo,
   getCompaniesOfUser
 };
 

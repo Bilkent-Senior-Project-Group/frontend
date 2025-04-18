@@ -25,10 +25,11 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  Avatar
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit } from 'lucide-react';
+import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit, Plus, Trash2 } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import CompanyService from '../../services/CompanyService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -54,7 +55,10 @@ const CompanyPage = () => {
     phone: '',
     email: '',
     overallRating: 0,
+    totalReviews: 0,
   });
+  const [people, setPeople] = useState([]);
+  
   const [activeTab, setActiveTab] = useState(0);
   const { token, user } = useAuth();
   const [userCompanies, setUserCompanies] = useState([]);
@@ -65,6 +69,13 @@ const CompanyPage = () => {
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [deleteLogoConfirmOpen, setDeleteLogoConfirmOpen] = useState(false);
+  const [deletingLogo, setDeletingLogo] = useState(false);
+  const [deleteLogoError, setDeleteLogoError] = useState('');
+  const [deleteLogoSuccess, setDeleteLogoSuccess] = useState(false);
 
   // Fetch user's companies to determine ownership
   const fetchUserCompanies = async () => {
@@ -102,6 +113,9 @@ const CompanyPage = () => {
       console.log("Backend Company Data:", companyData);
       const companyProfile = new CompanyProfileDTO(companyData);
       setCompany(companyProfile);
+      const data = await CompanyService.getCompanyPeople(companyProfile.companyId, token);
+      setPeople(data);
+      console.log("Backend Company People Data:", data);
     } catch (error) {
       console.error("Error fetching company:", error.message);
     }
@@ -132,6 +146,9 @@ const CompanyPage = () => {
     setUploadError('');
     setSelectedFile(null);
     setUploadSuccess(false);
+    // Clear delete-related messages too
+    setDeleteLogoError('');
+    setDeleteLogoSuccess(false);
   };
 
   const handleLogoUploadClose = () => {
@@ -150,6 +167,18 @@ const CompanyPage = () => {
       }
     }
   };
+
+  const handleCreateProject = () => {
+    navigate(`/create-project`);
+  };
+
+  const handleViewUserProfile = (userName) => {
+    navigate(`/profile/${userName}`);
+  };
+
+  const hasReviews = useMemo(() => {
+    return company.totalReviews > 0;
+  }, [company.totalReviews]);
 
   const handleLogoUpload = async () => {
     if (!selectedFile) {
@@ -171,6 +200,34 @@ const CompanyPage = () => {
       setUploadError(error.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDeleteLogoOpen = () => {
+    setDeleteLogoConfirmOpen(true);
+    setDeleteLogoError('');
+    setDeleteLogoSuccess(false);
+  };
+
+  const handleDeleteLogoClose = () => {
+    setDeleteLogoConfirmOpen(false);
+  };
+
+  const handleDeleteLogo = async () => {
+    setDeletingLogo(true);
+    setDeleteLogoError('');
+    
+    try {
+      await CompanyService.deleteLogo(company.companyId, token);
+      setDeleteLogoSuccess(true);
+      setTimeout(() => {
+        fetchCompany();
+        handleLogoUploadClose(); // Close the upload dialog entirely
+      }, 1500);
+    } catch (error) {
+      setDeleteLogoError(error.message);
+    } finally {
+      setDeletingLogo(false);
     }
   };
 
@@ -207,6 +264,29 @@ const CompanyPage = () => {
       </Container>
     );
   }
+
+  const tabs = [
+    { label: "Overview", id: 0 },
+    { label: "Portfolio", id: 1 }
+  ];
+
+  // Only add People tab if user is not the company owner
+  if (!isCompanyOwner) {
+    tabs.push({ label: "People", id: 2 });
+  }
+
+  // Add Reviews tab only if there are reviews
+  if (hasReviews) {
+    tabs.push({ label: "Reviews", id: isCompanyOwner ? 2 : 3 });
+  }
+
+  // Add Contact tab at the end
+  tabs.push({ 
+    label: "Contact", 
+    id: isCompanyOwner 
+      ? (hasReviews ? 3 : 2) 
+      : (hasReviews ? 4 : 3) 
+  });
 
   return (
     <Box>
@@ -256,23 +336,27 @@ const CompanyPage = () => {
                         }}
                       />
                       {isCompanyOwner && (
-                        <Tooltip title="Change logo">
-                          <IconButton
-                            size="small"
-                            onClick={handleLogoUploadOpen}
-                            sx={{
-                              position: 'absolute',
-                              bottom: 0,
-                              right: 0,
-                              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                              },
-                            }}
-                          >
-                            <Edit size={16} />
-                          </IconButton>
-                        </Tooltip>
+                        <Box sx={{ 
+                          position: 'absolute', 
+                          bottom: 0, 
+                          right: 0, 
+                          display: 'flex' 
+                        }}>
+                          <Tooltip title="Change logo">
+                            <IconButton
+                              size="small"
+                              onClick={handleLogoUploadOpen}
+                              sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                },
+                              }}
+                            >
+                              <Edit size={16} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       )}
                     </>
                   ) : (
@@ -394,11 +478,15 @@ const CompanyPage = () => {
       </Box>
 
       <Dialog open={logoUploadOpen} onClose={handleLogoUploadClose}>
-        <DialogTitle>Upload Company Logo</DialogTitle>
+        <DialogTitle>
+          {company.logoUrl ? 'Change Company Logo' : 'Upload Company Logo'}
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ my: 2 }}>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Upload a new logo for your company. Only PNG files are supported.
+              {company.logoUrl 
+                ? 'Upload a new logo for your company or delete the current one. Only PNG files are supported for uploads.'
+                : 'Upload a new logo for your company. Only PNG files are supported.'}
             </Typography>
 
             <input
@@ -437,16 +525,72 @@ const CompanyPage = () => {
                 Logo uploaded successfully!
               </Alert>
             )}
+            
+            {deleteLogoError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {deleteLogoError}
+              </Alert>
+            )}
+
+            {deleteLogoSuccess && (
+              <Alert severity="success" sx={{ mt: 2 }}>
+                Logo deleted successfully!
+              </Alert>
+            )}
           </Box>
         </DialogContent>
+        <DialogActions sx={{ justifyContent: 'space-between', px: 3 }}>
+          <Box>
+            {company.logoUrl && (
+              <Button
+                onClick={handleDeleteLogo}
+                color="error"
+                disabled={deletingLogo || uploading}
+                startIcon={<Trash2 size={16} />}
+              >
+                {deletingLogo ? 'Deleting...' : 'Delete Logo'}
+              </Button>
+            )}
+          </Box>
+          <Box>
+            <Button onClick={handleLogoUploadClose} sx={{ mr: 1 }}>Cancel</Button>
+            <Button
+              onClick={handleLogoUpload}
+              variant="contained"
+              disabled={!selectedFile || uploading || deletingLogo}
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteLogoConfirmOpen} onClose={handleDeleteLogoClose}>
+        <DialogTitle>Delete Company Logo</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Are you sure you want to delete the company logo? This action cannot be undone.
+          </Typography>
+          {deleteLogoError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteLogoError}
+            </Alert>
+          )}
+          {deleteLogoSuccess && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              Logo deleted successfully!
+            </Alert>
+          )}
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleLogoUploadClose}>Cancel</Button>
+          <Button onClick={handleDeleteLogoClose}>Cancel</Button>
           <Button
-            onClick={handleLogoUpload}
+            onClick={handleDeleteLogo}
             variant="contained"
-            disabled={!selectedFile || uploading}
+            color="error"
+            disabled={deletingLogo}
           >
-            {uploading ? 'Uploading...' : 'Upload'}
+            {deletingLogo ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -454,11 +598,9 @@ const CompanyPage = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
           <Tabs value={activeTab} onChange={handleTabChange} aria-label="company tabs">
-            <Tab label="Overview" />
-            <Tab label="Services" />
-            <Tab label="Portfolio" />
-            <Tab label="Reviews" />
-            <Tab label="Contact" />
+            {tabs.map((tab) => (
+              <Tab key={tab.id} label={tab.label} />
+            ))}
           </Tabs>
         </Box>
 
@@ -472,39 +614,6 @@ const CompanyPage = () => {
                 <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
                   {company.description}
                 </Typography>
-
-                {company.projects && company.projects.length > 0 && (
-                  <>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                      Projects Overview
-                    </Typography>
-                    <Stack spacing={3}>
-                      {serviceStats.map((project, index) => (
-                        <Box key={index}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
-                              {project.name}
-                            </Typography>
-                            <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
-                              {project.percentage}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={project.percentage}
-                            sx={{
-                              height: 10,
-                              borderRadius: 5,
-                              '& .MuiLinearProgress-bar': {
-                                backgroundColor: project.color,
-                              },
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Stack>
-                  </>
-                )}
 
                 {company.services && company.services.length > 0 && (
                   <>
@@ -540,71 +649,60 @@ const CompanyPage = () => {
                     </Box>
                   </>
                 )}
-
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-                  Partnerships
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {company.partnerships.map((client, index) => (
-                    <Chip key={index} label={client} />
-                  ))}
-                </Box>
               </Grid>
 
               <Grid item xs={12} md={4}>
-                <Card elevation={1}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Company Information
+                {company.projects && company.projects.length > 0 && (
+                  <>
+                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                      Projects Overview
                     </Typography>
-                    <List disablePadding>
-                      <ListItem disableGutters>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Globe size={18} />
-                        </ListItemIcon>
-                        <ListItemText primary="Website" secondary={company.website} />
-                      </ListItem>
-                      <ListItem disableGutters>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Mail size={18} />
-                        </ListItemIcon>
-                        <ListItemText primary="Email" secondary={company.email} />
-                      </ListItem>
-                      <ListItem disableGutters>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Phone size={18} />
-                        </ListItemIcon>
-                        <ListItemText primary="Phone" secondary={company.phone} />
-                      </ListItem>
-                      <ListItem disableGutters>
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                          <Calendar size={18} />
-                        </ListItemIcon>
-                        <ListItemText primary="Founded" secondary={company.foundedYear} />
-                      </ListItem>
-                    </List>
-
-                    <Divider sx={{ my: 2 }} />
-                  </CardContent>
-                </Card>
+                    <Stack spacing={3}>
+                      {serviceStats.map((project, index) => (
+                        <Box key={index}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
+                              {project.name}
+                            </Typography>
+                            <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
+                              {project.percentage}%
+                            </Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={project.percentage}
+                            sx={{
+                              height: 10,
+                              borderRadius: 5,
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: project.color,
+                              },
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Stack>
+                  </>
+                )}
               </Grid>
             </Grid>
           )}
 
           {activeTab === 1 && (
             <Grid container spacing={4}>
-              <Grid item xs={12} md={8}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  Services Offered
-                </Typography>
-                <List disablePadding></List>
-              </Grid>
-            </Grid>
-          )}
-
-          {activeTab === 2 && (
-            <Grid container spacing={4}>
               <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}> 
+                  {isCompanyOwner && (
+                    <Button
+                      variant="contained"
+                      startIcon={<Plus size={16} />}
+                      onClick={handleCreateProject}
+                    >
+                      Create Project
+                    </Button>
+                  )}
+                </Box>
+
                 {company.projects && company.projects.length > 0 ? (
                   <Grid container spacing={3}>
                     {company.projects.map((project, index) => (
@@ -712,7 +810,69 @@ const CompanyPage = () => {
               </Grid>
             </Grid>
           )}
-          {activeTab === 3 && (
+          
+          {!isCompanyOwner && activeTab === 2 && (
+            <Grid container spacing={4}>
+              <Grid item xs={12}>
+                {people && people.length > 0 ? (
+                  <Grid container spacing={3}>
+                    {people.map((member, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Card 
+                          elevation={1} 
+                          sx={{ 
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: 3
+                            }
+                          }}
+                          onClick={() => handleViewUserProfile(member.userName)}
+                        >
+                          <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                            <Avatar
+                              src={member.profilePictureUrl}
+                              alt={`${member.firstName} ${member.lastName}`}
+                              sx={{ width: 80, height: 80, mx: 'auto', mb: 2 }}
+                            />
+                            <Typography variant="h6" gutterBottom>
+                              {member.firstName} {member.lastName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {member.role || 'Member'}
+                            </Typography>
+                            {member.title && (
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                {member.title}
+                              </Typography>
+                            )}
+                            <Button
+                              variant="text"
+                              size="small"
+                              sx={{ mt: 2 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewUserProfile(member.userName);
+                              }}
+                            >
+                              View Profile
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ) : (
+                  <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    No members available for this company.
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          )}
+
+          {hasReviews && activeTab === (isCompanyOwner ? 2 : 3) && (
             <Grid container spacing={4}>
               <Grid item xs={12} md={8}>
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
@@ -723,27 +883,64 @@ const CompanyPage = () => {
             </Grid>
           )}
 
-          {activeTab === 4 && (
+          {activeTab === (isCompanyOwner 
+            ? (hasReviews ? 3 : 2) 
+            : (hasReviews ? 4 : 3)) && (
             <Grid container spacing={4}>
               <Grid item xs={12} md={8}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  Contact {company.name}
-                </Typography>
+               
                 <Typography variant="body1" paragraph>
                   For inquiries or to request a quote, please contact {company.name} directly.
                 </Typography>
-                <Button
-                  variant="contained"
-                  size="large"
-                  href={`mailto:${company.email}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Contact Company
-                </Button>
+                
+                <List disablePadding>
+                  <ListItem disableGutters>
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Globe size={18} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Website" 
+                      secondary={
+                        <Typography 
+                          component="a" 
+                          href={company.website?.startsWith('http') ? company.website : `https://${company.website}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        >
+                          {company.website}
+                        </Typography>
+                      } 
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Mail size={18} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Email" 
+                      secondary={
+                        <Typography 
+                          component="a" 
+                          href={`mailto:${company.email}`} 
+                          color="primary"
+                        >
+                          {company.email}
+                        </Typography>
+                      } 
+                    />
+                  </ListItem>
+                  <ListItem disableGutters>
+                    <ListItemIcon sx={{ minWidth: 36 }}>
+                      <Phone size={18} />
+                    </ListItemIcon>
+                    <ListItemText primary="Phone" secondary={company.phone} />
+                  </ListItem>
+                </List>
               </Grid>
             </Grid>
           )}
+          
         </Box>
       </Container>
     </Box>
