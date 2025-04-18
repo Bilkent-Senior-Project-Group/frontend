@@ -31,16 +31,28 @@ export const formatPhoneNumber = (phoneNumber, countryCode) => {
 /**
  * Validate a phone number
  * @param {string} phoneNumber - The phone number to validate
- * @returns {boolean} True if valid
+ * @returns {Object} Object with isValid flag and error message if invalid
  */
 export const validatePhoneNumber = (phoneNumber) => {
-    if (!phoneNumber) return false;
+    if (!phoneNumber) {
+        return { isValid: false, error: "Phone number is required" };
+    }
 
     try {
         const parsedNumber = parsePhoneNumberFromString(phoneNumber);
-        return parsedNumber?.isValid() || false;
+        if (parsedNumber && parsedNumber.isValid()) {
+            return { isValid: true };
+        } else {
+            return { 
+                isValid: false, 
+                error: "Please enter a valid phone number with country code (e.g., +1 555-123-4567)" 
+            };
+        }
     } catch (error) {
-        return false;
+        return { 
+            isValid: false, 
+            error: "Invalid phone number format" 
+        };
     }
 };
 

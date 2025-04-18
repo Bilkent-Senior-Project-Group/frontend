@@ -403,10 +403,15 @@ const EditCompanyPage = () => {
     }
     
     // Check if company name already exists (but only if it's different from original)
-    if (name === 'name' && value.trim() !== '' && value !== originalName) {
+    if (name === 'name' && value.trim() !== '') {
       // Clear any existing timeout
       if (nameSearchTimeout) {
         clearTimeout(nameSearchTimeout);
+      }
+      
+      // If the name is the same as the original (case-insensitive), no need to check
+      if (value.toLowerCase() === originalName.toLowerCase()) {
+        return; // Skip the validation check - it's the original name
       }
       
       // Set a new timeout to avoid too many requests
@@ -417,8 +422,7 @@ const EditCompanyPage = () => {
           
           // Check if there's any company with the exact same name
           const nameExists = results.some(company => 
-            company.companyName.toLowerCase() === value.toLowerCase() && 
-            company.companyName.toLowerCase() !== originalName.toLowerCase()
+            company.companyName.toLowerCase() === value.toLowerCase()
           );
           
           if (nameExists) {
@@ -465,6 +469,13 @@ const EditCompanyPage = () => {
       errors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(companyDetails.email)) {
       errors.email = 'Email is invalid';
+    }
+    
+    if (companyDetails.phone && companyDetails.phone.trim() !== '') {
+        const phoneValidation = validatePhoneNumber(companyDetails.phone);
+        if (!phoneValidation.isValid) {
+          errors.phone = phoneValidation.error || 'Phone number is invalid';
+        }
     }
     
     if (selectedServices.length === 0) {
