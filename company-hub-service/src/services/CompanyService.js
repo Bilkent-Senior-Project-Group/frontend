@@ -321,32 +321,60 @@ const editCompanyProfile = async (companyData, token) => {
       throw new Error('You must be logged in to edit a company profile');
     }
     
-    // If companyData is coming as FormData, we can use it directly
-    // Otherwise, if it's a regular object, convert it to FormData if needed
-    let formData = companyData;
-    if (!(companyData instanceof FormData)) {
-      formData = new FormData();
-      
-      // Add all properties from companyData to formData
-      // For nested objects and arrays, we need to stringify them
-      Object.keys(companyData).forEach(key => {
-        if (companyData[key] !== null && companyData[key] !== undefined) {
-          if (typeof companyData[key] === 'object') {
-            formData.append(key, JSON.stringify(companyData[key]));
-          } else {
-            formData.append(key, companyData[key]);
+    // Create a proper JSON object that matches the API's expected structure
+    let requestData = {};
+    
+    // Check if we're dealing with FormData or a regular object
+    if (companyData instanceof FormData) {
+      // Extract data from FormData and build proper JSON object
+      const formEntries = Array.from(companyData.entries());
+      for (const [key, value] of formEntries) {
+        // Handle services and partnerships specially
+        if (key === 'services' || key === 'partnerships') {
+          try {
+            requestData[key] = JSON.parse(value);
+          } catch (e) {
+            console.error(`Error parsing ${key}:`, e);
+            requestData[key] = [];
           }
+        } else {
+          requestData[key] = value;
         }
-      });
+      }
+    } else {
+      // Working with a plain object
+      requestData = { ...companyData };
+      
+      // Ensure services is an array of objects, not a string
+      if (typeof requestData.services === 'string') {
+        try {
+          requestData.services = JSON.parse(requestData.services);
+        } catch (e) {
+          console.error('Error parsing services string:', e);
+          requestData.services = [];
+        }
+      }
+      
+      // // Ensure partnerships is an array, not a string
+      // if (typeof requestData.partnerships === 'string') {
+      //   try {
+      //     requestData.partnerships = JSON.parse(requestData.partnerships);
+      //   } catch (e) {
+      //     console.error('Error parsing partnerships string:', e);
+      //     requestData.partnerships = [];
+      //   }
+      // }
     }
+    
+    console.log('Sending company profile data:', requestData);
 
     const response = await axios.post(
       `${API_URL}/api/Company/ModifyCompanyProfile`,
-      formData,
+      requestData,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       }
     );
@@ -366,6 +394,7 @@ const editCompanyProfile = async (companyData, token) => {
     const message = error.response?.data?.message ||
       error.response?.data?.title ||
       error.response?.data ||
+      error.message ||
       "Failed to update company profile. Please check your connection and try again.";
 
     console.error('Error details:', message);

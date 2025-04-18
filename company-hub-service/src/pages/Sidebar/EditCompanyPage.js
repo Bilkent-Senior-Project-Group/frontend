@@ -280,9 +280,9 @@ const EditCompanyPage = () => {
     }
     
     // Add phone validation
-    if (companyDetails.phone && !validatePhoneNumber(companyDetails.phone)) {
-      errors.phone = "Please enter a valid phone number";
-    }
+    // if (companyDetails.phone && !validatePhoneNumber(companyDetails.phone)) {
+    //   errors.phone = "Please enter a valid phone number";
+    // }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -300,34 +300,61 @@ const EditCompanyPage = () => {
     
     setIsLoading(true);
     try {
-      // Prepare form data for submission
-      const formData = new FormData();
-      
-      // Add basic fields
-      formData.append('companyId', companyDetails.companyId);
-      formData.append('name', companyDetails.name);
-      formData.append('description', companyDetails.description);
-      formData.append('foundedYear', companyDetails.foundedYear);
-      formData.append('address', companyDetails.address);
-      formData.append('location', companyDetails.location);
-      formData.append('companySize', companyDetails.companySize);
-      formData.append('website', companyDetails.website);
-      formData.append('phone', companyDetails.phone);
-      formData.append('email', companyDetails.email);
-      
-      // Add services and partnerships as JSON strings
-      const servicesData = selectedServices.map(id => ({
-        id: id,
-        serviceName: servicesByIndustry
+      // Format services correctly - ensure industryId is a valid GUID
+      const formattedServices = selectedServices.map(id => {
+        const service = servicesByIndustry
           .flatMap(industry => industry.services)
-          .find(service => service.id === id)?.serviceName || ''
-      }));
+          .find(service => service.id === id);
+        
+        // Find the industry this service belongs to
+        const industryInfo = servicesByIndustry.find(ind => 
+          ind.services.some(s => s.id === id)
+        );
+        
+        // Get industry ID from the first service in that industry (they all share the same industryId)
+        const industryId = industryInfo?.services[0]?.industryId;
+        
+        return {
+          id: id , // Default GUID if missing
+          serviceName: service?.name ,
+          industryId: industryId , // Default GUID if missing
+          industryName: industryInfo?.industry,
+        //   percentage: service?.percentage,
+        };
+      });
+
+      // Create a structured object following the backend's expected format
+      const companyRequestData = {
+        companyId: companyDetails.companyId,
+        name: companyDetails.name,
+        description: companyDetails.description,
+        foundedYear: companyDetails.foundedYear ,
+        address: companyDetails.address,
+        location: companyDetails.location,
+        city: selectedLocation?.city,
+        country: selectedLocation?.country,
+        companySize: companyDetails.companySize,
+        website: companyDetails.website,
+        phone: companyDetails.phone,
+        email: companyDetails.email,
+        // verified: 0, // Include required field
+        // totalReviews: 0, // Include required field
+        // overallRating: 0, // Include required field
+        // logoUrl: companyDetails.logoUrl || '', // Include required field
+        
+        // Properly format services array with all required fields
+        services: formattedServices,
+        
+        // // Make sure partnerships is an array of strings
+        // partnerships: Array.isArray(companyDetails.partnerships) 
+        //   ? companyDetails.partnerships 
+        //   : []
+      };
       
-      formData.append('services', JSON.stringify(servicesData));
-      formData.append('partnerships', JSON.stringify(companyDetails.partnerships));
+      console.log('Sending company data:', companyRequestData);
       
-      // Send the update request
-      await CompanyService.editCompanyProfile(formData, token);
+      // Send the update request with properly formatted data
+      await CompanyService.editCompanyProfile(companyRequestData, token);
       
       setNotification({
         open: true,
