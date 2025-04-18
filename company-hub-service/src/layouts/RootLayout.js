@@ -90,6 +90,11 @@ const RootLayout = () => {
     handleUserMenuClose();
     navigate('/settings');
   };
+
+  const handleUserProfileClick = () => {
+    handleUserMenuClose();
+    navigate('/profile/' + user.userName);
+  };
   
   const handleAddMenuOpen = (event) => {
     setAddMenuAnchorEl(event.currentTarget);
@@ -135,62 +140,36 @@ const RootLayout = () => {
       >
         <Toolbar>
           {/* Menu Icon and Logo */}
-          <IconButton 
+            <IconButton 
             edge="start" 
             onClick={toggleDrawer} 
             sx={{ mr: 2 }}
-          >
+            >
             <MenuIcon />
-          </IconButton>
-          <Box 
+            </IconButton>
+
+            <Box sx={{ flexGrow: 1 }} />
+
+            <Box 
             sx={{ 
               display: 'flex', 
               alignItems: 'center',
               gap: 1,
               cursor: 'pointer',
-              mr: 3
+              justifyContent: 'center',
+              flexGrow: 1
             }}
             onClick={() => navigate('/home')}
-          >
+            >
             <Building size={24} />
             <Typography variant="h6">
               COMPEDIA
             </Typography>
-          </Box>
+            </Box>
 
-          <Box sx={{ flexGrow: 0.8 }} />
+            <Box sx={{ flexGrow: 1 }} />
 
-          {/* Search Bar */}
-          <Paper
-            component="form"
-            sx={{ 
-              p: '2px 4px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              width: 500,
-              flexGrow: 0
-            }}
-          >
-            <InputBase
-              sx={{ ml: 1, flex: 1 }}
-              placeholder="Enter some description"
-              inputProps={{ 'aria-label': 'search' }}
-            />
-            <IconButton type="button" sx={{ p: '10px', color: 'success.main' }}>
-              <Search />
-            </IconButton>
-          </Paper>
-
-          <Box sx={{ flexGrow: 1 }} />
-
-          {/* Notification and Add Menu */}
-          <IconButton>
-            <Badge badgeContent={4} color="error">
-              <Bell />
-            </Badge>
-          </IconButton>
-
-          {/* New Add Menu */}
+            {/* New Add Menu */}
           <IconButton 
             sx={{ ml: 1 }}
             onClick={handleAddMenuOpen}
@@ -265,6 +244,13 @@ const RootLayout = () => {
               horizontal: 'right',
             }}
           >
+            <MenuItem onClick={handleUserProfileClick}>
+              <ListItemIcon>
+                <User size={18} />
+              </ListItemIcon>
+              <Typography variant="inherit">Profile</Typography>
+            </MenuItem>
+            <Divider />
             <MenuItem onClick={handleSettingsClick}>
               <ListItemIcon>
                 <Settings size={18} />
@@ -450,6 +436,27 @@ const RootLayout = () => {
                           }}
                         />
                       </ListItem>
+
+                      <ListItem
+                        button
+                        onClick={() => navigate(`/company/projects/${company.companyName.replace(/\s+/g, '')}`)}
+                        sx={{ 
+                          pl: 6,
+                          py: 0.5,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <ListItemIcon>
+                          <FileTextIcon size={16} />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Projects"
+                          primaryTypographyProps={{ 
+                            fontSize: '0.85rem',
+                            color: 'text.secondary'
+                          }}
+                        />
+                      </ListItem>
                       <ListItem
                         button
                         onClick={() => navigate(`/company/analytics/${company.companyName.replace(/\s+/g, '')}`)}
@@ -479,97 +486,20 @@ const RootLayout = () => {
         </List>
       </Drawer>
 
-      {/* Main content area */}
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* AppBar */}
-        <AppBar 
-          position="static" 
-          color="default" 
-          elevation={0}
-          sx={{ 
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: 'background.paper'
-          }}
-        >
-          <Toolbar>
-            <Paper
-              component="form"
-              sx={{ 
-                p: '2px 4px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                width: 400,
-                ml: 2
-              }}
-            >
-              <InputBase
-                sx={{ ml: 1, flex: 1 }}
-                placeholder="Enter some description"
-                inputProps={{ 'aria-label': 'search' }}
-              />
-              <IconButton type="button" sx={{ p: '10px', color: 'success.main' }}>
-                <Search />
-              </IconButton>
-            </Paper>
-            <Box sx={{ flexGrow: 1 }} />
-            <IconButton>
-              <Badge badgeContent={4} color="error">
-                <Bell />
-              </Badge>
-            </IconButton>
-            <IconButton 
-              sx={{ ml: 1 }}
-              onClick={handleUserMenuOpen}
-            >
-              <User />
-            </IconButton>
-            
-            {/* User Menu */}
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleUserMenuClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-            >
-              <MenuItem onClick={handleSettingsClick}>
-                <ListItemIcon>
-                  <Settings size={18} />
-                </ListItemIcon>
-                <Typography variant="inherit">Settings</Typography>
-              </MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>
-                <ListItemIcon>
-                  <LogOut size={18} />
-                </ListItemIcon>
-                <Typography variant="inherit">Logout</Typography>
-              </MenuItem>
-            </Menu>
-          </Toolbar>
-        </AppBar>
-
-        {/* Main content */}
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            bgcolor: 'background.default',
-            height: '100%'
-          }}
-        >
-          <Box sx={{ p: 3 }}>
-            <Outlet />
-          </Box>
+      {/* Main content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          bgcolor: 'background.default',
+          height: '100%',
+          pt: '64px', // Add padding-top for app bar
+        }}
+      >
+        <Box sx={{ p: 3 }}>
+          <Outlet />
         </Box>
       </Box>
     </Box>

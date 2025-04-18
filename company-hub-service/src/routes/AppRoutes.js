@@ -20,8 +20,15 @@ import RootLayout from '../layouts/RootLayout';
 import AdminRoute from './AdminRoute';
 import AdminDashboard from '../pages/Admin/AdminDashboard';
 import SearchResultsPage from '../pages/SearchResultsPage';
+import ProjectsPage from '../pages/Sidebar/ProjectsPage';
+import Project from '../pages/Sidebar/Projects/Project';
+import ProjectRequestsPage from '../pages/Sidebar/Projects/ProjectRequestsPage';
+import EditProjectPage from '../pages/Sidebar/Projects/EditProjectPage';
 import { useAuth } from '../contexts/AuthContext';
 import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
+import UserProfilePage from '../pages/Topbar/UserProfilePage';
+import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
+import EditCompanyPage from '../pages/Sidebar/EditCompanyPage';
 
 
 const AppRoutes = () => {
@@ -36,6 +43,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
@@ -48,9 +56,22 @@ const AppRoutes = () => {
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
+        <Route path="/profile/:username" element={<UserProfilePage />} />
+
         {/* Company routes */}
         <Route path="/company/:companyName" element={<CompanyPage />} />
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
+        <Route path="/company/edit-company/:companyName" element={<EditCompanyPage />} />
+
+        {/* Project routes */}
+        <Route path="/company/projects/:companyName" element={<ProjectsPage />} />
+        <Route path="/company/projects/:companyName/:projectId" element={<Project />} />
+        {/* <Route path="/company/projects/project-requests/:companyName" element={<Project />} /> */}
+        <Route path="/company/projects/project-requests" element={<ProjectRequestsPage />} />
+        {/* <Route path="/company/projects/edit-project/:projectId" element={<EditProjectPage />} /> */}
+        <Route path="/company/projects/edit-project" element={<EditProjectPage />} />
+
+        {/* Admin Routes */}
         <Route path="/company/analytics/:companyName" element={<AnalyticsPage />} />
         <Route
           path="/admin"

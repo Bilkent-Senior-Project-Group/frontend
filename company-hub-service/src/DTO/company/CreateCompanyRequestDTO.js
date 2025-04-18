@@ -6,19 +6,19 @@ import {ProjectDTO} from '../project/ProjectDTO.js';
  */
 export class CreateCompanyRequestDTO {
   constructor(data = {}) {
-    this.CompanyName = data.CompanyName || '';
-    this.Description = data.Description || '';
-    this.FoundedYear = data.FoundedYear || new Date().getFullYear();
-    this.Address = data.Address || '';
-    this.Specialties = data.Specialties || '';
-    this.Industries = data.Industries || '';
-    this.Location = data.Location || '';
-    this.Website = data.Website || '';
-    this.CompanySize = data.CompanySize || '';
-    this.Phone = data.Phone || '';
-    this.Email = data.Email || '';
-    this.CoreExpertise = data.CoreExpertise || '';
-    this.Portfolio = data.Portfolio || [];
+    this.companyName = data.companyName || '';
+    this.description = data.description || '';
+    this.foundedYear = data.foundedYear || new Date().getFullYear();
+    this.address = data.address || '';
+    this.location = data.location || -1;
+    this.website = data.website || '';
+    this.companySize = data.companySize || '';
+    this.phone = data.phone || '';
+    this.email = data.email || '';
+    this.portfolio = data.portfolio || [];
+    this.services = data.services || [];
+    this.partnerships = data.partnerships || [];
+    this.addedOnPage = true;
   }
 
   /**
@@ -28,48 +28,20 @@ export class CreateCompanyRequestDTO {
     const errors = {};
     
     // [Required] validations
-    if (!this.CompanyName) {
-      errors.CompanyName = "Company name is required";
+    if (!this.companyName) {
+      errors.companyName = "Company name is required";
     }
     
-    if (!this.Address) {
-      errors.Address = "Address is required";
+    if (!this.address) {
+      errors.address = "Address is required";
     }
     
     // [Range] validation
-    if (this.FoundedYear < 1800 || this.FoundedYear > 2100) {
-      errors.FoundedYear = "Foundation year must be between 1800 and 2100";
-    }
-    
-    // [EnsureAtLeastOneProject] validation
-    if (!this.Portfolio || this.Portfolio.length === 0) {
-      errors.Portfolio = "At least one project is required";
+    if (this.foundedYear < 1800 || this.foundedYear > 2100) {
+      errors.foundedYear = "Foundation year must be between 1800 and 2100";
     }
     
     return errors;
-  }
-
-  /**
-   * Convert form data to DTO
-   */
-  static fromFormData(formData) {
-    const { companyDetails, projects } = formData;
-    
-    return new CreateCompanyRequestDTO({
-      CompanyName: companyDetails.name,
-      Description: companyDetails.description || '',
-      FoundedYear: parseInt(companyDetails.foundingYear) || new Date().getFullYear(),
-      Address: companyDetails.location || '',
-      Location: companyDetails.location || '',
-      Website: companyDetails.websiteUrl || '',
-      CompanySize: companyDetails.employeeSize || '',
-      Specialties: companyDetails.specialties || '',
-      Industries: companyDetails.industries || '',
-      Phone: companyDetails.phone || '',
-      Email: companyDetails.email || '',
-      CoreExpertise: companyDetails.coreExpertise || '',
-      Portfolio: projects.map(project => ProjectDTO.fromFormData(project))
-    });
   }
 }
 
