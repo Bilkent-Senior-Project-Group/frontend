@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container, Typography, Box, Button, TextField, Grid, Card, CardContent,
   FormControl, InputLabel, Select, MenuItem, Chip, Paper, Tabs, Tab,
-  Snackbar, Alert, Autocomplete, CircularProgress, Divider
+  Snackbar, Alert, Autocomplete, CircularProgress, Divider, LinearProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -65,6 +65,9 @@ const EditCompanyPage = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [showServicePanel, setShowServicePanel] = useState(false);
 
+  // Add new state for service percentages
+  const [servicePercentages, setServicePercentages] = useState({});
+
   // Location states
   const [loadingLocations, setLoadingLocations] = useState(false);
   const [locationQuery, setLocationQuery] = useState('');
@@ -94,6 +97,11 @@ const EditCompanyPage = () => {
     return years;
   };
 
+  // Add at the top of your file with other state variables
+  const [isCheckingName, setIsCheckingName] = useState(false);
+  const [nameSearchTimeout, setNameSearchTimeout] = useState(null);
+  const [originalName, setOriginalName] = useState('');
+
   // Fetch company data when component mounts
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -104,6 +112,9 @@ const EditCompanyPage = () => {
       
       try {
         const companyData = await CompanyService.getCompany(companyName, token);
+        
+        // Store the original company name for comparison
+        setOriginalName(companyData.name || '');
         
         // Set company details
         setCompanyDetails({
@@ -121,9 +132,47 @@ const EditCompanyPage = () => {
           email: companyData.email || '',
         });
         
-        // Set selected services
+        // Set selected services and their percentages
         if (companyData.services && companyData.services.length > 0) {
+          // Update selected services
           setSelectedServices(companyData.services.map(service => service.id));
+          
+          // Initialize service percentages
+          const initialPercentages = {};
+          companyData.services.forEach(service => {
+            initialPercentages[service.id] = service.percentage || 0;
+          });
+          
+          // Check if percentages sum to 100, otherwise normalize them
+          const totalPercentage = Object.values(initialPercentages).reduce((sum, val) => sum + val, 0);
+          
+          if (totalPercentage === 0) {
+            // If all percentages are 0, distribute evenly
+            const evenPercentage = Math.floor(100 / companyData.services.length);
+            companyData.services.forEach((service, index) => {
+              if (index === companyData.services.length - 1) {
+                // Last service gets the remainder to ensure total is exactly 100%
+                initialPercentages[service.id] = 100 - (evenPercentage * (companyData.services.length - 1));
+              } else {
+                initialPercentages[service.id] = evenPercentage;
+              }
+            });
+          } else if (totalPercentage !== 100) {
+            // If percentages don't sum to 100, normalize them
+            const factor = 100 / totalPercentage;
+            Object.keys(initialPercentages).forEach(id => {
+              initialPercentages[id] = Math.round(initialPercentages[id] * factor);
+            });
+            
+            // Ensure the total is exactly 100% by adjusting the first service
+            const adjustedTotal = Object.values(initialPercentages).reduce((sum, val) => sum + val, 0);
+            if (adjustedTotal !== 100 && Object.keys(initialPercentages).length > 0) {
+              const firstServiceId = Object.keys(initialPercentages)[0];
+              initialPercentages[firstServiceId] += (100 - adjustedTotal);
+            }
+          }
+          
+          setServicePercentages(initialPercentages);
         }
         
         // Set location if available
@@ -227,12 +276,111 @@ const EditCompanyPage = () => {
 
   const toggleService = (serviceId) => {
     setSelectedServices(prevSelected => {
+      let newSelected;
       if (prevSelected.includes(serviceId)) {
-        return prevSelected.filter(id => id !== serviceId);
+        newSelected = prevSelected.filter(id => id !== serviceId);
+        // Remove percentage for this service
+        setServicePercentages(prev => {
+          const { [serviceId]: removed, ...rest } = prev;
+          // Redistribute percentages among remaining services
+          if (Object.keys(rest).length > 0) {
+            const remainingTotal = 100;
+            const factor = remainingTotal / Object.values(rest).reduce((sum, val) => sum + val, 0);
+            return Object.fromEntries(
+              Object.entries(rest).map(([id, percentage]) => [id, Math.round(percentage * factor)])
+            );
+          }
+          return rest;
+        });
       } else {
-        return [...prevSelected, serviceId];
+        newSelected = [...prevSelected, serviceId];
+        
+        // Add service with appropriate percentage distribution
+        setServicePercentages(prev => {
+          // Clear validation errors when adding a new service
+          if (validationErrors.percentages) {
+            setValidationErrors(prevErrors => ({
+              ...prevErrors,
+              percentages: null
+            }));
+          }
+          
+          const existingCount = Object.keys(prev).length;
+          const updatedPercentages = { ...prev };
+          
+          if (existingCount === 0) {
+            // First service gets 100%
+            updatedPercentages[serviceId] = 100;
+          } else {
+            // Distribute evenly among all services (including the new one)
+            const newPercentage = Math.floor(100 / (existingCount + 1));
+            
+            // Set all existing services to the new percentage
+            Object.keys(updatedPercentages).forEach(key => {
+              updatedPercentages[key] = newPercentage;
+            });
+            
+            // Assign the last bit to the new service to ensure total is 100%
+            updatedPercentages[serviceId] = 100 - (newPercentage * existingCount);
+          }
+          
+          return updatedPercentages;
+        });
       }
+      
+      // Clear services validation error if we now have services
+      if (newSelected.length > 0 && validationErrors.services) {
+        setValidationErrors(prev => ({
+          ...prev,
+          services: null
+        }));
+      }
+      
+      return newSelected;
     });
+  };
+
+  const handlePercentageChange = (serviceId, value) => {
+    // Ensure value is a number between 0 and 100
+    const percentage = Math.max(0, Math.min(100, parseInt(value) || 0));
+    
+    // Clear percentage validation error when user makes changes
+    if (validationErrors.percentages) {
+      setValidationErrors(prev => ({
+        ...prev,
+        percentages: null
+      }));
+    }
+    
+    setServicePercentages(prev => {
+      const updatedPercentages = { ...prev, [serviceId]: percentage };
+      
+      // Calculate total of all except current
+      const otherServices = Object.entries(updatedPercentages).filter(([id]) => id !== serviceId);
+      const otherTotal = otherServices.reduce((sum, [, val]) => sum + val, 0);
+      
+      // Adjust other percentages if total exceeds 100
+      if (percentage + otherTotal > 100) {
+        // Calculate adjustment factor
+        const excessTotal = percentage + otherTotal - 100;
+        const totalToReduce = otherTotal;
+        
+        if (totalToReduce > 0) {
+          otherServices.forEach(([id, val]) => {
+            // Proportionally reduce other values
+            const reduction = Math.round((val / totalToReduce) * excessTotal);
+            updatedPercentages[id] = Math.max(0, val - reduction);
+          });
+        }
+      }
+      
+      return updatedPercentages;
+    });
+  };
+
+  const calculateRemainingPercentage = () => {
+    const total = Object.values(servicePercentages).reduce((sum, val) => sum + val, 0);
+    return 100 - total;
   };
 
   const getSelectedServiceCount = () => {
@@ -253,6 +401,41 @@ const EditCompanyPage = () => {
         [name]: null
       }));
     }
+    
+    // Check if company name already exists (but only if it's different from original)
+    if (name === 'name' && value.trim() !== '' && value !== originalName) {
+      // Clear any existing timeout
+      if (nameSearchTimeout) {
+        clearTimeout(nameSearchTimeout);
+      }
+      
+      // Set a new timeout to avoid too many requests
+      const timeoutId = setTimeout(async () => {
+        setIsCheckingName(true);
+        try {
+          const results = await CompanyService.searchCompaniesByName(value, token);
+          
+          // Check if there's any company with the exact same name
+          const nameExists = results.some(company => 
+            company.companyName.toLowerCase() === value.toLowerCase() && 
+            company.companyName.toLowerCase() !== originalName.toLowerCase()
+          );
+          
+          if (nameExists) {
+            setValidationErrors(prev => ({
+              ...prev,
+              name: 'This company name already exists. Please choose a different name.'
+            }));
+          }
+        } catch (error) {
+          console.error('Error checking company name:', error);
+        } finally {
+          setIsCheckingName(false);
+        }
+      }, 500);
+      
+      setNameSearchTimeout(timeoutId);
+    }
   };
 
   const handlePartnershipsChange = (event, newValue) => {
@@ -269,6 +452,11 @@ const EditCompanyPage = () => {
       errors.name = 'Company name is required';
     }
     
+    // If we're checking the name or there's already a name error, form is invalid
+    if (isCheckingName || validationErrors.name) {
+      errors.name = validationErrors.name || 'Still checking name availability';
+    }
+    
     if (!companyDetails.description || companyDetails.description.trim() === '') {
       errors.description = 'Description is required';
     }
@@ -279,10 +467,14 @@ const EditCompanyPage = () => {
       errors.email = 'Email is invalid';
     }
     
-    // Add phone validation
-    // if (companyDetails.phone && !validatePhoneNumber(companyDetails.phone)) {
-    //   errors.phone = "Please enter a valid phone number";
-    // }
+    if (selectedServices.length === 0) {
+      errors.services = 'At least one service is required';
+    }
+    
+    const totalPercentage = Object.values(servicePercentages).reduce((sum, val) => sum + val, 0);
+    if (totalPercentage !== 100) {
+      errors.percentages = `Service percentages must add up to 100% (currently ${totalPercentage}%)`;
+    }
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -300,7 +492,7 @@ const EditCompanyPage = () => {
     
     setIsLoading(true);
     try {
-      // Format services correctly - ensure industryId is a valid GUID
+      // Format services correctly - ensure industryId is a valid GUID and include percentages
       const formattedServices = selectedServices.map(id => {
         const service = servicesByIndustry
           .flatMap(industry => industry.services)
@@ -315,11 +507,11 @@ const EditCompanyPage = () => {
         const industryId = industryInfo?.services[0]?.industryId;
         
         return {
-          id: id , // Default GUID if missing
-          serviceName: service?.name ,
-          industryId: industryId , // Default GUID if missing
+          id: id, // Default GUID if missing
+          serviceName: service?.name,
+          industryId: industryId, // Default GUID if missing
           industryName: industryInfo?.industry,
-        //   percentage: service?.percentage,
+          percentage: servicePercentages[id] || 0, // Include percentage
         };
       });
 
@@ -424,7 +616,14 @@ const EditCompanyPage = () => {
                       value={companyDetails.name}
                       onChange={handleCompanyDetailsChange}
                       error={!!validationErrors.name}
-                      helperText={validationErrors.name}
+                      helperText={
+                        isCheckingName ? 'Checking name availability...' : validationErrors.name
+                      }
+                      InputProps={{
+                        endAdornment: isCheckingName ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null,
+                      }}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -660,7 +859,7 @@ const EditCompanyPage = () => {
                   </Box>
                 </Box>
                 
-                {/* Selected services summary - keep as chips */}
+                {/* Selected services summary with percentages */}
                 <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="medium">
                     Selected Services ({getSelectedServiceCount()})
@@ -671,57 +870,157 @@ const EditCompanyPage = () => {
                       No services selected yet. Please select at least one service.
                     </Typography>
                   ) : (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedServices.map((serviceId) => {
-                        const service = servicesByIndustry
-                          .flatMap(industry => industry.services)
-                          .find(service => service.id === serviceId);
+                    <>
+                      {/* Service percentage distribution */}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', mb: 3 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          Distribute percentages among services (total must be 100%)
+                        </Typography>
                         
-                        return (
-                          <Chip
-                            key={serviceId}
-                            label={service ? service.name : 'Unknown Service'}
-                            onDelete={() => toggleService(serviceId)}
-                            color="primary"
-                          />
-                        );
-                      })}
-                    </Box>
+                        {validationErrors.percentages && (
+                          <Alert severity="error" sx={{ mb: 2 }}>
+                            {validationErrors.percentages}
+                          </Alert>
+                        )}
+                        
+                        <Grid container spacing={2} sx={{ mb: 2 }}>
+                          {selectedServices.map((serviceId) => {
+                            const service = servicesByIndustry
+                              .flatMap(industry => industry.services)
+                              .find(service => service.id === serviceId);
+                            
+                            return (
+                              <Grid item xs={12} sm={6} key={serviceId}>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <Typography variant="body2" sx={{ minWidth: '150px', mr: 1 }}>
+                                    {service ? service.name : 'Unknown Service'}:
+                                  </Typography>
+                                  <TextField
+                                    size="small"
+                                    type="number"
+                                    InputProps={{
+                                      endAdornment: <Typography>%</Typography>,
+                                      inputProps: { min: 0, max: 100 }
+                                    }}
+                                    value={servicePercentages[serviceId] || 0}
+                                    onChange={(e) => handlePercentageChange(serviceId, e.target.value)}
+                                    sx={{ width: '100px' }}
+                                  />
+                                </Box>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                        
+                        {/* Total percentage indicator */}
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                          <Typography variant="body2" fontWeight="medium">
+                            Total: {Object.values(servicePercentages).reduce((sum, val) => sum + val, 0)}%
+                          </Typography>
+                          <Typography 
+                            variant="body2" 
+                            color={calculateRemainingPercentage() === 0 ? "success.main" : "error.main"}
+                            fontWeight="medium"
+                          >
+                            {calculateRemainingPercentage() === 0 ? "✓ Valid distribution" : `${Math.abs(calculateRemainingPercentage())}% ${calculateRemainingPercentage() > 0 ? "remaining" : "over"}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      
+                      {/* Service percentage bars visualization */}
+                      {selectedServices.length > 0 && (
+                        <Box sx={{ mb: 3 }}>
+                          <Typography variant="subtitle2" sx={{ mb: 2 }}>Service Distribution</Typography>
+                          {selectedServices.map((serviceId) => {
+                            const service = servicesByIndustry
+                              .flatMap(industry => industry.services)
+                              .find(service => service.id === serviceId);
+                            const percentage = servicePercentages[serviceId] || 0;
+                            
+                            return (
+                              <Box key={serviceId} sx={{ mb: 1.5 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                  <Typography variant="body2">{service ? service.name : 'Unknown'}</Typography>
+                                  <Typography variant="body2" fontWeight="medium">{percentage}%</Typography>
+                                </Box>
+                                <Box 
+                                  sx={{ 
+                                    position: 'relative',
+                                    height: 10,
+                                    width: '100%',
+                                    bgcolor: 'rgba(0,0,0,0.08)',
+                                    borderRadius: 1,
+                                    overflow: 'hidden',
+                                    cursor: 'pointer'
+                                  }}
+                                  onClick={(e) => {
+                                    // Calculate percentage based on click position
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const clickX = e.clientX - rect.left;
+                                    const totalWidth = rect.width;
+                                    const clickPercentage = Math.round((clickX / totalWidth) * 100);
+                                    
+                                    // Update the percentage for this service
+                                    handlePercentageChange(serviceId, clickPercentage);
+                                  }}
+                                >
+                                  <Box 
+                                    sx={{
+                                      position: 'absolute',
+                                      height: '100%',
+                                      width: `${percentage}%`,
+                                      bgcolor: 'primary.main',
+                                      borderRadius: 1,
+                                      transition: 'width 0.3s ease'
+                                    }}
+                                  />
+                                  {/* Invisible slider overlay for dragging */}
+                                  <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={percentage}
+                                    onChange={(e) => handlePercentageChange(serviceId, e.target.value)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: 0,
+                                      left: 0,
+                                      width: '100%',
+                                      height: '100%',
+                                      opacity: 0,
+                                      cursor: 'pointer'
+                                    }}
+                                  />
+                                </Box>
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                      
+                      {/* Service chips */}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {selectedServices.map((serviceId) => {
+                          const service = servicesByIndustry
+                            .flatMap(industry => industry.services)
+                            .find(service => service.id === serviceId);
+                          
+                          return (
+                            <Chip
+                              key={serviceId}
+                              label={`${service ? service.name : 'Unknown Service'} (${servicePercentages[serviceId] || 0}%)`}
+                              onDelete={() => toggleService(serviceId)}
+                              color="primary"
+                            />
+                          );
+                        })}
+                      </Box>
+                    </>
                   )}
                 </Box>
               </CardContent>
             </Card>
           </Grid>
-
-          {/* Partnerships */}
-          {/* <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Partnerships
-                </Typography>
-                <Autocomplete
-                  multiple
-                  freeSolo
-                  options={[]}
-                  value={companyDetails.partnerships}
-                  onChange={handlePartnershipsChange}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip variant="outlined" label={option} {...getTagProps({ index })} />
-                    ))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Add partnerships (press Enter after each)"
-                      placeholder="Enter partnership"
-                    />
-                  )}
-                />
-              </CardContent>
-            </Card>
-          </Grid> */}
 
           {/* Action Buttons */}
           <Grid item xs={12} sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>

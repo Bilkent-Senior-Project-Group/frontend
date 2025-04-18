@@ -642,32 +642,86 @@ const CompanyPage = () => {
                     <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
                       Services Breakdown
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                      <PieChart width={300} height={300}>
-                        <Pie
-                          data={company.services}
-                          cx={150}
-                          cy={100}
-                          innerRadius={60}
-                          outerRadius={80}
-                          dataKey="percentage"
-                          nameKey="serviceName"
-                        >
-                          {company.services.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={[
+                    <Box sx={{ 
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      mb: 4
+                    }}>
+                      {/* Chart container */}
+                      <Box sx={{ 
+                        width: '100%',
+                        display: 'flex', 
+                        justifyContent: 'center',
+                        mb: 4
+                      }}>
+                        <PieChart width={300} height={220}>
+                          <Pie
+                            data={company.services}
+                            cx={150}
+                            cy={100}
+                            innerRadius={60}
+                            outerRadius={90}
+                            dataKey="percentage"
+                            nameKey="serviceName"
+                            labelLine={false}
+                          >
+                            {company.services.map((_, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={[
+                                  colors.primary[500],
+                                  colors.primary[400],
+                                  colors.primary[300],
+                                  colors.primary[600],
+                                ][index % 4]}
+                              />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip 
+                            formatter={(value, name) => [`${value}%`, name]} 
+                            contentStyle={{ backgroundColor: 'white', borderRadius: '4px', padding: '8px' }}
+                          />
+                        </PieChart>
+                      </Box>
+
+                      {/* Legend container - without borders and with larger text */}
+                      <Box sx={{ 
+                        display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        justifyContent: 'center',
+                        maxWidth: '600px',
+                        gap: 3
+                      }}>
+                        {company.services.map((service, index) => (
+                          <Box 
+                            key={index} 
+                            sx={{ 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              padding: '4px 8px',
+                              minWidth: '150px'
+                            }}
+                          >
+                            <Box sx={{ 
+                              width: 16, 
+                              height: 16, 
+                              borderRadius: '50%',
+                              backgroundColor: [
                                 colors.primary[500],
                                 colors.primary[400],
                                 colors.primary[300],
                                 colors.primary[600],
-                              ][index % 4]}
-                            />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip formatter={(value) => `${value}%`} />
-                        <Legend />
-                      </PieChart>
+                              ][index % 4],
+                              mr: 1.5
+                            }} />
+                            <Typography variant="subtitle2" sx={{ fontSize: '1rem' }}>
+                              {service.serviceName}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
                     </Box>
                   </>
                 )}
