@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -40,7 +41,8 @@ export default function FakeHomepage() {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  
+  const navigate = useNavigate();
+
   const DRAWER_WIDTH = 240;
   const MINI_DRAWER_WIDTH = 72;
   
@@ -49,9 +51,7 @@ export default function FakeHomepage() {
   };
   
   const redirectToLogin = () => {
-    alert("Redirecting to login/signup page");
-    // In a real implementation, you would use navigation here
-    // navigate('/login');
+    navigate('checkEmail');
   };
 
   // New function to reset to homepage view
