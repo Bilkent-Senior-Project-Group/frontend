@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // Add useNavigate import
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   Box, 
@@ -10,7 +10,8 @@ import {
   Avatar, 
   Divider,
   CircularProgress,
-  Alert
+  Alert,
+  Button // Add Button import
 } from '@mui/material';
 import { Email as EmailIcon, Phone as PhoneIcon, Person as PersonIcon } from '@mui/icons-material';
 import CompanyService from '../../services/CompanyService';
@@ -18,10 +19,18 @@ import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 
 const CompanyPeoplePage = () => {
   const { companyName } = useParams();
+  const navigate = useNavigate(); // Add navigate hook
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const {token} = useAuth();
+
+  // Add a function to handle navigation to user profile
+  const handleViewUserProfile = (userName) => {
+    if (userName) {
+      navigate(`/profile/${userName}`);
+    }
+  };
 
   useEffect(() => {
     const fetchCompanyPeople = async () => {
@@ -43,7 +52,7 @@ const CompanyPeoplePage = () => {
     };
 
     fetchCompanyPeople();
-  }, [companyName]);
+  }, [companyName, token]);
 
   if (loading) {
     return (
@@ -82,9 +91,11 @@ const CompanyPeoplePage = () => {
                   transition: 'transform 0.2s, box-shadow 0.2s',
                   '&:hover': {
                     transform: 'translateY(-4px)',
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                    cursor: 'pointer'
                   }
                 }}
+                onClick={() => handleViewUserProfile(person.userName)}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -95,6 +106,7 @@ const CompanyPeoplePage = () => {
                         bgcolor: 'primary.main',
                         mr: 2
                       }}
+                      src={person.profilePictureUrl} // Make sure to use the profile picture if available
                     >
                       {person.firstName && person.lastName 
                         ? person.firstName.charAt(0).toUpperCase() + person.lastName.charAt(0).toUpperCase() 
@@ -117,7 +129,10 @@ const CompanyPeoplePage = () => {
                           color: 'text.secondary',
                           cursor: person.email ? 'pointer' : 'default' 
                         }} 
-                        onClick={() => person.email && window.open(`mailto:${person.email}`)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card click event
+                          person.email && window.open(`mailto:${person.email}`)
+                        }}
                       />
                       <Typography 
                         variant="body2" 
@@ -129,7 +144,10 @@ const CompanyPeoplePage = () => {
                             color: 'text.secondary'
                           }
                         }}
-                        onClick={() => person.email && window.open(`mailto:${person.email}`)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent card click event
+                          person.email && window.open(`mailto:${person.email}`)
+                        }}
                       >
                         {person.email || "Email not available"}
                       </Typography>
@@ -141,6 +159,19 @@ const CompanyPeoplePage = () => {
                         {person.phoneNumber || "Phone number not available"}
                       </Typography>
                     </Box>
+                  </Box>
+                  
+                  {/* Add a clear visual indication that this card is clickable */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                    <Button 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Technically redundant with the card click handler
+                        handleViewUserProfile(person.userName);
+                      }}
+                    >
+                      View Profile
+                    </Button>
                   </Box>
                 </CardContent>
               </Card>

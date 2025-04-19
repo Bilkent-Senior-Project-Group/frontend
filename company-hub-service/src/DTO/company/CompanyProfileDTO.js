@@ -9,7 +9,15 @@ export class CompanyProfileDTO {
     this.companyId = data.companyId  || null;
     this.name = data.name  || '';
     this.description = data.description || '';
-    this.services = data.services || [];
+    this.services = Array.isArray(data.services) 
+      ? data.services.map(service => ({
+        id: service.id || null,
+        serviceName: service.serviceName || '',
+        industryId: service.industryId || null,
+        industryName: service.industryName || '',
+        percentage: service.percentage !== undefined ? Number(service.percentage) : 0
+      }))
+      : [];
     
     // Convert numeric or boolean values to appropriate types
     this.verified = data.verified !== undefined ? Boolean(data.verified) : false;
@@ -55,6 +63,10 @@ export class CompanyProfileDTO {
     this.phone = data.phone || '';
     this.email = data.email || '';
     this.overallRating = data.overallRating || 0;
+    this.city = data.city || '';
+    this.country = data.country || '';
+    this.totalReviews = data.totalReviews || 0;
+    this.logoUrl = data.logoUrl || '';
   }
 
 }

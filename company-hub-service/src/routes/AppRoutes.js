@@ -28,6 +28,7 @@ import { useAuth } from '../contexts/AuthContext';
 import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
 import UserProfilePage from '../pages/Topbar/UserProfilePage';
 import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
+import EditCompanyPage from '../pages/Sidebar/EditCompanyPage';
 import FakeHomepage from '../pages/Auth/FakeHomePage';
 import ConfirmEmailPage from '../pages/Auth/ConfirmEmailPage';
 
@@ -64,6 +65,7 @@ const AppRoutes = () => {
         {/* Company routes */}
         <Route path="/company/:companyName" element={<CompanyPage />} />
         <Route path="/company/people/:companyName" element={<CompanyPeoplePage />} />
+        <Route path="/company/edit-company/:companyName" element={<EditCompanyPage />} />
 
         {/* Project routes */}
         <Route path="/company/projects/:companyName" element={<ProjectsPage />} />

@@ -96,7 +96,7 @@ const getCompany = async (companyName, token) => {
     const userId = token.userId;
     
     const response = await axios.get(
-      `${API_URL}/api/Company/GetCompany/${companyName}/${userId}`,
+      `${API_URL}/api/Company/GetCompany/${companyName}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -182,12 +182,237 @@ const searchCompaniesByName = async (query, token) => {
   }
 };
 
+const getProjectsOfCompany = async (companyId, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetProjectsOfCompany/${companyId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('Company projects data:', response.data);
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error in getProjectsOfCompany:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch company projects. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
+const uploadLogo = async (companyId, logoFile, token) => {
+  try {
+    if (!companyId) {
+      throw new Error('Company ID is required');
+    }
+    
+    if (!logoFile || !(logoFile instanceof File)) {
+      throw new Error('A valid image file is required');
+    }
+    
+    // Check if the file is a PNG
+    if (!logoFile.type.includes('png')) {
+      throw new Error('Only PNG images are supported');
+    }
+
+    const formData = new FormData();
+    formData.append('file', logoFile);
+
+    const response = await axios.post(
+      `${API_URL}/api/Company/UploadLogo/${companyId}`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        }
+      }
+    );
+
+    console.log('Logo uploaded successfully:', response.data);
+    return response.data; // Usually contains the URL of the uploaded logo
+  } catch (error) {
+    console.error('Error uploading logo:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to upload company logo. Please check your file and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
+const getCompaniesOfUser = async (userId, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetCompaniesOfUser/${userId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('User companies data:', response.data);
+    return response.data; // Returns array of {companyId, companyName}
+  }
+  catch (error) {
+    console.error('Error in getCompaniesOfUser:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch user companies. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
+const deleteLogo = async (companyId, token) => {    
+  try {
+    if (!companyId) {
+      throw new Error('Company ID is required');
+    }
+
+    const response = await axios.delete(
+      `${API_URL}/api/Company/DeleteLogo/${companyId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    console.log('Logo deleted successfully:', response.data);
+    return response.data; // Usually contains a success message
+  } catch (error) {
+    console.error('Error deleting logo:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to delete company logo. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+}
+
+const editCompanyProfile = async (companyData, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to edit a company profile');
+    }
+    
+    // Create a proper JSON object that matches the API's expected structure
+    let requestData = {};
+    
+    // Check if we're dealing with FormData or a regular object
+    if (companyData instanceof FormData) {
+      // Extract data from FormData and build proper JSON object
+      const formEntries = Array.from(companyData.entries());
+      for (const [key, value] of formEntries) {
+        // Handle services and partnerships specially
+        if (key === 'services' || key === 'partnerships') {
+          try {
+            requestData[key] = JSON.parse(value);
+          } catch (e) {
+            console.error(`Error parsing ${key}:`, e);
+            requestData[key] = [];
+          }
+        } else {
+          requestData[key] = value;
+        }
+      }
+    } else {
+      // Working with a plain object
+      requestData = { ...companyData };
+      
+      // Ensure services is an array of objects, not a string
+      if (typeof requestData.services === 'string') {
+        try {
+          requestData.services = JSON.parse(requestData.services);
+        } catch (e) {
+          console.error('Error parsing services string:', e);
+          requestData.services = [];
+        }
+      }
+      
+      // // Ensure partnerships is an array, not a string
+      // if (typeof requestData.partnerships === 'string') {
+      //   try {
+      //     requestData.partnerships = JSON.parse(requestData.partnerships);
+      //   } catch (e) {
+      //     console.error('Error parsing partnerships string:', e);
+      //     requestData.partnerships = [];
+      //   }
+      // }
+    }
+    
+    console.log('Sending company profile data:', requestData);
+
+    const response = await axios.post(
+      `${API_URL}/api/Company/ModifyCompanyProfile`,
+      requestData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Company profile updated successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating company profile:', error.response || error);
+
+    // Handle 401 Unauthorized errors specifically
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      error.message ||
+      "Failed to update company profile. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+};
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
   getCompany,
   getCompanyPeople,
-  searchCompaniesByName
+  searchCompaniesByName,
+  getProjectsOfCompany,
+  uploadLogo,
+  deleteLogo,
+  getCompaniesOfUser,
+  editCompanyProfile
 };
 
 export default CompanyService;

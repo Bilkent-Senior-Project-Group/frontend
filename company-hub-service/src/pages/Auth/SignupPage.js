@@ -12,6 +12,8 @@ import {
   Stack,
   Link as MuiLink
 } from '@mui/material';
+import CountryCodeSelector from '../../components/CountryCodeSelector';
+import { validatePhoneNumber } from '../../utils/phoneUtils';
 
 const SignupPage = () => {
   const location = useLocation();
@@ -22,8 +24,9 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  // Add these state variables after your existing useState declarations
   const [validationErrors, setValidationErrors] = useState({
     firstName: '',
     lastName: '',
@@ -45,7 +48,6 @@ const SignupPage = () => {
   };
   
   const validatePassword = (password) => {
-    // At least 6 characters, 1 uppercase, 1 lowercase, 1 symbol
     const minLength = password.length >= 6;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
@@ -55,14 +57,12 @@ const SignupPage = () => {
   };
   
   const validatePhone = (phone) => {
-    const regex = /^\+?[1-9]\d{9,11}$/;
-    return regex.test(phone);
+    return validatePhoneNumber(phone);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Reset validation errors
     setValidationErrors({
       firstName: '',
       lastName: '',
@@ -72,8 +72,8 @@ const SignupPage = () => {
       phone: ''
     });
     setError(null);
+    setIsSubmitting(true);
   
-    // Validate inputs
     let hasErrors = false;
     const newValidationErrors = {};
   
@@ -109,6 +109,7 @@ const SignupPage = () => {
   
     if (hasErrors) {
       setValidationErrors(newValidationErrors);
+      setIsSubmitting(false);
       return;
     }
   
@@ -123,15 +124,19 @@ const SignupPage = () => {
       });
       
       if (response.status === 200) {
-        navigate('/login', { 
-          state: { 
-            message: 'Registration successful! Please login.' 
-          }
-        });
+        setSuccess(true);
+        setIsSubmitting(false);
+        
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! Please login.' 
+            }
+          });
+        }, 2000);
       }
     } catch (err) {
       if (err.response?.data?.errors) {
-        // Handle validation errors from backend
         const backendErrors = err.response.data.errors;
         const formattedErrors = {};
         Object.keys(backendErrors).forEach(key => {
@@ -141,6 +146,7 @@ const SignupPage = () => {
       } else {
         setError(err.message || 'An error occurred during registration');
       }
+      setIsSubmitting(false);
     }
   };
 
@@ -217,13 +223,11 @@ const SignupPage = () => {
             helperText={validationErrors.password}
           />
 
-          <TextField
-            fullWidth
+          <CountryCodeSelector
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone Number"
+            onChange={(value) => setPhone(value)}
+            label="Phone Number"
             required
-            variant="outlined"
             error={!!validationErrors.phone}
             helperText={validationErrors.phone}
           />
@@ -232,7 +236,7 @@ const SignupPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              color="success"
+              color="primary"
               sx={{ 
                 mt: 2, 
                 height: '48px',

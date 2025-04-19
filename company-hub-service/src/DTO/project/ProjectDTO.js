@@ -9,8 +9,7 @@ export class ProjectDTO {
     this.projectName = data.projectName || '';
     this.description = data.description || '';
     this.technologiesUsed =  data.technologiesUsed || [];
-    this.industry = data.industry || '';
-    this.impact = data.impact || '';
+
     this.startDate = data.startDate || new Date().toISOString();
     this.completionDate = data.completionDate || new Date().toISOString();
     this.isOnCompedia = data.isOnCompedia || false;
@@ -19,7 +18,10 @@ export class ProjectDTO {
     this.clientType = data.clientType || '';
     this.clientCompanyName = data.clientCompanyName || '';
     this.providerCompanyName = data.providerCompanyName || '';
-    this.services = data.services || [];
+    this.services = (data.services || []).map(service => ({
+      id: service.id,
+      name: service.name
+    }));
   }
 
 }
