@@ -122,8 +122,8 @@ const SignupPage = () => {
         phone,
         username
       });
-  
-      if (response.data?.message === "Registration successful!") {
+      
+      if (response.status === 200) {
         setSuccess(true);
         setIsSubmitting(false);
         
