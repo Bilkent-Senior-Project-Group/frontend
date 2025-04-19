@@ -12,11 +12,9 @@ import {
   Button,
   Paper,
   Divider,
-  Rating,
   CircularProgress,
   Drawer,
   IconButton,
-  FormControlLabel,
   Checkbox,
   Tabs,
   Tab,
@@ -27,7 +25,7 @@ import { Search, Filter, MapPin, X } from 'lucide-react';
 import { colors } from '../theme/theme';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { API_URL } from '../config/apiConfig';
+import { API_URL, SEARCH_API_URL } from '../config/apiConfig';
 
 const SearchResultsPage = () => {
   const location = useLocation();
@@ -55,13 +53,47 @@ const SearchResultsPage = () => {
 
   const [displayedQuery, setDisplayedQuery] = useState('');
 
+  // Helper function to parse service names from various formats
+  const parseServiceNames = (services) => {
+    if (!services || !Array.isArray(services) || services.length === 0) {
+      return [];
+    }
+
+    // Check if we have a string representation of a list in the first element
+    if (services.length === 1 && typeof services[0] === 'string') {
+      const firstItem = services[0];
+      
+      // If it looks like a string representation of a list
+      if (firstItem.startsWith('[') && firstItem.endsWith(']')) {
+        try {
+          // Safely parse the string as a JSON array
+          const parsed = JSON.parse(firstItem.replace(/'/g, '"'));
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        } catch (e) {
+          // If parsing fails, try a simple string split approach
+          const cleanString = firstItem
+            .replace(/^\[|\]$/g, '')  // Remove opening and closing brackets
+            .replace(/'/g, '')        // Remove single quotes
+            .split(',')               // Split by commas
+            .map(item => item.trim()); // Trim whitespace
+          
+          return cleanString;
+        }
+      }
+    }
+    
+    // If all else fails, return the original array
+    return services;
+  };
+
   // Track active filters count for badge
   const getActiveFiltersCount = () => {
     return selectedLocationIds.length + selectedServiceIds.length;
   };
 
   // Parse query parameters on load
-  // Add this to the initial data fetching
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const currentQuery = queryParams.get('q') || '';
@@ -97,13 +129,13 @@ const SearchResultsPage = () => {
     fetchInitialData(currentQuery, locationIds, serviceIds);
   }, [location.search]);
 
-  // Modify the fetchInitialData to fetch service names even before showing filters
+  // Fetch initial data
   const fetchInitialData = async (query, locationIds, serviceIds) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Fetch services for filter panel - Make this the first async call
+      // Fetch services for filter panel
       const servicesResponse = await axios.get(`${API_URL}/api/Company/GetAllServices`);
       
       // Process services data
@@ -113,7 +145,7 @@ const SearchResultsPage = () => {
       }));
       setServicesByIndustry(grouped);
       
-      // Build a map of service IDs to names - Do this immediately after fetching services
+      // Build a map of service IDs to names
       const serviceNamesMap = {};
       grouped.forEach(group => {
         group.services.forEach(service => {
@@ -132,7 +164,7 @@ const SearchResultsPage = () => {
       console.log("Search payload:", searchPayload);
       
       // Execute search 
-      const searchResponse = await axios.post(`${API_URL}/api/Company/FreeTextSearch`, searchPayload);
+      const searchResponse = await axios.post(`${SEARCH_API_URL}/search`, searchPayload);
       
       // Process search results
       setCompanies(searchResponse.data.results || []);
@@ -357,7 +389,7 @@ const SearchResultsPage = () => {
                         px: 1.5,
                         py: 0.5,
                         borderRadius: 1,
-                        mb: 0  // Reduced margin between title and chips
+                        mb: 0
                       }}
                     >
                       Locations
@@ -398,7 +430,7 @@ const SearchResultsPage = () => {
                         px: 1.5,
                         py: 0.5,
                         borderRadius: 1,
-                        mb: 0  // Reduced margin between title and chips
+                        mb: 0
                       }}
                     >
                       Services
@@ -497,21 +529,20 @@ const SearchResultsPage = () => {
                   <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={9}>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {company.Name}
+                        {company.Name || "Unnamed Company"}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         <MapPin size={14} style={{ marginRight: 4, verticalAlign: 'text-bottom' }} />
-                        {company.Location}
+                        {company.Location || "Location not specified"}
                       </Typography>
                 
-                      {/* Add Services Display */}
+                      {/* Services Display - WITH FIX */}
                       {company.Services && company.Services.length > 0 && (
                         <Box sx={{ mb: 2 }}>
-                          
                           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {company.Services.map((service) => (
+                            {parseServiceNames(company.Services).map((service, index) => (
                               <Chip 
-                                key={service} 
+                                key={`${service}-${index}`} 
                                 label={service} 
                                 size="small"
                                 sx={{ 
@@ -526,7 +557,7 @@ const SearchResultsPage = () => {
                         </Box>
                       )}
                       
-                      {/* Keep Specialties if available */}
+                      {/* Specialties if available */}
                       {company.Specialties && (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                           {company.Specialties.split(',').map((spec) => (
