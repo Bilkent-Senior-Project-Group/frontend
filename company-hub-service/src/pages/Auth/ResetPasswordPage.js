@@ -79,6 +79,9 @@ const ResetPasswordPage = () => {
       const response = await AuthService.resetPassword(email, token, password);
       console.log('Password reset response:', response);
       setMessage('Password has been reset successfully!');
+      setTimeout(() => {
+        navigate('/login'); // Redirect to login page after 3 seconds
+      }, 3000);
     } catch (err) {
       setError('Error resetting password. The link may have expired. Please try again.');
     }
