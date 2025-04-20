@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_URL } from '../config/apiConfig';
+import { useAuth } from '../contexts/AuthContext';
 
 const fetchUserProfile = async (username, token) => {
   try {
@@ -33,12 +34,13 @@ const updateUserProfile = async (profileData, token) => {
 
 const checkEmailVerification = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/api/User/GetEmailConfirmed`, {
+    const response = await axios.get(`${API_URL}/api/Account/GetEmailConfirmed`, {
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });
-    return response.data.EmailConfirmed;
+    return response.data;  // Return the complete response data object
   } catch (error) {
     console.error('Error checking email verification:', error);
     throw new Error('Failed to check email verification status');
@@ -49,6 +51,7 @@ const sendConfirmationEmail = async (token) => {
   try {
     const response = await axios.post(`${API_URL}/api/Account/SendConfirmationEmail`, {}, {
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });

@@ -1,4 +1,3 @@
-
 // src/routes/AppRoutes.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -32,7 +31,7 @@ import EditCompanyPage from '../pages/Sidebar/EditCompanyPage';
 import FakeHomepage from '../pages/Auth/FakeHomePage';
 import ConfirmEmailPage from '../pages/Auth/ConfirmEmailPage';
 import WaitingConfirmEmailPage from '../pages/Auth/WaitingConfirmEmailPage';
-
+import VerifiedRoute from '../components/VerifiedRoute';
 
 const AppRoutes = () => {
 
@@ -58,7 +57,11 @@ const AppRoutes = () => {
         <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/create-company" element={<CreateCompanyPage />} />
+        <Route path="/create-company" element={
+          <VerifiedRoute>
+            <CreateCompanyPage />
+          </VerifiedRoute>
+        } />
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
