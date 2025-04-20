@@ -177,6 +177,9 @@ const CreateCompanyPage = () => {
     const [addProjectSelectedServices, setAddProjectSelectedServices] = useState([]);
     const [addProjectShowServicePanel, setAddProjectShowServicePanel] = useState(false);
 
+    const [isCheckingName, setIsCheckingName] = useState(false);
+    const [nameSearchTimeout, setNameSearchTimeout] = useState(null);
+
   // Generate years from 1800 to current year
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
@@ -326,6 +329,39 @@ const CreateCompanyPage = () => {
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
     // Ensure employeeSize is stored as a string
+    if (name === 'companyName' && value.trim() !== '') 
+    {
+      // Clear any existing timeout
+      if (nameSearchTimeout) {
+        clearTimeout(nameSearchTimeout);
+      }
+      
+      // Set a new timeout to avoid too many requests
+      const timeoutId = setTimeout(async () => {
+        setIsCheckingName(true);
+        try {
+          const results = await CompanyService.searchCompaniesByName(value, token);
+          
+          // Check if there's any company with the exact same name
+          const nameExists = results.some(company => 
+            company.companyName.toLowerCase() === value.toLowerCase()
+          );
+          
+          if (nameExists) {
+            setValidationErrors(prev => ({
+              ...prev,
+              name: 'This company name already exists. Please choose a different name.'
+            }));
+          }
+        } catch (error) {
+          console.error('Error checking company name:', error);
+        } finally {
+          setIsCheckingName(false);
+        }
+      }, 500);
+      
+      setNameSearchTimeout(timeoutId);
+    }
     if (name === 'companySize') {
       setCompanyDetails(prev => ({
         ...prev,
@@ -486,6 +522,10 @@ const CreateCompanyPage = () => {
     // Address validation
     if (!companyDetails.address || companyDetails.address.trim() === '') {
       errors.address = "Address is required";
+    }
+
+    if (isCheckingName || validationErrors.companyName) {
+      errors.companyName = validationErrors.companyName || 'Still checking name availability';
     }
     
     // Phone validation
@@ -661,13 +701,21 @@ const CreateCompanyPage = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <TextField
+              required
               fullWidth
               label="Company Name"
               name="companyName"
               value={companyDetails.companyName}
               onChange={handleCompanyDetailsChange}
-              variant="outlined"
-              required
+              error={!!validationErrors.companyName}
+              helperText={
+                isCheckingName ? 'Checking name availability...' : validationErrors.companyName
+              }
+              InputProps={{
+                endAdornment: isCheckingName ? (
+                  <CircularProgress color="inherit" size={20} />
+                ) : null,
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
