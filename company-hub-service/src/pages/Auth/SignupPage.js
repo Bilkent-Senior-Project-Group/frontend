@@ -27,6 +27,7 @@ const SignupPage = () => {
   const [success, setSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [isInvited, setIsInvited] = useState(false);
   const [validationErrors, setValidationErrors] = useState({
     firstName: '',
     lastName: '',
@@ -35,6 +36,29 @@ const SignupPage = () => {
     password: '',
     phone: ''
   });
+
+
+  // Handle URL search params for email and companyId
+  const [companyId, setCompanyId] = useState(null);
+
+  useEffect(() => {
+    // Get query parameters from URL
+    const queryParams = new URLSearchParams(location.search);
+    const emailParam = queryParams.get('email');
+    const companyIdParam = queryParams.get('companyId');
+    
+    // Set email if it exists in query params
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+    
+    // Set companyId if it exists in query params
+    if (companyIdParam) {
+      setCompanyId(companyIdParam);
+      setIsInvited(true);
+    }
+  }, [location.search]);
+
 
   useEffect(() => {
     if (location.state?.email) {
@@ -120,7 +144,8 @@ const SignupPage = () => {
         email,
         password,
         phone,
-        username
+        username,
+        companyId: companyId ?? null
       });
       
       if (response.status === 200) {
