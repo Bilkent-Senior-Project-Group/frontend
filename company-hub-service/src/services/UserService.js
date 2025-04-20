@@ -31,9 +31,39 @@ const updateUserProfile = async (profileData, token) => {
   }
 };
 
+const checkEmailVerification = async (token) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/User/GetEmailConfirmed`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data.EmailConfirmed;
+  } catch (error) {
+    console.error('Error checking email verification:', error);
+    throw new Error('Failed to check email verification status');
+  }
+};
+
+const sendConfirmationEmail = async (token) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/SendConfirmationEmail`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending confirmation email:', error);
+    throw new Error('Failed to send confirmation email');
+  }
+}
+
 const UserService = {
   fetchUserProfile,
   updateUserProfile,
+  checkEmailVerification,
+  sendConfirmationEmail
 };
 
 export default UserService;

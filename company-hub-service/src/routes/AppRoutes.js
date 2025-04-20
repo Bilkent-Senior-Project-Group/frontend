@@ -31,6 +31,7 @@ import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
 import EditCompanyPage from '../pages/Sidebar/EditCompanyPage';
 import FakeHomepage from '../pages/Auth/FakeHomePage';
 import ConfirmEmailPage from '../pages/Auth/ConfirmEmailPage';
+import WaitingConfirmEmailPage from '../pages/Auth/WaitingConfirmEmailPage';
 
 
 const AppRoutes = () => {
@@ -48,6 +49,7 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+      <Route path="/waiting-confirm-email" element={<WaitingConfirmEmailPage />} />
 
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>

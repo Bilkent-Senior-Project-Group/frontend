@@ -38,13 +38,14 @@ const ConfirmEmailPage = () => {
           setMessage('Your email has been successfully confirmed!');
           // Automatically redirect after 3 seconds
           setTimeout(() => {
-            navigate('/');
+            navigate('/login');
           }, 3000);
         } else {
           setStatus('error');
           setMessage('Failed to confirm email. Please try again or contact support.');
         }
       } catch (error) {
+        console.error('Email confirmation failed:', error);
         setStatus('error');
         setMessage(error.response?.data?.message || 'An error occurred while confirming your email.');
       }

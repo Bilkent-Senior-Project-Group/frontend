@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CountryCodeSelector from '../../components/CountryCodeSelector';
 import { validatePhoneNumber } from '../../utils/phoneUtils';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SignupPage = () => {
   const location = useLocation();
@@ -35,6 +36,7 @@ const SignupPage = () => {
     password: '',
     phone: ''
   });
+  const { signup } = useAuth();
 
   useEffect(() => {
     if (location.state?.email) {
@@ -114,7 +116,7 @@ const SignupPage = () => {
     }
   
     try {
-      const response = await AuthService.signup({
+      const response = await signup({
         firstName,
         lastName,
         email,
@@ -128,9 +130,9 @@ const SignupPage = () => {
         setIsSubmitting(false);
         
         setTimeout(() => {
-          navigate('/login', { 
+          navigate('/waiting-confirm-email', { 
             state: { 
-              message: 'Registration successful! Please login.' 
+              message: 'Registration successful! Please confirm your email.' 
             }
           });
         }, 2000);

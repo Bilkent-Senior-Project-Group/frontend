@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthService from "../services/AuthService"; // Import AuthService for API calls
 import { useLocation } from 'react-router-dom';
-
+import axios from 'axios';
+import { API_URL } from '../config/apiConfig';
 
 const AuthContext = createContext();
 
@@ -57,8 +58,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
 
-        
-
         setToken(response.data.token);
         setUser(response.data.user);
         console.log("Login successful response is:", response.data);
@@ -69,7 +68,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  
+  const signup = async (userData) => {
+    try {
+      const response = await AuthService.signup(userData);
+      
+      // If registration is successful and returns token and user data
+      if (response.data && response.data.token) {
+        // Store token and user in localStorage
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        // Update context state
+        setToken(response.data.token);
+        setUser(response.data.user);
+        
+        console.log("Signup successful, token stored");
+      }
+      
+      return { 
+        success: true, 
+        data: response.data,
+        requiresEmailVerification: true // Assuming your app requires email verification
+      };
+    } catch (error) {
+      console.error("Signup error:", error);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || "Connection Error Occurred." 
+      };
+    }
+  };
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
@@ -95,7 +123,15 @@ export const AuthProvider = ({ children }) => {
   
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isTokenValid }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      logout, 
+      signup, // Added signup to the context
+      updateUser, 
+      isTokenValid 
+    }}>
       {children}
     </AuthContext.Provider>
   );
