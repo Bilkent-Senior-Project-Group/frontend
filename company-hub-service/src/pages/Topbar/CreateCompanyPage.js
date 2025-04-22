@@ -1128,7 +1128,7 @@ const CreateCompanyPage = () => {
           border: `1px solid ${colors.neutral[200]}`,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" sx={{ color: colors.neutral[700] }}>
             Previous Projects
           </Typography>
@@ -1153,7 +1153,7 @@ const CreateCompanyPage = () => {
                 isCompleted: true,
                 isOnCompedia: false,
                 clientCompanyName: '',
-                providerCompanyName: '',
+                providerCompanyName: companyDetails.companyName || '', // Pre-fill with company being created
                 services: []
               });
               
@@ -1165,6 +1165,22 @@ const CreateCompanyPage = () => {
             Add Project
           </Button>
         </Box>
+        
+        {/* Add this Alert box for caution notice */}
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mb: 3, 
+            backgroundColor: `${colors.primary[100]}20`, // Using primary color with opacity
+            border: `1px solid ${colors.primary[300]}`,
+            borderRadius: 2
+          }}
+        >
+          <Typography variant="body2">
+            <strong>Important:</strong> Please add projects where <strong>{companyDetails.companyName || "this company"}</strong> is the <strong>provider</strong> of services. 
+            The provider field will be pre-filled with the company name you're creating.
+          </Typography>
+        </Alert>
 
         <Grid container spacing={3}>
         {projects.map((project, index) => (
@@ -1487,7 +1503,7 @@ const CreateCompanyPage = () => {
               <Autocomplete
                 options={providerCompanyOptions}
                 getOptionLabel={(option) => option.companyName || ''}
-                inputValue={currentProject.providerInputValue || ''}
+                inputValue={currentProject.providerInputValue || companyDetails.companyName || ''}
                 onInputChange={(_, newInputValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
@@ -1498,7 +1514,7 @@ const CreateCompanyPage = () => {
                 onChange={(_, newValue) => {
                   setCurrentProject(prev => ({
                     ...prev,
-                    providerCompanyName: newValue?.companyName || ''
+                    providerCompanyName: newValue?.companyName || companyDetails.companyName || ''
                   }));
                 }}
                 isOptionEqualToValue={(option, value) => option.companyName === value.companyName}
@@ -1508,12 +1524,18 @@ const CreateCompanyPage = () => {
                     label="Provider Company"
                     required
                     error={!!validationErrors.providerCompanyName}
-                    helperText={validationErrors.providerCompanyName}
+                    helperText={validationErrors.providerCompanyName || "Pre-filled with company being created"}
                     variant="outlined"
+                    InputProps={{
+                      ...params.InputProps,
+                      readOnly: !!companyDetails.companyName, // Make read-only if company name exists
+                    }}
                   />
                 )}
                 freeSolo
                 noOptionsText="Type to search companies"
+                value={companyDetails.companyName ? { companyName: companyDetails.companyName } : null}
+                disabled={!!companyDetails.companyName} // Disable the component if company name exists
               />
             </Grid>
             <Grid item xs={12}>

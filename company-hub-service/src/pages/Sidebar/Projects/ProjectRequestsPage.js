@@ -2,73 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { 
   Container, Typography, Grid, Card, CardContent, 
   CardActionArea, Dialog, DialogTitle, DialogContent, 
-  DialogActions, Button, Box, Divider, Paper 
+  DialogActions, Button, Box, Divider, Paper, Chip
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { colors } from '../../../theme/theme';
 
-// Add this import when ready to integrate with backend
-// import ProjectService from '../../../services/ProjectService';
-
-// Mock data for project requests - Remove this when backend is integrated
-const mockProjectRequests = [
-  {
-    id: 1,
-    title: "E-Commerce Platform",
-    description: "A full-featured online shopping platform with payment integration",
-    requestDate: "2025-04-05",
-    clientName: "Retail Solutions Inc.",
-    budget: "$45,000",
-    duration: "4 months",
-    status: "pending"
-  },
-  {
-    id: 2,
-    title: "Healthcare Management System",
-    description: "Patient records and appointment scheduling system for clinics",
-    requestDate: "2025-04-01",
-    clientName: "MediCare Group",
-    budget: "$60,000",
-    duration: "6 months",
-    status: "pending"
-  },
-  {
-    id: 3,
-    title: "Inventory Management Tool",
-    description: "Real-time inventory tracking and management system",
-    requestDate: "2025-04-08",
-    clientName: "Supply Chain Partners",
-    budget: "$32,000",
-    duration: "3 months",
-    status: "pending"
-  }
-];
+import ProjectService from '../../../services/ProjectService';
+import CompanyService from '../../../services/CompanyService';
 
 const ProjectRequestsPage = () => {
+  const { companyName } = useParams();
   const [projectRequests, setProjectRequests] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [actionType, setActionType] = useState('');
-  // Add these states for backend integration
-  // const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token } = useAuth();
+  const navigate = useNavigate();
 
-  // Fetch project requests - Replace with this code when backend is ready
+  // Fetch project requests
   useEffect(() => {
-    // Current implementation with mock data
-    setProjectRequests(mockProjectRequests);
-
-    /* BACKEND INTEGRATION - Uncomment when ready
     const fetchProjectRequests = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await ProjectService.getProjectRequests();
-        setProjectRequests(response.data);
+        const companyData = await CompanyService.getCompany(companyName, token);
+        const response = await ProjectService.getProjectRequests(companyData.companyId, token);
+        // Properly handle the response to ensure we're using the correct data structure
+        const requestsData = Array.isArray(response) ? response : 
+                           (Array.isArray(response.data) ? response.data : []);
+        setProjectRequests(requestsData);
       } catch (err) {
         console.error("Error fetching project requests:", err);
         setError("Failed to load project requests. Please try again later.");
@@ -78,8 +46,7 @@ const ProjectRequestsPage = () => {
     };
 
     fetchProjectRequests();
-    */
-  }, []);
+  }, [companyName, token]);
 
   const handleCardClick = (project) => {
     setSelectedProject(project);
@@ -95,47 +62,32 @@ const ProjectRequestsPage = () => {
     setConfirmDialogOpen(true);
   };
 
-  const handleConfirmAction = () => {
-    // Current implementation without backend
-    const updatedProjects = projectRequests.filter(
-      project => project.id !== selectedProject.id
-    );
-    
-    setProjectRequests(updatedProjects);
-    setConfirmDialogOpen(false);
-    setDetailsOpen(false);
-    
-    console.log(`Project ${actionType === 'approve' ? 'approved' : 'declined'}: ${selectedProject.title}`);
-
-    /* BACKEND INTEGRATION - Uncomment when ready
-    const updateProjectRequest = async () => {
-      setLoading(true);
-      try {
-        if (actionType === 'approve') {
-          await ProjectService.approveProjectRequest(selectedProject.id, token);
-        } else {
-          await ProjectService.declineProjectRequest(selectedProject.id, token);
-        }
-        
-        // Refresh the project requests list
-        const response = await ProjectService.getProjectRequests();
-        setProjectRequests(response.data);
-        
-        // Display success notification
-        // You can implement a toast notification here
-      } catch (err) {
-        console.error(`Error ${actionType === 'approve' ? 'approving' : 'declining'} project:`, err);
-        // Display error notification
-        setError(`Failed to ${actionType} project. Please try again.`);
-      } finally {
-        setLoading(false);
-        setConfirmDialogOpen(false);
-        setDetailsOpen(false);
+  const handleConfirmAction = async () => {
+    setLoading(true);
+    try {
+      if (actionType === 'approve') {
+        // Send true as request body for approve
+        await ProjectService.approveProjectRequest(selectedProject.requestId, token, true);
+      } else {
+        // Send false as request body for decline
+        await ProjectService.declineProjectRequest(selectedProject.requestId, token, false);
       }
-    };
-
-    updateProjectRequest();
-    */
+      
+      // Refresh the project requests list
+      const companyData = await CompanyService.getCompany(companyName, token);
+      const response = await ProjectService.getProjectRequests(companyData.companyId, token);
+      const requestsData = Array.isArray(response) ? response : 
+                        (Array.isArray(response.data) ? response.data : []);
+      setProjectRequests(requestsData);
+      
+    } catch (err) {
+      console.error(`Error ${actionType === 'approve' ? 'approving' : 'declining'} project:`, err);
+      setError(`Failed to ${actionType} project. Please try again.`);
+    } finally {
+      setLoading(false);
+      setConfirmDialogOpen(false);
+      setDetailsOpen(false);
+    }
   };
 
   const handleCancelAction = () => {
@@ -148,7 +100,15 @@ const ProjectRequestsPage = () => {
         Project Requests
       </Typography>
       
-      {projectRequests.length === 0 ? (
+      {loading && <Typography>Loading project requests...</Typography>}
+      
+      {error && (
+        <Paper sx={{ p: 2, mb: 2, bgcolor: 'error.light' }}>
+          <Typography color="error">{error}</Typography>
+        </Paper>
+      )}
+      
+      {!loading && !error && projectRequests.length === 0 ? (
         <Paper 
           sx={{ 
             p: 4, 
@@ -166,7 +126,7 @@ const ProjectRequestsPage = () => {
       ) : (
         <Grid container spacing={3}>
           {projectRequests.map((project) => (
-            <Grid item xs={12} md={6} lg={4} key={project.id}>
+            <Grid item xs={12} md={6} lg={4} key={project.requestId}>
               <Card 
                 elevation={3} 
                 sx={{ 
@@ -180,19 +140,20 @@ const ProjectRequestsPage = () => {
                 <CardActionArea onClick={() => handleCardClick(project)}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      {project.title}
+                      {project.projectName || 'Unnamed Project'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {project.description}
+                      {project.description ? 
+                        (project.description.length > 100 
+                          ? `${project.description.substring(0, 100)}...` 
+                          : project.description) 
+                        : 'No description provided'}
                     </Typography>
                     <Divider sx={{ my: 1 }} />
                     <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body2">Client: {project.clientName}</Typography>
-                      <Typography variant="body2">Budget: {project.budget}</Typography>
+                      <Typography variant="body2">Client: {project.clientCompanyName || 'Unknown'}</Typography>
+                      <Typography variant="body2">Type: {project.clientType || 'Not specified'}</Typography>
                     </Box>
-                    <Typography variant="caption" display="block" sx={{ mt: 1, color: 'text.secondary' }}>
-                      Request Date: {project.requestDate}
-                    </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>
@@ -215,12 +176,12 @@ const ProjectRequestsPage = () => {
             </DialogTitle>
             <DialogContent dividers>
               <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                {selectedProject.title}
+                {selectedProject.projectName || 'Unnamed Project'}
               </Typography>
               
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body1" paragraph>
-                  {selectedProject.description}
+                  {selectedProject.description || 'No description provided.'}
                 </Typography>
               </Box>
               
@@ -228,41 +189,53 @@ const ProjectRequestsPage = () => {
                 <Grid item xs={12} sm={6}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Client
+                      Client Company
                     </Typography>
                     <Typography variant="body1">
-                      {selectedProject.clientName}
+                      {selectedProject.clientCompanyName || 'Not specified'}
                     </Typography>
                   </Paper>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Request Date
+                      Client Type
                     </Typography>
                     <Typography variant="body1">
-                      {selectedProject.requestDate}
+                      {selectedProject.clientType || 'Not specified'}
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Budget
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Technologies
                     </Typography>
-                    <Typography variant="body1">
-                      {selectedProject.budget}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {Array.isArray(selectedProject.technologiesUsed) && selectedProject.technologiesUsed.length > 0 ? (
+                        selectedProject.technologiesUsed.map((tech, index) => (
+                          <Chip key={index} label={tech} size="small" />
+                        ))
+                      ) : (
+                        <Typography variant="body2">No technologies specified</Typography>
+                      )}
+                    </Box>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Estimated Duration
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Services
                     </Typography>
-                    <Typography variant="body1">
-                      {selectedProject.duration}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {Array.isArray(selectedProject.services) && selectedProject.services.length > 0 ? (
+                        selectedProject.services.map((service) => (
+                          <Chip key={service.id} label={service.name} size="small" />
+                        ))
+                      ) : (
+                        <Typography variant="body2">No services specified</Typography>
+                      )}
+                    </Box>
                   </Paper>
                 </Grid>
               </Grid>

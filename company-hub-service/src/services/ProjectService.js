@@ -17,7 +17,8 @@ const createProject = async (projectData, token) => {
       projectDTO,
       {
         headers: {
-          'Authorization': `Bearer ${token}`, // Include the auth token
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
         },
       }
     );
@@ -155,14 +156,14 @@ const updateProject = async (projectId, projectData, token) => {
   }
 };
 
-const getProjectRequests = async (projectId, token) => {
+const getProjectRequests = async (companyId, token) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to view project requests');
     }
     
     const response = await axios.get(
-      `${API_URL}/api/Project/GetProjectRequestsOfCompany/${projectId}`,
+      `${API_URL}/api/Project/GetProjectRequestsOfCompany/${companyId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -192,7 +193,7 @@ const getProjectRequests = async (projectId, token) => {
 
 // input projectId might be changed to projectRequestId
 // in the future
-const approveProjectRequest = async (requestId, token) => {
+const approveProjectRequest = async (requestId, token, approveValue) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to view project requests');
@@ -200,8 +201,10 @@ const approveProjectRequest = async (requestId, token) => {
     
     const response = await axios.post(
       `${API_URL}/api/Project/ApproveProjectRequest/${requestId}`,
+      JSON.stringify(approveValue),
       {
         headers: {
+          
           'Authorization': `Bearer ${token}`,
         },
       }
@@ -230,7 +233,7 @@ const approveProjectRequest = async (requestId, token) => {
 // input projectId might be changed to projectRequestId
 // in the future
 //backend method does not exist yet
-const declineProjectRequest = async (projectId, token) => {
+const declineProjectRequest = async (projectId, token, declineValue ) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to view project requests');
@@ -238,6 +241,7 @@ const declineProjectRequest = async (projectId, token) => {
     
     const response = await axios.post(
       `${API_URL}/api/Project/ApproveProjectRequest/${projectId}`,
+      JSON.stringify(declineValue), 
       {
         headers: {
           'Authorization': `Bearer ${token}`,

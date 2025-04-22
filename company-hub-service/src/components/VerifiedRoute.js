@@ -14,6 +14,7 @@ const VerifiedRoute = ({ children }) => {
     if (!token) return;
     
     try {
+      console.log("token:", token);
       const response = await UserService.checkEmailVerification(token);
       
       if (response.emailConfirmed) {

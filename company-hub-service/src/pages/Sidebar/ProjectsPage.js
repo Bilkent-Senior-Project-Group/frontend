@@ -25,7 +25,7 @@ import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO.js';
 import ProjectDTO from '../../DTO/project/ProjectDTO.js'
 
 const ProjectsPage = () => {
-    const { companyName } = useParams();
+  const { companyName } = useParams();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,7 +60,7 @@ useEffect(() => {
 }, [token, companyName]);
 
   const handleViewProject = (projectId) => {
-    navigate(`/company/projects/${companyName}/${projectId}`);
+    // navigate(`/company/projects/${companyName}/${projectId}`);
   };
 
   const handleEditProject = (projectId, e) => {
@@ -129,7 +129,7 @@ return (
                     </Typography>
                     <Box>
                         <Button 
-                            onClick={() => navigate('/company/projects/project-requests')} 
+                            onClick={() => navigate(`/company/projects/project-requests/${companyName}`)} 
                             variant="outlined" 
                             startIcon={<VisibilityIcon />}
                             sx={{ mr: 2 }}
@@ -137,7 +137,11 @@ return (
                             View Project Requests
                         </Button>
                         <Button 
-                            onClick={() => navigate('/create-project')}
+                            onClick={() => navigate('/create-project', {
+                                state: {
+                                    providerCompany: companyName // This comes from useParams
+                                }
+                            })}
                             variant="contained" 
                             startIcon={<AddIcon />}
                         >
@@ -169,8 +173,11 @@ return (
                         Start by adding your first project
                     </Typography>
                     <Button 
-                        component={Link}
-                        to="/projects/add" 
+                        onClick={() => navigate('/create-project', {
+                            state: {
+                                providerCompany: companyName // This comes from useParams
+                            }
+                        })} 
                         variant="contained" 
                         startIcon={<AddIcon />}
                     >

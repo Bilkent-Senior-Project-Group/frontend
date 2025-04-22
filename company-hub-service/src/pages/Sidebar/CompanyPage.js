@@ -169,7 +169,11 @@ const CompanyPage = () => {
   };
 
   const handleCreateProject = () => {
-    navigate(`/create-project`);
+    navigate(`/create-project`, {
+      state: {
+        providerCompany: company.name
+      }
+    });
   };
 
   const handleViewUserProfile = (userName) => {
@@ -779,112 +783,108 @@ const CompanyPage = () => {
                   )}
                 </Box>
 
-                {company.projects && company.projects.length > 0 ? (
+                {company.projects && company.projects.filter(project => 
+                  // Only show projects where this company is the provider
+                  project.providerCompanyName === company.name
+                ).length > 0 ? (
                   <Grid container spacing={3}>
-                    {company.projects.map((project, index) => (
-                      <Grid item xs={12} md={6} key={index}>
-                        <Card
-                          elevation={2}
-                          sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-                        >
-                          <CardContent sx={{ flexGrow: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                              <Typography variant="h6" gutterBottom>
-                                {project.projectName}
-                              </Typography>
-                              <Chip 
+                    {company.projects
+                      .filter(project => project.providerCompanyName === company.name)
+                      .map((project, index) => (
+                        <Grid item xs={12} md={6} key={index}>
+                          <Card
+                            elevation={2}
+                            sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                          >
+                            <CardContent sx={{ flexGrow: 1 }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                  {project.projectName}
+                                </Typography>
+                                <Chip 
                                   label={project.isCompleted ? 'Completed' : 'Ongoing'} 
                                   color={getStatusColor(project.isCompleted)} 
                                   size="small" 
-                              />
-                            </Box>
-                            
-                            <Typography variant="body2" color="text.secondary" paragraph>
-                              {project.description}
-                            </Typography>
-                            {(project.startDate || project.completionDate) && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <Calendar size={16} color={colors.neutral[500]} />
-                                <Typography
-                                  variant="body2"
-                                  sx={{ ml: 1 }}
-                                  color="text.secondary"
-                                >
-                                  {project.startDate
-                                    ? new Date(project.startDate).toLocaleDateString()
-                                    : 'Unknown'}{' '}
-                                  -{' '}
-                                  {project.completionDate
-                                    ? new Date(project.completionDate).toLocaleDateString()
-                                    : 'Present'}
-                                </Typography>
+                                />
                               </Box>
-                            )}
-                            {project.clientCompanyName && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                              >
-                                <strong>Client Company Name:</strong>{' '}
-                                {project.clientCompanyName}
+                              
+                              <Typography variant="body2" color="text.secondary" paragraph>
+                                {project.description}
                               </Typography>
-                            )}
-                            {project.providerCompanyName && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mb: 1 }}
-                              >
-                                <strong>Provider Company Name:</strong>{' '}
-                                {project.providerCompanyName}
-                              </Typography>
-                            )}
-                            {project.services && project.services.length > 0 && (
-                              <Box sx={{ mt: 2 }}>
+                              {(project.startDate || project.completionDate) && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                  <Calendar size={16} color={colors.neutral[500]} />
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ ml: 1 }}
+                                    color="text.secondary"
+                                  >
+                                    {project.startDate
+                                      ? new Date(project.startDate).toLocaleDateString()
+                                      : 'Unknown'}{' '}
+                                    -{' '}
+                                    {project.completionDate
+                                      ? new Date(project.completionDate).toLocaleDateString()
+                                      : 'Present'}
+                                  </Typography>
+                                </Box>
+                              )}
+                              {project.clientCompanyName && (
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
                                   sx={{ mb: 1 }}
                                 >
-                                  <strong>Services:</strong>
+                                  <strong>Client:</strong>{' '}
+                                  {project.clientCompanyName}
                                 </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                  {project.services.map((service, serviceIndex) => (
-                                    <Chip
-                                      key={serviceIndex}
-                                      label={service.name}
-                                      size="small"
-                                      sx={{
-                                        backgroundColor: colors.primary[500],
-                                        color: 'white',
-                                        '&:hover': {
-                                          backgroundColor: colors.primary[700],
+                              )}
+                              {/* Removed provider company name display since it's redundant */}
+                              {project.services && project.services.length > 0 && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{ mb: 1 }}
+                                  >
+                                    <strong>Services:</strong>
+                                  </Typography>
+                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {project.services.map((service, serviceIndex) => (
+                                      <Chip
+                                        key={serviceIndex}
+                                        label={service.name}
+                                        size="small"
+                                        sx={{
+                                          backgroundColor: colors.primary[500],
                                           color: 'white',
-                                        },
-                                      }}
-                                    />
-                                  ))}
+                                          '&:hover': {
+                                            backgroundColor: colors.primary[700],
+                                            color: 'white',
+                                          },
+                                        }}
+                                      />
+                                    ))}
+                                  </Box>
                                 </Box>
+                              )}
+                            </CardContent>
+                            {project.projectUrl && (
+                              <Box sx={{ p: 2, pt: 0 }}>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  href={project.projectUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Visit Project
+                                </Button>
                               </Box>
                             )}
-                          </CardContent>
-                          {project.projectUrl && (
-                            <Box sx={{ p: 2, pt: 0 }}>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                href={project.projectUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Visit Project
-                              </Button>
-                            </Box>
-                          )}
-                        </Card>
-                      </Grid>
-                    ))}
+                          </Card>
+                        </Grid>
+                      ))}
                   </Grid>
                 ) : (
                   <Typography variant="body1" color="text.secondary">

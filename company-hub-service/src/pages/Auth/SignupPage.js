@@ -150,17 +150,18 @@ const SignupPage = () => {
         companyId: companyId ?? null
       });
       
-      if (response.status === 200) {
+      if (response.success) {
         setSuccess(true);
         setIsSubmitting(false);
+        navigate('/waiting-confirm-email');
         
-        setTimeout(() => {
-          navigate('/waiting-confirm-email', { 
-            state: { 
-              message: 'Registration successful! Please confirm your email.' 
-            }
-          });
-        }, 2000);
+        // setTimeout(() => {
+        //   navigate('/waiting-confirm-email', { 
+        //     state: { 
+        //       message: 'Registration successful! Please confirm your email.' 
+        //     }
+        //   });
+        // }, 2000);
       }
     } catch (err) {
       if (err.response?.data?.errors) {
