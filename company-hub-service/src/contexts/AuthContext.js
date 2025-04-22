@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false); // State to track admin status
   const location = useLocation();
+  const [loading, setLoading] = useState(true);
 
   const logout = React.useCallback(async () => {
     try {
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }) => {
           setIsAdmin(storedAdmin === "true");
         }
       }
+      setLoading(false);
     })();
   }, [location, logout]);
   
@@ -95,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   };
   
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, login, logout, updateUser, isTokenValid }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, login, logout, updateUser, isTokenValid, loading }}>
       {children}
     </AuthContext.Provider>
   );
