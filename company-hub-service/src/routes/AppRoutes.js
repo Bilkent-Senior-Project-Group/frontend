@@ -52,6 +52,7 @@ const AppRoutes = () => {
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
         {/* <Route index element={<Navigate to="/home" replace />} /> */}
+      
         <Route path="/home" element={<HomePage />} />
         <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
@@ -81,12 +82,14 @@ const AppRoutes = () => {
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboard />
+              <AdminDashboard/>
             </AdminRoute>
           }
-        />
+        /> 
+        
 
       </Route>
+
 
       {/* Redirect root to home */}
       {/* <Route path="/" element={<Navigate to="/home" replace />} /> */}

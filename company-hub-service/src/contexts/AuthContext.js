@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthService from "../services/AuthService"; // Import AuthService for API calls
 import { useLocation } from 'react-router-dom';
-
+// Removed unused import
 
 const AuthContext = createContext();
 
@@ -12,6 +12,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false); // State to track admin status
   const location = useLocation();
 
   const logout = React.useCallback(async () => {
@@ -25,42 +26,43 @@ export const AuthProvider = ({ children }) => {
     }
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("isAdmin"); // Remove isAdmin from localStorage
+    setIsAdmin(false); // Reset isAdmin state
     setToken(null); // Reset token state
     setUser(null); // Reset user state
   }, [token]);
 
   // Load user from localStorage on app startup
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (storedToken && storedUser) {
-      try {
-        if (!isTokenValid(storedToken)) {
-          console.log("Token is not valid, logging out...");
+    (async () => {
+      const storedToken = localStorage.getItem("token");
+      const storedUser  = localStorage.getItem("user");
+      const storedAdmin = localStorage.getItem("isAdmin");
+      if (storedToken && storedUser) {
+        const valid = await isTokenValid(storedToken);
+        if (!valid) {
           logout();
         } else {
           setToken(storedToken);
-          setUser(JSON.parse(storedUser)); // Store user in state
+          setUser(JSON.parse(storedUser));
+          setIsAdmin(storedAdmin === "true");
         }
-      } catch (error) {
-        console.error("Invalid token", error);
-        logout(); // Clear invalid token
       }
-    }
+    })();
   }, [location, logout]);
+  
 
   const login = async (email, password) => {
     try {
       const response = await AuthService.login({ email, password });
       if (response.status === 200) {
+        const isUserAdmin = response.data.isAdmin === true;
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
-
-        
-
+        localStorage.setItem("isAdmin", isUserAdmin.toString()); // Save isAdmin status in localStorage as string
         setToken(response.data.token);
         setUser(response.data.user);
+        setIsAdmin(isUserAdmin); // Set isAdmin state directly with boolean
         console.log("Login successful response is:", response.data);
         return { success: true };
       }
@@ -69,11 +71,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  
-
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser)); // Save updated user in localStorage
+   
   };
 
   const isTokenValid = async (token) => {
@@ -93,9 +94,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
   
-
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isTokenValid }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, login, logout, updateUser, isTokenValid }}>
       {children}
     </AuthContext.Provider>
   );
