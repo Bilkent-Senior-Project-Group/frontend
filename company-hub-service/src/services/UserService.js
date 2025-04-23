@@ -52,11 +52,15 @@ const sendConfirmationEmail = async (token) => {
     const response = await axios.post(`${API_URL}/api/Account/SendConfirmationEmail`, {}, {
       headers: {
         'Content-Type': 'application/json',
-         } catch (error) {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
     console.error('Error sending confirmation email:', error);
     throw new Error('Failed to send confirmation email');
   }
-}
+};
 
 const updateProfilePhoto = async (file, token) => {
   try {
@@ -66,7 +70,6 @@ const updateProfilePhoto = async (file, token) => {
     const response = await axios.post(`${API_URL}/api/User/UploadProfilePhoto`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-
         'Authorization': `Bearer ${token}`,
       },
     });
@@ -77,7 +80,6 @@ const updateProfilePhoto = async (file, token) => {
     throw new Error('Failed to update profile photo');
   }
 };
-
 
 const UserService = {
   fetchUserProfile,
