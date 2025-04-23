@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CountryCodeSelector from '../../components/CountryCodeSelector';
 import { validatePhoneNumber } from '../../utils/phoneUtils';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SignupPage = () => {
   const location = useLocation();
@@ -36,6 +37,7 @@ const SignupPage = () => {
     password: '',
     phone: ''
   });
+  const { signup } = useAuth();
 
 
   // Handle URL search params for email and companyId
@@ -138,7 +140,7 @@ const SignupPage = () => {
     }
   
     try {
-      const response = await AuthService.signup({
+      const response = await signup({
         firstName,
         lastName,
         email,
@@ -148,17 +150,18 @@ const SignupPage = () => {
         companyId: companyId ?? null
       });
       
-      if (response.status === 200) {
+      if (response.success) {
         setSuccess(true);
         setIsSubmitting(false);
+        navigate('/waiting-confirm-email');
         
-        setTimeout(() => {
-          navigate('/login', { 
-            state: { 
-              message: 'Registration successful! Please login.' 
-            }
-          });
-        }, 2000);
+        // setTimeout(() => {
+        //   navigate('/waiting-confirm-email', { 
+        //     state: { 
+        //       message: 'Registration successful! Please confirm your email.' 
+        //     }
+        //   });
+        // }, 2000);
       }
     } catch (err) {
       if (err.response?.data?.errors) {

@@ -4,7 +4,7 @@ import { API_URL } from '../config/apiConfig';
 const signup = async (userData) => {
   try {
     const response = await axios.post(`${API_URL}/api/Account/Register`, userData);
-    return response;
+    return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Connection Error Occured.");
   }

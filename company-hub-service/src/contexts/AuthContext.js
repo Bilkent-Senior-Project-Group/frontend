@@ -1,7 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AuthService from "../services/AuthService"; // Import AuthService for API calls
 import { useLocation } from 'react-router-dom';
-// Removed unused import
+
+import axios from 'axios';
+import { API_URL } from '../config/apiConfig';
+
 
 const AuthContext = createContext();
 
@@ -61,7 +64,10 @@ export const AuthProvider = ({ children }) => {
         const isUserAdmin = response.data.isAdmin === true;
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("user", JSON.stringify(response.data.user));
+
+
         localStorage.setItem("isAdmin", isUserAdmin.toString()); // Save isAdmin status in localStorage as string
+
         setToken(response.data.token);
         setUser(response.data.user);
         setIsAdmin(isUserAdmin); // Set isAdmin state directly with boolean
@@ -70,6 +76,37 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       return { success: false, message: err.message };
+    }
+  };
+
+  const signup = async (userData) => {
+    try {
+      const responseData = await AuthService.signup(userData);
+      
+      // If registration is successful and returns token and user data
+      if (responseData && responseData.token.result) {
+        // Store token and user in localStorage
+        localStorage.setItem("token", responseData.token.result);
+        // localStorage.setItem("user", JSON.stringify(responseData.user));
+        
+        // Update context state
+        setToken(responseData.token.result);
+        // setUser(response.data.user);
+        
+        console.log("Signup successful, token stored");
+      }
+      
+      return { 
+        success: true, 
+        data: responseData,
+        requiresEmailVerification: true // Assuming your app requires email verification
+      };
+    } catch (error) {
+      console.error("Signup error:", error);
+      return { 
+        success: false, 
+        message: error.responseData?.message || "Connection Error Occurred." 
+      };
     }
   };
 
@@ -97,7 +134,9 @@ export const AuthProvider = ({ children }) => {
   };
   
   return (
-    <AuthContext.Provider value={{ user, token, isAdmin, login, logout, updateUser, isTokenValid, loading }}>
+
+    <AuthContext.Provider value={{ user, token, isAdmin, login, logout, updateUser, isTokenValid, loading, signup }}>
+
       {children}
     </AuthContext.Provider>
   );

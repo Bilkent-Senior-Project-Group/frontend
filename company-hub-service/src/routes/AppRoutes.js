@@ -1,4 +1,3 @@
-
 // src/routes/AppRoutes.js
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -23,7 +22,6 @@ import SearchResultsPage from '../pages/SearchResultsPage';
 import ProjectsPage from '../pages/Sidebar/ProjectsPage';
 import Project from '../pages/Sidebar/Projects/Project';
 import ProjectRequestsPage from '../pages/Sidebar/Projects/ProjectRequestsPage';
-import EditProjectPage from '../pages/Sidebar/Projects/EditProjectPage';
 import { useAuth } from '../contexts/AuthContext';
 import AnalyticsPage from '../pages/Sidebar/AnalyticsPage';
 import UserProfilePage from '../pages/Topbar/UserProfilePage';
@@ -31,7 +29,8 @@ import ResetPasswordPage from '../pages/Auth/ResetPasswordPage';
 import EditCompanyPage from '../pages/Sidebar/EditCompanyPage';
 import FakeHomepage from '../pages/Auth/FakeHomePage';
 import ConfirmEmailPage from '../pages/Auth/ConfirmEmailPage';
-
+import WaitingConfirmEmailPage from '../pages/Auth/WaitingConfirmEmailPage';
+import VerifiedRoute from '../components/VerifiedRoute';
 
 const AppRoutes = () => {
 
@@ -48,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+      <Route path="/waiting-confirm-email" element={<WaitingConfirmEmailPage />} />
 
       {/* Protected routes with sidebar */}
       <Route element={<PrivateRoute><RootLayout /></PrivateRoute>}>
@@ -57,7 +57,11 @@ const AppRoutes = () => {
         <Route path="/search-results" element={<SearchResultsPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/create-company" element={<CreateCompanyPage />} />
+        <Route path="/create-company" element={
+          <VerifiedRoute>
+            <CreateCompanyPage />
+          </VerifiedRoute>
+        } />
         <Route path="/create-project" element={<CreateProjectPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/support" element={<SupportPage />} />
@@ -71,10 +75,8 @@ const AppRoutes = () => {
         {/* Project routes */}
         <Route path="/company/projects/:companyName" element={<ProjectsPage />} />
         <Route path="/company/projects/:companyName/:projectId" element={<Project />} />
-        {/* <Route path="/company/projects/project-requests/:companyName" element={<Project />} /> */}
-        <Route path="/company/projects/project-requests" element={<ProjectRequestsPage />} />
-        {/* <Route path="/company/projects/edit-project/:projectId" element={<EditProjectPage />} /> */}
-        <Route path="/company/projects/edit-project" element={<EditProjectPage />} />
+        <Route path="/company/projects/project-requests/:companyName" element={<ProjectRequestsPage />} />
+        
 
         {/* Admin Routes */}
         <Route path="/company/analytics/:companyName" element={<AnalyticsPage />} />
