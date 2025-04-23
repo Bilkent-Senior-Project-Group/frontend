@@ -321,9 +321,11 @@ const markProjectAsCompleted = async (projectId, token) => {
     
     const response = await axios.post(
       `${API_URL}/api/Project/MarkProjectAsCompleted/${projectId}`,
+      {}, // Empty object as request body, or add any required data here
       {
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
       }
     );
@@ -331,6 +333,7 @@ const markProjectAsCompleted = async (projectId, token) => {
     console.log('Project marked as completed successfully:', response.data);
     return response.data;
   } catch (error) {
+    // Error handling remains the same
     console.error('Error details:', error.response || error);
     
     if (error.response?.status === 401) {

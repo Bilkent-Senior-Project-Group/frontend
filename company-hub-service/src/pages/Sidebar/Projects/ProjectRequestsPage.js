@@ -862,6 +862,33 @@ const ProjectRequestsPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={handleCancelAction}
+      >
+        <DialogTitle>
+          {actionType === 'approve' ? 'Approve Project Request?' : 'Decline Project Request?'}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            Are you sure you want to {actionType === 'approve' ? 'approve' : 'decline'} this project request?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelAction} color="primary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmAction} 
+            color={actionType === 'approve' ? 'success' : 'error'}
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? 'Processing...' : actionType === 'approve' ? 'Yes, Approve' : 'Yes, Decline'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

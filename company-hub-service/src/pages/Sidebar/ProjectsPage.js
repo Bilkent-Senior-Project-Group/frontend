@@ -26,7 +26,8 @@ import {
 import { 
   Edit as EditIcon, 
   Add as AddIcon, 
-  Visibility as VisibilityIcon
+  Visibility as VisibilityIcon,
+  Check // Add this import
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { colors } from '../../theme/theme.js';
@@ -80,6 +81,9 @@ const ProjectsPage = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [activeIndustryTab, setActiveIndustryTab] = useState(0);
 
+  // Add this new state for project completion status
+  const [projectCompletionStatus, setProjectCompletionStatus] = useState({});
+
   useEffect(() => {
     const fetchProjects = async () => {
         try {
@@ -124,6 +128,49 @@ const ProjectsPage = () => {
 
     fetchIndustryServices();
   }, []);
+
+  // Add this useEffect to fetch completion status for all projects when projects state changes
+  useEffect(() => {
+    if (!projects || projects.length === 0 || !token) return;
+    
+    const loadCompletionStatus = async () => {
+      const projectStatusPromises = projects.map(async (project) => {
+        try {
+          // Check client side completion
+          const clientResponse = await ProjectService.isProjectCompletedByClient(project.projectId, token);
+          
+          // Check provider side completion
+          const providerResponse = await ProjectService.isProjectCompletedByProvider(project.projectId, token);
+          
+          return {
+            projectId: project.projectId,
+            client: clientResponse.isCompleted,
+            provider: providerResponse.isCompleted
+          };
+        } catch (error) {
+          console.error(`Error loading completion status for project ${project.projectId}:`, error);
+          return {
+            projectId: project.projectId,
+            client: false,
+            provider: false
+          };
+        }
+      });
+      
+      const statuses = await Promise.all(projectStatusPromises);
+      const statusMap = {};
+      statuses.forEach(status => {
+        statusMap[status.projectId] = {
+          client: status.client,
+          provider: status.provider
+        };
+      });
+      
+      setProjectCompletionStatus(statusMap);
+    };
+    
+    loadCompletionStatus();
+  }, [projects, token]);
 
   const handleViewProject = (projectId) => {
     const project = projects.find(p => p.projectId === projectId);
@@ -261,6 +308,42 @@ const ProjectsPage = () => {
     }
   };
 
+  // Add this function to handle marking projects as completed
+  const handleMarkProjectAsCompleted = async (projectId, event) => {
+    // Prevent triggering card click
+    event.stopPropagation();
+    
+    try {
+      await ProjectService.markProjectAsCompleted(projectId, token);
+      
+      // Update the local state to reflect the change
+      const project = projects.find(p => p.projectId === projectId);
+      if (project) {
+        const isClient = project.clientCompanyName === companyName;
+        
+        setProjectCompletionStatus(prev => ({
+          ...prev,
+          [projectId]: {
+            ...prev[projectId],
+            [isClient ? 'client' : 'provider']: true
+          }
+        }));
+      }
+      
+      // Refresh projects data to get any other updated fields
+      const companyData = await CompanyService.getCompany(companyName, token);
+      const companyProfile = new CompanyProfileDTO(companyData);
+      const response = await CompanyService.getProjectsOfCompany(companyProfile.companyId, token);
+      
+      if (response) {
+        const projectDTOs = response.map(project => new ProjectDTO(project));
+        setProjects(projectDTOs);
+      }
+    } catch (error) {
+      console.error("Error marking project as completed:", error);
+    }
+  };
+
   const getStatusColor = (isCompleted) => {
     return isCompleted ? 'success' : 'primary';
   };
@@ -391,11 +474,17 @@ return (
                                     '&:hover': {
                                         transform: 'translateY(-4px)',
                                         boxShadow: 3
-                                    }
+                                    },
+                                    display: 'flex',
+                                    flexDirection: 'column'
                                 }}
                                 onClick={() => handleViewProject(project.projectId)}
                             >
-                                <CardContent>
+                                <CardContent sx={{ 
+                                    flexGrow: 1, 
+                                    pb: 1,
+                                    minHeight: '240px'
+                                }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                                         <Chip 
                                             label={project.isCompleted ? 'Completed' : 'Ongoing'} 
@@ -418,11 +507,68 @@ return (
                                         {project.projectName}
                                     </Typography>
                                     
+                                    {projectCompletionStatus[project.projectId] && project.isOnCompedia && (
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            flexDirection: 'column', 
+                                            gap: 0.75, 
+                                            mb: 1.5,
+                                            mt: 0.5
+                                        }}>
+                                            <Chip 
+                                                icon={projectCompletionStatus[project.projectId].client ? 
+                                                    <Check fontSize="small" /> : 
+                                                    null
+                                                }
+                                                label={projectCompletionStatus[project.projectId].client ? "Client Completed" : "Awaiting Client Completion"}
+                                                size="small"
+                                                variant={projectCompletionStatus[project.projectId].client ? "filled" : "outlined"}
+                                                color={projectCompletionStatus[project.projectId].client ? "success" : "default"}
+                                                sx={{ 
+                                                    height: '24px',
+                                                    width: 'fit-content', 
+                                                    '& .MuiChip-label': {
+                                                        px: 1,
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: projectCompletionStatus[project.projectId].client ? 700 : 400
+                                                    },
+                                                    '& .MuiChip-icon': {
+                                                        fontSize: '14px',
+                                                        ml: 0.5
+                                                    }
+                                                }}
+                                            />
+                                            <Chip 
+                                                icon={projectCompletionStatus[project.projectId].provider ? 
+                                                    <Check fontSize="small" /> : 
+                                                    null
+                                                }
+                                                label={projectCompletionStatus[project.projectId].provider ? "Provider Completed" : "Awaiting Provider Completion"}
+                                                size="small"
+                                                variant={projectCompletionStatus[project.projectId].provider ? "filled" : "outlined"}
+                                                color={projectCompletionStatus[project.projectId].provider ? "success" : "default"}
+                                                sx={{ 
+                                                    height: '24px',
+                                                    width: 'fit-content',
+                                                    '& .MuiChip-label': {
+                                                        px: 1,
+                                                        fontSize: '0.7rem',
+                                                        fontWeight: projectCompletionStatus[project.projectId].provider ? 700 : 400
+                                                    },
+                                                    '& .MuiChip-icon': {
+                                                        fontSize: '14px',
+                                                        ml: 0.5
+                                                    }
+                                                }}
+                                            />
+                                        </Box>
+                                    )}
+                                    
                                     <Typography 
                                         variant="body2" 
                                         color="text.secondary" 
                                         sx={{ 
-                                            mb: 2,
+                                            mb: 1.5,
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
                                             display: '-webkit-box',
@@ -433,60 +579,55 @@ return (
                                         {project.description}
                                     </Typography>
                                     
-                                    <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}>
-                                        {project.technologiesUsed.slice(0, 3).map((tech, index) => (
-                                            <Chip 
-                                                key={index} 
-                                                label={tech} 
-                                                size="small" 
-                                                variant="outlined"
-                                                sx={{ fontSize: '0.7rem' }}
-                                            />
-                                        ))}
-                                        {project.technologiesUsed.length > 3 && (
-                                            <Chip 
-                                                label={`+${project.technologiesUsed.length - 3}`} 
-                                                size="small" 
-                                                variant="outlined"
-                                                sx={{ fontSize: '0.7rem' }}
-                                            />
-                                        )}
-                                    </Stack>
+                                    <Divider sx={{ my: 0.75 }} />
                                     
-                                    <Divider sx={{ my: 2 }} />
-                                    
-                                    <Box sx={{ mt: 2 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Partner Company:
+                                    <Box sx={{ mt: 0.75 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                                Partner:
                                             </Typography>
-                                            <Typography variant="body2" noWrap sx={{ maxWidth: '60%', textAlign: 'right' }}>
+                                            <Typography variant="body2" noWrap sx={{ maxWidth: '60%', textAlign: 'right', fontSize: '0.8rem' }}>
                                                 {getPartnerCompanyName(project)}
                                             </Typography>
                                         </Box>
 
-                                        
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="body2" color="text.secondary">
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                                                 Started:
                                             </Typography>
-                                            <Typography variant="body2">
+                                            <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
                                                 {formatDate(project.startDate)}
                                             </Typography>
                                         </Box>
                                         
                                         {project.isCompleted && (
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="body2" color="text.secondary">
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                                                     Completed:
                                                 </Typography>
-                                                <Typography variant="body2">
+                                                <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
                                                     {formatDate(project.completionDate)}
                                                 </Typography>
                                             </Box>
                                         )}
                                     </Box>
                                 </CardContent>
+                                
+                                <Box sx={{ p: 1.5, pt: 0, display: 'flex', justifyContent: 'flex-end', mt: 'auto' }}>
+                                    {project.isOnCompedia && (!projectCompletionStatus[project.projectId] || 
+                                     (project.providerCompanyName === companyName && !projectCompletionStatus[project.projectId]?.provider) ||
+                                     (project.clientCompanyName === companyName && !projectCompletionStatus[project.projectId]?.client)) && (
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            color="success"
+                                            onClick={(e) => handleMarkProjectAsCompleted(project.projectId, e)}
+                                            startIcon={<Check size={16} />}
+                                        >
+                                            Mark Completed
+                                        </Button>
+                                    )}
+                                </Box>
                             </Card>
                         </Grid>
                     ))}
@@ -722,20 +863,7 @@ return (
                             margin="normal"
                         />
                     </Grid>
-                    
-                    <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 3 }}>
-                            <input
-                                type="checkbox"
-                                id="isCompleted"
-                                name="isCompleted"
-                                checked={editProjectFormData.isCompleted}
-                                onChange={handleProjectInputChange}
-                                style={{ marginRight: '8px' }}
-                            />
-                            <label htmlFor="isCompleted">Mark project as completed</label>
-                        </Box>
-                    </Grid>
+                
                     
                     {/* Technologies Section */}
                     <Grid item xs={12}>

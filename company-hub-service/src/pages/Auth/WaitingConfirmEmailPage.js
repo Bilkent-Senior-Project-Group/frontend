@@ -15,7 +15,7 @@ const WaitingConfirmEmailPage = () => {
 
   const { user, token } = useAuth();
   
-  // Function to check if email has been verified - using useCallback for optimization
+  // Update the email verification check function
   const checkEmailVerification = useCallback(async () => {
     if (!token) {
       navigate('/login');
@@ -26,9 +26,9 @@ const WaitingConfirmEmailPage = () => {
       const response = await UserService.checkEmailVerification(token);
       console.log("API response emailConfirmed:", response.emailConfirmed);
       
-      setEmailChecked(true);
       if (response.emailConfirmed) {
         setIsVerified(true);
+        setEmailChecked(true); // Only mark as checked when verified
         
         // Add a short delay before redirecting to show the verified state
         setTimeout(() => {
@@ -40,11 +40,11 @@ const WaitingConfirmEmailPage = () => {
         }, 2000);
       } else {
         setIsVerified(false);
+        setEmailChecked(true); // Mark as checked even if not verified so we know we checked
       }
     } catch (error) {
       console.error('Error checking email verification:', error);
-      setEmailChecked(true); // Mark as checked even on error
-      setIsVerified(false);
+      setEmailChecked(true); // Mark as checked even on error so we know we attempted
     }
   }, [token, navigate]);
   
@@ -72,7 +72,7 @@ const WaitingConfirmEmailPage = () => {
     }
   };
   
-  // Check email verification status every 5 seconds but only if not verified yet
+  // Update the useEffect to manage the interval more effectively
   useEffect(() => {
     let intervalId;
     
@@ -80,8 +80,8 @@ const WaitingConfirmEmailPage = () => {
     if (user && token) {
       checkEmailVerification();
       
-      // Only setup interval if email is not checked yet or not verified
-      if (!emailChecked && !isVerified) {
+      // Only setup interval if not verified yet
+      if (!isVerified) {
         intervalId = setInterval(() => {
           checkEmailVerification();
         }, 5000);
@@ -93,7 +93,7 @@ const WaitingConfirmEmailPage = () => {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [checkEmailVerification, emailChecked, isVerified, user, token, navigate]);
+  }, [checkEmailVerification, isVerified, user, token, navigate]);
   
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
@@ -133,16 +133,18 @@ const WaitingConfirmEmailPage = () => {
             </Typography>
             
             <Box sx={{ my: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleResendEmail}
-                disabled={isLoading || isVerified}
-                startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <MarkEmailReadIcon />}
-                sx={{ mb: 2 }}
-              >
-                {isLoading ? 'Sending...' : 'Resend Verification Email'}
-              </Button>
+              {!isVerified && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleResendEmail}
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <MarkEmailReadIcon />}
+                  sx={{ mb: 2 }}
+                >
+                  {isLoading ? 'Sending...' : 'Resend Verification Email'}
+                </Button>
+              )}
               
               {resendStatus === 'success' && (
                 <Typography color="success.main" sx={{ mt: 1 }}>

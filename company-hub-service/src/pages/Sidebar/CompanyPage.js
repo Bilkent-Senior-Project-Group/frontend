@@ -226,6 +226,7 @@ const CompanyPage = () => {
         response = await ProjectService.isProjectCompletedByClient(projectId, token);
       } else {
         response = await ProjectService.isProjectCompletedByProvider(projectId, token);
+        console.log("Provider response:", response);
       }
       
       setProjectCompletionStatus(prev => ({
@@ -1553,21 +1554,29 @@ const CompanyPage = () => {
                               </Box>
                               
                               {/* New completion status display */}
-                              {projectCompletionStatus[project.projectId] && (
+                              {projectCompletionStatus[project.projectId] && project.isOnCompedia && (
                                 <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
                                   <Chip 
-                                    icon={projectCompletionStatus[project.projectId].client ? <Check size={14} /> : null}
-                                    label="Client Approved"
+                                    icon={<Check size={14} />}
+                                    label={projectCompletionStatus[project.projectId].client ? "Client Completed" : "Awaiting Client Completion"}
                                     size="small"
                                     variant={projectCompletionStatus[project.projectId].client ? "filled" : "outlined"}
-                                    color={projectCompletionStatus[project.projectId].client ? "success" : "default"}
+                                    color={projectCompletionStatus[project.projectId].client ? "success" : "warning"}
+                                    sx={{ 
+                                      fontWeight: projectCompletionStatus[project.projectId].client ? 'bold' : 'normal',
+                                      borderWidth: projectCompletionStatus[project.projectId].client ? 2 : 1,
+                                    }}
                                   />
                                   <Chip 
-                                    icon={projectCompletionStatus[project.projectId].provider ? <Check size={14} /> : null}
-                                    label="Provider Approved"
+                                    icon={<Check size={14} />}
+                                    label={projectCompletionStatus[project.projectId].provider ? "Provider Completed" : "Awaiting Provider Completion"}
                                     size="small"
                                     variant={projectCompletionStatus[project.projectId].provider ? "filled" : "outlined"}
-                                    color={projectCompletionStatus[project.projectId].provider ? "success" : "default"}
+                                    color={projectCompletionStatus[project.projectId].provider ? "success" : "warning"}
+                                    sx={{ 
+                                      fontWeight: projectCompletionStatus[project.projectId].provider ? 'bold' : 'normal',
+                                      borderWidth: projectCompletionStatus[project.projectId].provider ? 2 : 1,
+                                    }}
                                   />
                                 </Box>
                               )}
@@ -1687,7 +1696,7 @@ const CompanyPage = () => {
                               )}
                               
                               {/* Mark as Completed Button for company owners */}
-                              {isCompanyOwner && (
+                              {isCompanyOwner && project.isOnCompedia && (
                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                   {/* Show Mark as Completed button only if not already marked as completed by this company */}
                                   {(!projectCompletionStatus[project.projectId] || 
