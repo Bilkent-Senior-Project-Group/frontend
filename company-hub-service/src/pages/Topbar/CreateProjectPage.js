@@ -32,7 +32,7 @@ const CreateProjectPage = () => {
   const location = useLocation();
   
   // Get any pre-filled data from navigation state
-  const providerCompanyFromNavigation = location.state?.providerCompany || '';
+  const clientCompanyFromNavigation = location.state?.clientCompany || '';
   
   const [projectDetails, setProjectDetails] = useState({
     projectName: '',
@@ -40,8 +40,8 @@ const CreateProjectPage = () => {
     clientType: '',
     impact: '',
     technologiesUsed: [],
-    clientCompanyName: '',
-    providerCompanyName: providerCompanyFromNavigation,
+    clientCompanyName: clientCompanyFromNavigation,
+    providerCompanyName: '',
     services: [],
   });
 
@@ -56,8 +56,8 @@ const CreateProjectPage = () => {
   // States for company autocomplete
   const [clientCompanyOptions, setClientCompanyOptions] = useState([]);
   const [providerCompanyOptions, setProviderCompanyOptions] = useState([]);
-  const [clientInputValue, setClientInputValue] = useState('');
-  const [providerInputValue, setProviderInputValue] = useState(providerCompanyFromNavigation);
+  const [clientInputValue, setClientInputValue] = useState(clientCompanyFromNavigation);
+  const [providerInputValue, setProviderInputValue] = useState('');
 
   // Services states
   const [servicesByIndustry, setServicesByIndustry] = useState([]);
@@ -107,16 +107,18 @@ const CreateProjectPage = () => {
   const [isCheckingClientVerification, setIsCheckingClientVerification] = useState(false);
   const [isCheckingProviderVerification, setIsCheckingProviderVerification] = useState(false);
 
-  // Fetch companies when input changes
+  // Update the fetchClientCompanies function in the useEffect
   useEffect(() => {
     const fetchClientCompanies = async () => {
-      if (clientInputValue.length >= 2) {
-        try {
-          const companies = await CompanyService.searchCompaniesByName(clientInputValue);
-          setClientCompanyOptions(companies);
-        } catch (error) {
-          console.error("Error fetching client companies:", error);
-        }
+      if (clientInputValue.length >= 2 && userCompanies.length > 0) {
+        // Only filter from user's companies instead of searching all companies
+        const filteredCompanies = userCompanies.filter(company => 
+          company.companyName.toLowerCase().includes(clientInputValue.toLowerCase())
+        );
+        setClientCompanyOptions(filteredCompanies);
+      } else if (clientInputValue.length === 0) {
+        // When input is empty, show all user companies
+        setClientCompanyOptions(userCompanies);
       }
     };
 
@@ -125,7 +127,14 @@ const CreateProjectPage = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [clientInputValue]);
+  }, [clientInputValue, userCompanies]);
+
+  // Also add this effect to initialize client company options with all user companies
+  useEffect(() => {
+    if (userCompanies.length > 0) {
+      setClientCompanyOptions(userCompanies);
+    }
+  }, [userCompanies]);
 
   useEffect(() => {
     const fetchProviderCompanies = async () => {
@@ -179,6 +188,25 @@ const CreateProjectPage = () => {
           const companies = await CompanyService.getCompaniesOfUser(user.id, token);
           setUserCompanies(companies);
           console.log('User companies:', companies);
+          
+          // If user has companies and client company is not set, pre-fill with user's first company
+          if (companies.length > 0 && !projectDetails.clientCompanyName) {
+            const firstCompany = companies[0];
+            setProjectDetails(prev => ({
+              ...prev,
+              clientCompanyName: firstCompany.companyName
+            }));
+            setClientInputValue(firstCompany.companyName);
+            
+            // Also check verification status for this pre-filled company
+            try {
+              const companyData = await CompanyService.getCompany(firstCompany.companyName, token);
+              setClientCompanyVerified(companyData.verified === 1);
+            } catch (err) {
+              console.error('Error checking pre-filled client company verification:', err);
+              setClientCompanyVerified(false);
+            }
+          }
         } catch (error) {
           console.error('Error fetching user companies:', error);
           setNotification({
@@ -267,34 +295,34 @@ const CreateProjectPage = () => {
     return () => clearTimeout(timer);
   }, [projectDetails.providerCompanyName, token]);
 
-  // Verify the provider company when it's pre-filled from navigation
+  // Verify the client company when it's pre-filled from navigation
   useEffect(() => {
-    if (providerCompanyFromNavigation) {
-      const checkProviderCompanyVerification = async () => {
-        setIsCheckingProviderVerification(true);
+    if (clientCompanyFromNavigation) {
+      const checkClientCompanyVerification = async () => {
+        setIsCheckingClientVerification(true);
         try {
-          const companyData = await CompanyService.getCompany(providerCompanyFromNavigation, token);
-          setProviderCompanyVerified(companyData.verified === 1);
+          const companyData = await CompanyService.getCompany(clientCompanyFromNavigation, token);
+          setClientCompanyVerified(companyData.verified === 1);
           
           // Clear validation errors if company is now verified
-          if (companyData.verified === 1 && validationErrors.providerCompanyVerified) {
+          if (companyData.verified === 1 && validationErrors. clientCompanyVerified) {
             setValidationErrors(prev => {
               const updated = { ...prev };
-              delete updated.providerCompanyVerified;
+              delete updated.clientCompanyVerified;
               return updated;
             });
           }
         } catch (error) {
-          console.error('Error checking provider company verification:', error);
-          setProviderCompanyVerified(false);
+          console.error('Error checking client company verification:', error);
+          setClientCompanyVerified(false);
         } finally {
-          setIsCheckingProviderVerification(false);
+          setIsCheckingClientVerification(false);
         }
       };
 
-      checkProviderCompanyVerification();
+      checkClientCompanyVerification();
     }
-  }, [providerCompanyFromNavigation, token]);
+  }, [clientCompanyFromNavigation, token]);
 
   const handleProjectDetailsChange = (e) => {
     const { name, value } = e.target;
@@ -561,7 +589,7 @@ const CreateProjectPage = () => {
                         validationErrors.clientCompanyName || 
                         (clientCompanyVerified === false ? 
                           "This company is not verified. Projects can only be created for verified companies." : 
-                          "")
+                          "You can only select companies you're associated with")
                       }
                       variant="outlined"
                       InputProps={{
@@ -585,8 +613,9 @@ const CreateProjectPage = () => {
                       }}
                     />
                   )}
-                  freeSolo
-                  noOptionsText="Type to search companies"
+                  freeSolo={false} // Set to false to restrict to only user's companies
+                  noOptionsText="No matching companies found. You can only create projects for companies you're associated with."
+                  value={projectDetails.clientCompanyName ? { companyName: projectDetails.clientCompanyName } : null}
                 />
               </Grid>
               <Grid item xs={12} md={6}>

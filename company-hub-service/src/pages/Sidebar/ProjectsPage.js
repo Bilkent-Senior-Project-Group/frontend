@@ -11,7 +11,17 @@ import {
   Chip,
   Divider,
   IconButton,
-  Stack
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Autocomplete,
+  FormHelperText,
+  Alert,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
@@ -21,8 +31,11 @@ import {
 import { useAuth } from '../../contexts/AuthContext.js';
 import { colors } from '../../theme/theme.js';
 import CompanyService from '../../services/CompanyService.js';
+import ProjectService from '../../services/ProjectService.js';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO.js';
 import ProjectDTO from '../../DTO/project/ProjectDTO.js'
+import axios from 'axios';
+import { API_URL } from '../../config/apiConfig.js';
 
 const ProjectsPage = () => {
   const { companyName } = useParams();
@@ -32,7 +45,42 @@ const ProjectsPage = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
 
-useEffect(() => {
+  // New state for project editing
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [editProjectDialogOpen, setEditProjectDialogOpen] = useState(false);
+  const [editProjectFormData, setEditProjectFormData] = useState({
+    projectName: '',
+    description: '',
+    technologiesUsed: [],
+    clientType: '',
+    projectUrl: '',
+    isCompleted: false,
+    startDate: '',
+    completionDate: '',
+    services: []
+  });
+  const [editProjectLoading, setEditProjectLoading] = useState(false);
+  const [editProjectError, setEditProjectError] = useState('');
+
+  // Technology options for autocomplete
+  const [technologyOptions] = useState([
+    "Python", "JavaScript", "TypeScript", "Java", "C++", "C#", "Go", "PHP", "Ruby", "Swift", "Kotlin", "Rust",
+    "React", "Angular", "Vue.js", "Svelte", "Next.js", "Nuxt.js",
+    "Node.js", "Express.js", "Django", "Flask", "Spring Boot", "ASP.NET Core", "Laravel", "Ruby on Rails", "FastAPI",
+    "React Native", "Flutter", "SwiftUI", "Android SDK",
+    "PostgreSQL", "MySQL", "SQLite", "MongoDB", "Redis", "Firebase Realtime DB", "Firestore", "Microsoft SQL Server",
+    "AWS", "Microsoft Azure", "Google Cloud Platform", "Docker", "Kubernetes", "Jenkins", "GitHub Actions", "GitLab CI/CD",
+    "TensorFlow", "PyTorch", "Scikit-learn", "OpenCV", "Pandas", "NumPy", "Hugging Face Transformers", "Keras",
+    "Git", "GitHub", "GitLab", "Figma", "Postman", "Swagger", "OpenAPI", "REST API", "GraphQL", "WebSockets"
+  ]);
+
+  // State for services by industry
+  const [servicesByIndustry, setServicesByIndustry] = useState([]);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [activeIndustryTab, setActiveIndustryTab] = useState(0);
+
+  useEffect(() => {
     const fetchProjects = async () => {
         try {
             setLoading(true);
@@ -57,16 +105,160 @@ useEffect(() => {
     };
 
     fetchProjects();
-}, [token, companyName]);
+  }, [token, companyName]);
+
+  // Fetch services by industry
+  useEffect(() => {
+    const fetchIndustryServices = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/Company/GetAllServices`);
+        const grouped = res.data.map(group => ({
+          industry: group[0].industry.name,
+          services: group.map(s => ({ id: s.id, name: s.name })),
+        }));
+        setServicesByIndustry(grouped);
+      } catch (err) {
+        console.error('Error fetching industries:', err);
+      }
+    };
+
+    fetchIndustryServices();
+  }, []);
 
   const handleViewProject = (projectId) => {
-    // navigate(`/company/projects/${companyName}/${projectId}`);
+    const project = projects.find(p => p.projectId === projectId);
+    if (project) {
+      setSelectedProject(project);
+      setProjectDialogOpen(true);
+    }
   };
 
   const handleEditProject = (projectId, e) => {
     e.stopPropagation(); // Prevent triggering the card click
-    // navigate(`/company/projects/edit-project/${projectId}`);
-    navigate(`/company/projects/edit-project`);
+    
+    const project = projects.find(p => p.projectId === projectId);
+    if (project) {
+      const formData = {
+        projectName: project.projectName || '',
+        description: project.description || '',
+        technologiesUsed: Array.isArray(project.technologiesUsed) 
+          ? [...project.technologiesUsed] 
+          : (typeof project.technologiesUsed === 'string' 
+              ? project.technologiesUsed.split(',').map(tech => tech.trim()).filter(tech => tech !== '')
+              : []),
+        clientType: project.clientType || '',
+        projectUrl: project.projectUrl || '',
+        isCompleted: project.isCompleted || false,
+        startDate: project.startDate || '',
+        completionDate: project.completionDate || '',
+        services: Array.isArray(project.services) 
+          ? project.services.map(service => ({
+              id: service.id,
+              name: service.name
+            }))
+          : []
+      };
+      
+      setSelectedProject(project);
+      setEditProjectFormData(formData);
+      
+      setSelectedServices(
+        Array.isArray(project.services) 
+          ? project.services.map(service => service.id) 
+          : []
+      );
+      
+      setEditProjectDialogOpen(true);
+      setEditProjectError('');
+    }
+  };
+
+  const handleProjectDialogClose = () => {
+    setProjectDialogOpen(false);
+    setSelectedProject(null);
+  };
+
+  const handleEditProjectDialogClose = () => {
+    setEditProjectDialogOpen(false);
+    setSelectedProject(null);
+  };
+
+  const handleProjectInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditProjectFormData({
+      ...editProjectFormData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+  };
+
+  const toggleService = (serviceId) => {
+    setSelectedServices(prevSelected => {
+      const newSelected = prevSelected.includes(serviceId)
+        ? prevSelected.filter(id => id !== serviceId)
+        : [...prevSelected, serviceId];
+        
+      setEditProjectFormData(prev => ({
+        ...prev,
+        services: servicesByIndustry
+          .flatMap(industry => industry.services)
+          .filter(service => newSelected.includes(service.id))
+      }));
+      
+      return newSelected;
+    });
+  };
+
+  const getSelectedServiceCount = () => {
+    return selectedServices.length;
+  };
+
+  const handleSubmitProjectEdit = async () => {
+    if (!selectedProject || !selectedProject.projectId) {
+      setEditProjectError('Project ID is missing');
+      return;
+    }
+
+    setEditProjectLoading(true);
+    setEditProjectError('');
+
+    try {
+      const formattedProjectData = {
+        projectId: selectedProject.projectId,
+        projectName: editProjectFormData.projectName,
+        description: editProjectFormData.description,
+        technologiesUsed: Array.isArray(editProjectFormData.technologiesUsed) 
+          ? editProjectFormData.technologiesUsed.join(',') 
+          : '',
+        clientType: editProjectFormData.clientType || '',
+        startDate: editProjectFormData.startDate || null,
+        completionDate: editProjectFormData.completionDate || null,
+        projectUrl: editProjectFormData.projectUrl || '',
+        services: Array.isArray(editProjectFormData.services) 
+          ? editProjectFormData.services.map(service => service.id)
+          : []
+      };
+
+      console.log('Sending formatted project data:', formattedProjectData);
+
+      await ProjectService.updateProject(formattedProjectData, token);
+
+      const companyData = await CompanyService.getCompany(companyName, token);
+      const companyProfile = new CompanyProfileDTO(companyData);
+      const companyId = companyProfile.companyId;
+      const response = await CompanyService.getProjectsOfCompany(companyId, token);
+      
+      if (response) {
+        const projectDTOs = response.map(project => new ProjectDTO(project));
+        setProjects(projectDTOs);
+      }
+      
+      setEditProjectDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating project:", error);
+      setEditProjectError(error.message || 'Failed to update project');
+    } finally {
+      setEditProjectLoading(false);
+    }
   };
 
   const getStatusColor = (isCompleted) => {
@@ -83,8 +275,11 @@ useEffect(() => {
   };
 
   const getPartnerCompanyName = (project) => {
-    // Simplified for now to just show one partner company
-    return project.clientCompanyName || 'No partner company';
+    if (project.clientCompanyName === companyName) {
+      return project.providerCompanyName || 'No partner company';
+    } else {
+      return project.clientCompanyName || 'No partner company';
+    }
   };
 
   if (loading) {
@@ -102,9 +297,9 @@ useEffect(() => {
       <Container maxWidth="lg" sx={{ py: 8 }}>
         <Box sx={{ 
           p: 2, 
-          backgroundColor: '#ffebee',  // Light red color
+          backgroundColor: '#ffebee',
           borderRadius: 1,
-          color: '#c62828'  // Dark red color
+          color: '#c62828'
         }}>
           <Typography>{error}</Typography>
         </Box>
@@ -139,7 +334,7 @@ return (
                         <Button 
                             onClick={() => navigate('/create-project', {
                                 state: {
-                                    providerCompany: companyName // This comes from useParams
+                                    clientCompany: companyName
                                 }
                             })}
                             variant="contained" 
@@ -153,7 +348,6 @@ return (
             </Container>
             </Box>
 
-            {/* Projects List */}
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {projects.length === 0 ? (
                 <Box 
@@ -175,7 +369,7 @@ return (
                     <Button 
                         onClick={() => navigate('/create-project', {
                             state: {
-                                providerCompany: companyName // This comes from useParams
+                                providerCompany: companyName
                             }
                         })} 
                         variant="contained" 
@@ -299,6 +493,438 @@ return (
                 </Grid>
             )}
         </Container>
+
+        {/* Project Details Dialog */}
+        <Dialog 
+            open={projectDialogOpen} 
+            onClose={handleProjectDialogClose}
+            maxWidth="md"
+            fullWidth
+        >
+            {selectedProject && (
+            <>
+                <DialogTitle sx={{ fontWeight: 'bold' }}>
+                Project Details
+                </DialogTitle>
+                <DialogContent dividers>
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                    {selectedProject.projectName || 'Unnamed Project'}
+                    </Typography>
+                    <Chip 
+                    label={selectedProject.isCompleted ? 'Completed' : 'Ongoing'} 
+                    color={getStatusColor(selectedProject.isCompleted)}
+                    size="small"
+                    />
+                </Box>
+                
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="body1" paragraph>
+                    {selectedProject.description || 'No description provided.'}
+                    </Typography>
+                </Box>
+                
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                    <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Typography
+                        variant="body2"
+                        sx={{ mr: 1 }}
+                        color="text.secondary"
+                        >
+                        Timeline:
+                        </Typography>
+                        <Typography variant="body2">
+                        {selectedProject.startDate
+                            ? new Date(selectedProject.startDate).toLocaleDateString()
+                            : 'Unknown'}{' '}
+                        -{' '}
+                        {selectedProject.completionDate
+                            ? new Date(selectedProject.completionDate).toLocaleDateString()
+                            : 'Present'}
+                        </Typography>
+                    </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                        <strong>Client:</strong>{' '}
+                        {selectedProject.clientCompanyName || 'Not specified'}
+                    </Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                        <strong>Provider:</strong>{' '}
+                        {selectedProject.providerCompanyName || 'Not specified'}
+                    </Typography>
+                    </Grid>
+                    {selectedProject.clientType && (
+                    <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">
+                        <strong>Client Type:</strong>{' '}
+                        {selectedProject.clientType}
+                        </Typography>
+                    </Grid>
+                    )}
+                    {selectedProject.projectUrl && (
+                    <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary">
+                        <strong>Project URL:</strong>{' '}
+                        <Typography 
+                            component="a" 
+                            href={selectedProject.projectUrl} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            color="primary"
+                            variant="body2"
+                        >
+                            {selectedProject.projectUrl}
+                        </Typography>
+                        </Typography>
+                    </Grid>
+                    )}
+                    
+                    {/* Technologies */}
+                    <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        <strong>Technologies</strong>
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {Array.isArray(selectedProject.technologiesUsed) && selectedProject.technologiesUsed.length > 0 ? (
+                        selectedProject.technologiesUsed.map((tech, index) => (
+                            <Chip key={index} label={tech} size="small" />
+                        ))
+                        ) : (
+                        <Typography variant="body2">No technologies specified</Typography>
+                        )}
+                    </Box>
+                    </Grid>
+                    
+                    {/* Services */}
+                    <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        <strong>Services</strong>
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {Array.isArray(selectedProject.services) && selectedProject.services.length > 0 ? (
+                        selectedProject.services.map((service) => (
+                            <Chip 
+                            key={service.id} 
+                            label={service.name} 
+                            size="small"
+                            sx={{
+                                backgroundColor: colors.primary[500],
+                                color: 'white',
+                                '&:hover': {
+                                backgroundColor: colors.primary[700],
+                                color: 'white',
+                                },
+                            }}
+                            />
+                        ))
+                        ) : (
+                        <Typography variant="body2">No services specified</Typography>
+                        )}
+                    </Box>
+                    </Grid>
+                </Grid>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                <Box></Box>
+                <Box>
+                    <Button onClick={handleProjectDialogClose} variant="outlined" sx={{ mr: 1 }}>
+                    Close
+                    </Button>
+                    <Button
+                    startIcon={<EditIcon />}
+                    variant="contained"
+                    onClick={() => {
+                        handleProjectDialogClose();
+                        handleEditProject(selectedProject.projectId, { stopPropagation: () => {} });
+                    }}
+                    >
+                    Edit Project
+                    </Button>
+                </Box>
+                </DialogActions>
+            </>
+            )}
+        </Dialog>
+
+        {/* Edit Project Dialog */}
+        <Dialog 
+            open={editProjectDialogOpen} 
+            onClose={handleEditProjectDialogClose}
+            maxWidth="md"
+            fullWidth
+        >
+            <DialogTitle sx={{ fontWeight: 'bold' }}>Edit Project</DialogTitle>
+            <DialogContent dividers>
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <TextField
+                            name="projectName"
+                            label="Project Name"
+                            value={editProjectFormData.projectName}
+                            onChange={handleProjectInputChange}
+                            fullWidth
+                            margin="normal"
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            name="description"
+                            label="Description"
+                            value={editProjectFormData.description}
+                            onChange={handleProjectInputChange}
+                            fullWidth
+                            multiline
+                            rows={4}
+                            margin="normal"
+                        />
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            name="startDate"
+                            label="Start Date"
+                            type="date"
+                            value={editProjectFormData.startDate ? new Date(editProjectFormData.startDate).toISOString().split('T')[0] : ''}
+                            onChange={handleProjectInputChange}
+                            fullWidth
+                            margin="normal"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            name="completionDate"
+                            label="Completion Date"
+                            type="date"
+                            value={editProjectFormData.completionDate ? new Date(editProjectFormData.completionDate).toISOString().split('T')[0] : ''}
+                            onChange={handleProjectInputChange}
+                            fullWidth
+                            margin="normal"
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                        <TextField
+                            name="projectUrl"
+                            label="Project URL"
+                            value={editProjectFormData.projectUrl}
+                            onChange={handleProjectInputChange}
+                            fullWidth
+                            margin="normal"
+                        />
+                    </Grid>
+                    
+                    <Grid item xs={12} sm={6}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 3 }}>
+                            <input
+                                type="checkbox"
+                                id="isCompleted"
+                                name="isCompleted"
+                                checked={editProjectFormData.isCompleted}
+                                onChange={handleProjectInputChange}
+                                style={{ marginRight: '8px' }}
+                            />
+                            <label htmlFor="isCompleted">Mark project as completed</label>
+                        </Box>
+                    </Grid>
+                    
+                    {/* Technologies Section */}
+                    <Grid item xs={12}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                            Technologies Used
+                        </Typography>
+                        <Autocomplete
+                            multiple
+                            id="technologies-autocomplete"
+                            options={technologyOptions}
+                            freeSolo
+                            value={editProjectFormData.technologiesUsed || []}
+                            onChange={(event, newValue) => {
+                                setEditProjectFormData(prev => ({
+                                    ...prev,
+                                    technologiesUsed: newValue.map(item => item.trim()).filter(item => item !== '')
+                                }));
+                            }}
+                            renderTags={(value, getTagProps) =>
+                                value.map((option, index) => (
+                                    <Chip
+                                        label={option}
+                                        {...getTagProps({ index })}
+                                        key={index}
+                                        size="small"
+                                    />
+                                ))
+                            }
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    variant="outlined"
+                                    placeholder={editProjectFormData.technologiesUsed?.length > 0 ? "" : "Add technologies..."}
+                                    fullWidth
+                                />
+                            )}
+                            filterOptions={(options, params) => {
+                                const filtered = options.filter(option => 
+                                    option.toLowerCase().includes(params.inputValue.toLowerCase())
+                                );
+                                
+                                const isExisting = options.some(
+                                    option => option.toLowerCase() === params.inputValue.toLowerCase()
+                                );
+                                
+                                if (params.inputValue !== '' && !isExisting) {
+                                    filtered.push(params.inputValue);
+                                }
+                                
+                                return filtered;
+                            }}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    paddingLeft: 1,
+                                    '& input': { paddingTop: 1, paddingBottom: 1 }
+                                }
+                            }}
+                        />
+                        <FormHelperText>
+                            Start typing to see suggestions or add your own technologies
+                        </FormHelperText>
+                    </Grid>
+                    
+                    {/* Services Section */}
+                    <Grid item xs={12}>
+                        <Typography variant="subtitle1" gutterBottom mt={2}>
+                            Services
+                        </Typography>
+                        
+                        {/* Industry tabs */}
+                        {servicesByIndustry.length > 0 && (
+                            <Box sx={{ width: '100%', mb: 2, mt: 1 }}>
+                                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                    <Tabs 
+                                        value={activeIndustryTab}
+                                        onChange={(_, newValue) => setActiveIndustryTab(newValue)}
+                                        variant="scrollable"
+                                        scrollButtons="auto"
+                                        aria-label="industry tabs"
+                                    >
+                                        {servicesByIndustry.map((industry, index) => (
+                                            <Tab key={index} label={industry.industry} id={`industry-tab-${index}`} />
+                                        ))}
+                                    </Tabs>
+                                </Box>
+                                
+                                {/* Services as checkboxes by selected industry */}
+                                <Box sx={{ pt: 2 }}>
+                                    {servicesByIndustry.length > 0 && servicesByIndustry[activeIndustryTab] && (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                            {servicesByIndustry[activeIndustryTab]?.services.map((service) => (
+                                                <Box 
+                                                    key={service.id} 
+                                                    sx={{ 
+                                                        width: 'calc(50% - 8px)',
+                                                        maxWidth: '340px',
+                                                        padding: '12px 16px',
+                                                        borderRadius: '4px',
+                                                        border: '1px solid',
+                                                        borderColor: 'divider',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        mb: 1,
+                                                        bgcolor: 'background.paper'
+                                                    }}
+                                                >
+                                                    <input 
+                                                        type="checkbox" 
+                                                        id={`service-${service.id}`}
+                                                        checked={selectedServices.includes(service.id)}
+                                                        onChange={() => toggleService(service.id)}
+                                                        style={{ 
+                                                            marginRight: '12px',
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    />
+                                                    <label 
+                                                        htmlFor={`service-${service.id}`} 
+                                                        style={{ 
+                                                            cursor: 'pointer',
+                                                            fontWeight: selectedServices.includes(service.id) ? 500 : 400
+                                                        }}
+                                                    >
+                                                        {service.name}
+                                                    </label>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+                        )}
+                        
+                        {/* Selected services summary */}
+                        <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                            <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+                                Selected Services ({getSelectedServiceCount()})
+                            </Typography>
+                            
+                            {selectedServices.length === 0 ? (
+                                <Typography variant="body2" color="text.secondary">
+                                    No services selected yet.
+                                </Typography>
+                            ) : (
+                                <>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                        {selectedServices.map((serviceId) => {
+                                            const service = servicesByIndustry
+                                                .flatMap(industry => industry.services)
+                                                .find(service => service.id === serviceId);
+                                            
+                                            return (
+                                                <Chip
+                                                    key={serviceId}
+                                                    label={service ? service.name : 'Unknown Service'}
+                                                    onDelete={() => toggleService(serviceId)}
+                                                    color="primary"
+                                                />
+                                            );
+                                        })}
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
+                    </Grid>
+                </Grid>
+                
+                {editProjectError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                        {editProjectError}
+                    </Alert>
+                )}
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+                <Button onClick={handleEditProjectDialogClose} color="inherit">
+                    Cancel
+                </Button>
+                <Button 
+                    onClick={handleSubmitProjectEdit} 
+                    color="primary" 
+                    variant="contained"
+                    disabled={editProjectLoading}
+                >
+                    {editProjectLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+            </DialogActions>
+        </Dialog>
     </Box>
 );
 };

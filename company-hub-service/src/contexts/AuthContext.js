@@ -70,31 +70,31 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      const response = await AuthService.signup(userData);
+      const responseData = await AuthService.signup(userData);
       
       // If registration is successful and returns token and user data
-      if (response.data && response.data.token) {
+      if (responseData && responseData.token.result) {
         // Store token and user in localStorage
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", responseData.token.result);
+        // localStorage.setItem("user", JSON.stringify(responseData.user));
         
         // Update context state
-        setToken(response.data.token);
-        setUser(response.data.user);
+        setToken(responseData.token.result);
+        // setUser(response.data.user);
         
         console.log("Signup successful, token stored");
       }
       
       return { 
         success: true, 
-        data: response.data,
+        data: responseData,
         requiresEmailVerification: true // Assuming your app requires email verification
       };
     } catch (error) {
       console.error("Signup error:", error);
       return { 
         success: false, 
-        message: error.response?.data?.message || "Connection Error Occurred." 
+        message: error.responseData?.message || "Connection Error Occurred." 
       };
     }
   };

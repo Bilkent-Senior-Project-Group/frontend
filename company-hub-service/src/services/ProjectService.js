@@ -117,20 +117,18 @@ const getProjectById = async (projectId, token) => {
   }
 };
 
-const updateProject = async (projectId, projectData, token) => {
+const updateProject = async (projectData, token) => {
   try {
     if (!token) {
       throw new Error('You must be logged in to update a project');
     }
-    
-    // Convert form data to DTO
-    const projectDTO = new ProjectRequestDTO(projectData);
 
-    const response = await axios.put(
-      `${API_URL}/api/Project/${projectId}`, 
-      projectDTO,
+    const response = await axios.post(
+      `${API_URL}/api/Project/EditProject`, 
+      projectData,
       {
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       }
@@ -181,6 +179,51 @@ const getProjectRequests = async (companyId, token) => {
       throw new Error('Your session has expired. Please log in again.');
     }
     
+    // Pass the original error response through so we can check it in the component
+    if (error.response) {
+      throw error;
+    }
+    
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch project requests.";
+      
+    console.error('Error fetching project requests:', message);
+    throw new Error(message);
+  }
+};
+
+const getSentProjectRequests = async (companyId, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to view project requests');
+    }
+    
+    const response = await axios.get(
+      `${API_URL}/api/Project/GetSentProjectRequests/${companyId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    
+    console.log('Project requests fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    // Pass the original error response through so we can check it in the component
+    if (error.response) {
+      throw error;
+    }
+    
     const message = error.response?.data?.message ||
       error.response?.data?.title ||
       error.response?.data ||
@@ -201,10 +244,10 @@ const approveProjectRequest = async (requestId, token, approveValue) => {
     
     const response = await axios.post(
       `${API_URL}/api/Project/ApproveProjectRequest/${requestId}`,
-      JSON.stringify(approveValue),
+      approveValue, // Send the boolean value directly
       {
         headers: {
-          
+          'Content-Type': 'application/json', // Add this important header
           'Authorization': `Bearer ${token}`,
         },
       }
@@ -241,15 +284,16 @@ const declineProjectRequest = async (projectId, token, declineValue ) => {
     
     const response = await axios.post(
       `${API_URL}/api/Project/ApproveProjectRequest/${projectId}`,
-      JSON.stringify(declineValue), 
+      declineValue, // Send the boolean value directly
       {
         headers: {
+          'Content-Type': 'application/json', // Add this important header
           'Authorization': `Bearer ${token}`,
         },
       }
     );
     
-    console.log('Project approved successfully:', response.data);
+    console.log('Project declined successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error details:', error.response || error);
@@ -304,8 +348,147 @@ const markProjectAsCompleted = async (projectId, token) => {
   }
 };
 
+const editProjectRequest = async (projectData, requestId, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to edit project requests');
+    }
+    
+    const response = await axios.put(
+      `${API_URL}/api/Project/EditProjectRequest/${requestId}`,
+      projectData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    
+    console.log('Project request edited successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to edit project request.";
+      
+    console.error('Error editing project request:', message);
+    throw new Error(message);
+  }
+}
 
-//update project ekle
+const deleteSentProjectRequest = async (requestId, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to delete project requests');
+    }
+    
+    const response = await axios.delete(
+      `${API_URL}/api/Project/DeleteProjectRequest/${requestId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    
+    console.log('Project request deleted successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to delete project request.";
+      
+    console.error('Error deleting project request:', message);
+    throw new Error(message);
+  }
+}
+
+const isProjectCompletedByClient = async (projectId, token) => {
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to check project completion');
+    }
+    
+    const response = await axios.get(
+      `${API_URL}/api/Project/IsProjectCompletedByClient/${projectId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    
+    console.log('Project completion status fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch project completion status.";
+      
+    console.error('Error fetching project completion status:', message);
+    throw new Error(message);
+  }
+}
+
+const isProjectCompletedByProvider = async (projectId, token) => { 
+  try {
+    if (!token) {
+      throw new Error('You must be logged in to check project completion');
+    }
+    
+    const response = await axios.get(
+      `${API_URL}/api/Project/IsProjectCompletedByProvider/${projectId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+    
+    console.log('Project completion status fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error details:', error.response || error);
+    
+    if (error.response?.status === 401) {
+      console.error('Authentication error: Your session may have expired. Please log in again.');
+      throw new Error('Your session has expired. Please log in again.');
+    }
+    
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch project completion status.";
+      
+    console.error('Error fetching project completion status:', message);
+    throw new Error(message);
+  }
+}
 
 
 
@@ -319,6 +502,11 @@ const ProjectService = {
     approveProjectRequest,
     declineProjectRequest,
     markProjectAsCompleted,
+    getSentProjectRequests,
+    editProjectRequest,
+    deleteSentProjectRequest,
+    isProjectCompletedByClient,
+    isProjectCompletedByProvider,
 };
 
 export default ProjectService;
