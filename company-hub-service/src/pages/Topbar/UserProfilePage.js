@@ -25,12 +25,14 @@ import {
   Email as EmailIcon,
   Business as BusinessIcon,
   Edit as EditIcon,
+  Cancel as CancelIcon,
   LinkedIn as LinkedInIcon,
   Language as WebsiteIcon,
   LocationOn as LocationIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import UserService from '../../services/UserService';
+import { set } from 'react-hook-form';
 
 const UserProfilePage = () => {
   const [userData, setUserData] = useState(null);
@@ -39,7 +41,7 @@ const UserProfilePage = () => {
   // For editing fields
   const [editedData, setEditedData] = useState({});
   const [error, setError] = useState(null);
-  const { user, token } = useAuth();
+  const { user, token, isAdmin } = useAuth();
   const { username } = useParams(); // Get the username from the URL
 
 
@@ -60,7 +62,8 @@ const UserProfilePage = () => {
 //     fetchData();
 //   }, [username, currentUser.token]);
 
-  
+console.log("admin data:", isAdmin);
+
 useEffect(() => {
   const fetchData = async () => {
     console.log("Fetching user data for:", username);
@@ -75,21 +78,26 @@ useEffect(() => {
         lastName: data.lastName || "soyadımız",
         photoUrl: data.photoUrl || "https://azurelogo.blob.core.windows.net/profile-photos/profile-photos/dd6811d7-c019-4c06-84b0-c6d7a27455a3/bc72c9da-f8bd-4bc0-9d63-7bfb01e267bc.jpeg",
         phoneNumber: data.phoneNumber || "5123456789",
-        userName: data.username || "abcdefg",
-        email: "john.doe@company.com",
-        companyName: "Acme Solutions",
-        position: "Head of Procurement",
-        companySize: "50-100",
-        industry: ["Technology", "Finance"],
-        location: "Istanbul, Turkey",
-        website: "www.acme-solutions.com",
-        linkedIn: "linkedin.com/in/johndoe",
-        bio: "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
-        interests: ["Software Development", "Cloud Services", "IoT Solutions"]
+        userName: data.userName || "abcdefg",
+        email: data.email || "john.doe@company.com",
+        // companyName: "Acme Solutions",
+        // position: "Head of Procurement",
+        // companySize: "50-100",
+        // industry: ["Technology", "Finance"],
+        // location: "Istanbul, Turkey",
+        // website: "www.acme-solutions.com",
+        linkedIn: data.linkedIn || "linkedin.com/in/johndoe",
+        bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
+        // interests: ["Software Development", "Cloud Services", "IoT Solutions"]
       };
 
+      
+      // Set the user data and edited data
+      setEditedData(mockData);
       setUserData(mockData);
-      setEditedData(mockData); // Initialize editedData with current userData
+
+      
+      
       setLoading(false);
     }, 1000);
   };
@@ -97,10 +105,18 @@ useEffect(() => {
   fetchData();
 }, []); // Don't forget this closing bracket!
 
-
   const handleEditProfile = () => {
     setIsEditing(true);
+
   };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedData(userData); // Reset to original data
+  };
+
+
+
 
   const handleSaveProfile = async () => {
     try{
@@ -119,20 +135,39 @@ useEffect(() => {
     console.log("Changes detected, updating profile...");
     
     // Update the user data with edited values
-    setUserData({...editedData});
+    setUserData({
+      ...userData,
+      ...editedData,
+    });
 
     console.log("Saving profile data:", editedData);
 
-    const { firstName, lastName, phoneNumber } = editedData;
+    // Send all edited data to ensure all changes are saved
     const dataToSend = {
-      firstName,
-      lastName,
-      phoneNumber
+      firstName: editedData.firstName,
+      lastName: editedData.lastName,
+      phoneNumber: editedData.phoneNumber,
+      userName: editedData.userName,
+      email: editedData.email,
+      // companyName: editedData.companyName,
+      // position: editedData.position,
+      // companySize: editedData.companySize,
+      // industry: editedData.industry,
+      // location: editedData.location,
+      // website: editedData.website,
+      // interests: editedData.interests,
+      linkedIn: editedData.linkedIn,
+      bio: editedData.bio,
+      photoUrl: editedData.photoUrl,
     };
     await UserService.updateUserProfile(dataToSend, token);
+    if (editedData.photoUrl !== userData.photoUrl) {
+      await UserService.updateProfilePhoto(editedData.photoUrl, token);
+    }
+
     setUserData(editedData);
     setIsEditing(false);
-    setIsEditing(false);
+    setError(null); // Clear any previous errors
   }catch (error) {
     console.error("Error saving profile:", error);
     setError(error.message);
@@ -184,7 +219,6 @@ useEffect(() => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={3}>
-        {/* Left Column - Profile Overview */}
         <Grid item xs={12} md={4} lg={3}>
           <Paper
             sx={{
@@ -195,15 +229,56 @@ useEffect(() => {
               height: '100%'
             }}
           >
-            <Avatar 
-              src={userData.photoUrl} 
+            <Box 
               sx={{ 
-                width: 150, 
-                height: 150, 
-                mb: 2,
-                border: '4px solid #f5f5f5'
+                position: 'relative',
+                mb: 2
               }}
-            />
+            >
+              <Avatar 
+                src={userData.photoUrl} 
+                sx={{ 
+                  width: 150, 
+                  height: 150,
+                  border: '4px solid #f5f5f5'
+                }}
+              />
+              {isEditing && (
+                <Box
+                  component="label"
+                  htmlFor="profile-photo-upload"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    backgroundColor: 'primary.main',
+                    borderRadius: '50%',
+                    padding: '8px',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark'
+                    }
+                  }}
+                >
+                  <EditIcon sx={{ color: 'white' }} />
+                  <input
+                    type="file"
+                    id="profile-photo-upload"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          handleChange('photoUrl', event.target.result);
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
             <Typography variant="h5" gutterBottom>
               {isEditing ? (
                 <TextField 
@@ -255,16 +330,16 @@ useEffect(() => {
                 />
               </ListItem>
               <ListItem>
-                <ListItemIcon>
+                {/* <ListItemIcon>
                   <BusinessIcon />
                 </ListItemIcon>
-                <ListItemText primary={`${userData.companySize} employees`} />
+                <ListItemText primary={`${userData.companySize} employees`} /> */}
               </ListItem>
               <ListItem>
-                <ListItemIcon>
+                {/* <ListItemIcon>
                   <LocationIcon />
                 </ListItemIcon>
-                <ListItemText primary={userData.location} />
+                <ListItemText primary={userData.location} /> */}
               </ListItem>
             </List>
             <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
@@ -288,6 +363,7 @@ useEffect(() => {
                 Edit Profile
             </Button>
             )}
+            
           </Paper>
         </Grid>
 
@@ -305,6 +381,16 @@ useEffect(() => {
                   onClick={handleSaveProfile}
                 >
                   Save Changes
+                </Button>
+              ) : null}
+              {isEditing ? (
+                <Button 
+                  variant="outlined" 
+                  color="secondary" 
+                  onClick={handleCancelEdit}
+                  startIcon={<CancelIcon />}
+                >
+                  Cancel
                 </Button>
               ) : null}
             </Box>
@@ -334,232 +420,8 @@ useEffect(() => {
                   </CardContent>
                 </Card>
               </Grid>
-
-              {/* Company Information */}
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Company Information
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Company Name
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.companyName}
-                            onChange={(e) => handleChange('companyName', e.target.value)}
-                          />
-                        ) : (
-                          <Typography variant="body1">{userData.companyName}</Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Your Position
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.position}
-                            onChange={(e) => handleChange('position', e.target.value)}
-                          />
-                        ) : (
-                          <Typography variant="body1">{userData.position}</Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Company Website
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.website}
-                            onChange={(e) => handleChange('website', e.target.value)}
-                          />
-                        ) : (
-                          <Typography 
-                            variant="body1"
-                            sx={{ 
-                              wordBreak: 'break-word',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {userData.website}
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          LinkedIn Profile
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.linkedIn}
-                            onChange={(e) => handleChange('linkedIn', e.target.value)}
-                          />
-                        ) : (
-                          <Typography 
-                            variant="body1"
-                            sx={{ 
-                              wordBreak: 'break-word',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {userData.linkedIn}
-                          </Typography>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Industry and Interests */}
-              <Grid item xs={12} md={6}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Industry
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {userData.industry.map((industry, index) => (
-                        <Chip 
-                          key={index} 
-                          label={industry} 
-                          color="primary" 
-                          variant="outlined" 
-                          onDelete={isEditing ? () => {
-                            const updatedIndustry = [...editedData.industry];
-                            updatedIndustry.splice(index, 1);
-                            handleChange('industry', updatedIndustry);
-                          } : undefined}
-                        />
-                      ))}
-                      {isEditing && (
-                        <Chip 
-                          label="+ Add" 
-                          color="primary" 
-                          variant="outlined" 
-                          onClick={() => {
-                            // In a real implementation, you would show a dialog to add a new industry
-                            const newIndustry = [...editedData.industry, "New Industry"];
-                            handleChange('industry', newIndustry);
-                          }} 
-                        />
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Business Interests
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {userData.interests.map((interest, index) => (
-                        <Chip 
-                          key={index} 
-                          label={interest} 
-                          color="secondary" 
-                          variant="outlined" 
-                          onDelete={isEditing ? () => {
-                            const updatedInterests = [...editedData.interests];
-                            updatedInterests.splice(index, 1);
-                            handleChange('interests', updatedInterests);
-                          } : undefined}
-                        />
-                      ))}
-                      {isEditing && (
-                        <Chip 
-                          label="+ Add" 
-                          color="secondary" 
-                          variant="outlined" 
-                          onClick={() => {
-                            // In a real implementation, you would show a dialog to add a new interest
-                            const newInterests = [...editedData.interests, "New Interest"];
-                            handleChange('interests', newInterests);
-                          }} 
-                        />
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              {/* Contact Information */}
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Contact Information
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Email
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.email}
-                            onChange={(e) => handleChange('email', e.target.value)}
-                          />
-                        ) : (
-                          <Typography 
-                            variant="body1"
-                            sx={{ 
-                              wordBreak: 'break-word',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            {userData.email}
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Phone
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.phoneNumber}
-                            onChange={(e) => handleChange('phoneNumber', e.target.value)}
-                          />
-                        ) : (
-                          <Typography variant="body1">+{userData.phoneNumber}</Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Location
-                        </Typography>
-                        {isEditing ? (
-                          <TextField 
-                            fullWidth 
-                            value={editedData.location}
-                            onChange={(e) => handleChange('location', e.target.value)}
-                          />
-                        ) : (
-                          <Typography variant="body1">{userData.location}</Typography>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
+            
+            
             </Grid>
           </Paper>
         </Grid>

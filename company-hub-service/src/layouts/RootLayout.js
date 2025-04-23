@@ -36,6 +36,7 @@ import {
   ChevronUp as ChevronUpIcon,   // Rename import to ChevronUpIcon
   HelpCircle as HelpCircleIcon,   // Rename import to HelpCircleIcon  
   ActivityIcon as AnalyticsIcon,
+  Shield as ShieldIcon,  // Add this for admin icon
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
@@ -55,6 +56,9 @@ const RootLayout = () => {
   const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   const { user, logout } = useAuth();
+  
+  const isAdmin = user?.email === "admin@admin.com";  // Check if user is admin
+  console.log('Is Admin:', isAdmin);
 
   // Sample companies data
   const companies = user?.companies || [];
@@ -335,6 +339,32 @@ const RootLayout = () => {
               {!isDrawerCollapsed && <ListItemText primary="Discover" />}
             </ListItem>
           </Tooltip>
+          
+          {/* Admin Dashboard - Only shown if user is admin */}
+          {isAdmin && (
+            <Tooltip title={isDrawerCollapsed ? "Admin Dashboard" : ""} placement="right">
+              <ListItem 
+                button 
+                onClick={() => navigate('/admin')}
+                selected={location.pathname.startsWith('/admin')}
+                sx={{ 
+                  minHeight: 48,
+                  px: 2.5,
+                  cursor: 'pointer',
+                  justifyContent: isDrawerCollapsed ? 'center' : 'initial'
+                }}
+              >
+                <ListItemIcon sx={{ 
+                  minWidth: 0, 
+                  mr: isDrawerCollapsed ? 0 : 2,
+                  justifyContent: 'center'
+                }}>
+                  <ShieldIcon />
+                </ListItemIcon>
+                {!isDrawerCollapsed && <ListItemText primary="Admin Dashboard" />}
+              </ListItem>
+            </Tooltip>
+          )}
 
           {/* Companies section */}
           <Tooltip title={isDrawerCollapsed ? "My Companies" : ""} placement="right">

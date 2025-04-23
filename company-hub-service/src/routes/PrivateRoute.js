@@ -4,7 +4,11 @@ import RootLayout from '../layouts/RootLayout';
 import { useAuth } from '../contexts/AuthContext';
 
 const PrivateRoute = ({ children }) => {
-  const {token} = useAuth();
+  const {token, loading} = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a proper loading component
+  }
 
   return token ? <RootLayout>{children}</RootLayout> : <Navigate to="/" />;
 };

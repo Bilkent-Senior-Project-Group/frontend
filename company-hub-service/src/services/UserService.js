@@ -19,7 +19,7 @@ const fetchUserProfile = async (username, token) => {
 
 const updateUserProfile = async (profileData, token) => {
   try {
-    const response = await axios.put(`${API_URL}/api/User/updateProfile`, profileData, {
+    const response = await axios.put(`${API_URL}/api/User/UpdateUserProfile`, profileData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -52,21 +52,39 @@ const sendConfirmationEmail = async (token) => {
     const response = await axios.post(`${API_URL}/api/Account/SendConfirmationEmail`, {}, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
+         } catch (error) {
     console.error('Error sending confirmation email:', error);
     throw new Error('Failed to send confirmation email');
   }
 }
 
+const updateProfilePhoto = async (file, token) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await axios.post(`${API_URL}/api/User/UploadProfilePhoto`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  }
+  catch (error) {
+    console.error('Error updating profile photo:', error);
+    throw new Error('Failed to update profile photo');
+  }
+};
+
+
 const UserService = {
   fetchUserProfile,
   updateUserProfile,
   checkEmailVerification,
-  sendConfirmationEmail
+  sendConfirmationEmail,
+  updateProfilePhoto,
 };
 
 export default UserService;
