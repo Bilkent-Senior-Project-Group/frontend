@@ -111,6 +111,8 @@ const EditCompanyPage = () => {
       }
       
       try {
+        // Use the companyName directly without additional processing
+        // The backend should handle the name format correctly
         const companyData = await CompanyService.getCompany(companyName, token);
         
         // Store the original company name for comparison

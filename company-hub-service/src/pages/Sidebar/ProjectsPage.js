@@ -21,22 +21,27 @@ import {
   FormHelperText,
   Alert,
   Tabs,
-  Tab
+  Tab,
+  Rating,
+  FormControl,
+  FormLabel
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
   Add as AddIcon, 
   Visibility as VisibilityIcon,
-  Check // Add this import
+  Check,
+  Star as StarIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { colors } from '../../theme/theme.js';
 import CompanyService from '../../services/CompanyService.js';
 import ProjectService from '../../services/ProjectService.js';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO.js';
-import ProjectDTO from '../../DTO/project/ProjectDTO.js'
+import ProjectDTO from '../../DTO/project/ProjectDTO.js';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig.js';
+import ReviewService from '../../services/ReviewService.js';
 
 const ProjectsPage = () => {
   const { companyName } = useParams();
@@ -83,6 +88,21 @@ const ProjectsPage = () => {
 
   // Add this new state for project completion status
   const [projectCompletionStatus, setProjectCompletionStatus] = useState({});
+
+  // Add new state for review
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewProject, setReviewProject] = useState(null);
+  const [reviewData, setReviewData] = useState({
+    reviewText: "",
+    rating: 5,
+    projectId: ""
+  });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+
+  // Add this state at the top with other state declarations
+  const [projectsWithReviews, setProjectsWithReviews] = useState({});
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -171,6 +191,42 @@ const ProjectsPage = () => {
     
     loadCompletionStatus();
   }, [projects, token]);
+
+  // Add this useEffect after your other useEffects
+  useEffect(() => {
+    if (!projects || projects.length === 0 || !token) return;
+    
+    const checkProjectReviews = async () => {
+      const reviewCheckPromises = projects.map(async (project) => {
+        try {
+          // Only check for projects where this company is the client
+          if (project.clientCompanyName === companyName) {
+            const response = await ReviewService.projectHasReview(project.projectId, token);
+            return {
+              projectId: project.projectId,
+              hasReview: response.hasReview
+            };
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error checking review for project ${project.projectId}:`, error);
+          return null;
+        }
+      });
+      
+      const reviewResults = (await Promise.all(reviewCheckPromises))
+        .filter(result => result !== null);
+      
+      const reviewMap = {};
+      reviewResults.forEach(result => {
+        reviewMap[result.projectId] = result.hasReview;
+      });
+      
+      setProjectsWithReviews(reviewMap);
+    };
+    
+    checkProjectReviews();
+  }, [projects, token, companyName]);
 
   const handleViewProject = (projectId) => {
     const project = projects.find(p => p.projectId === projectId);
@@ -362,6 +418,71 @@ const ProjectsPage = () => {
       return project.providerCompanyName || 'No partner company';
     } else {
       return project.clientCompanyName || 'No partner company';
+    }
+  };
+
+  // Add handlers for review dialog
+  const handleOpenReviewDialog = (project, e) => {
+    e.stopPropagation(); // Prevent triggering the card click
+    setReviewProject(project);
+    setReviewData({
+      reviewText: "",
+      rating: 5,
+      projectId: project.projectId
+    });
+    setReviewDialogOpen(true);
+    setReviewError('');
+    setReviewSuccess(false);
+  };
+
+  const handleCloseReviewDialog = () => {
+    setReviewDialogOpen(false);
+    setReviewProject(null);
+  };
+
+  const handleReviewInputChange = (e) => {
+    const { name, value } = e.target;
+    setReviewData({
+      ...reviewData,
+      [name]: value
+    });
+  };
+
+  const handleRatingChange = (event, newValue) => {
+    setReviewData({
+      ...reviewData,
+      rating: newValue
+    });
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewData.reviewText.trim()) {
+      setReviewError('Please provide review text');
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewError('');
+    
+    try {
+      await ReviewService.postReview(reviewData, token);
+      setReviewSuccess(true);
+      
+      // Update projectsWithReviews state to make the button disappear immediately
+      if (reviewData.projectId) {
+        setProjectsWithReviews(prev => ({
+          ...prev,
+          [reviewData.projectId]: true
+        }));
+      }
+      
+      setTimeout(() => {
+        setReviewDialogOpen(false);
+      }, 2000);
+    } catch (error) {
+      setReviewError(error.message || 'Failed to submit review');
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -625,6 +746,25 @@ return (
                                             startIcon={<Check size={16} />}
                                         >
                                             Mark Completed
+                                        </Button>
+                                    )}
+                                    
+                                    {/* Post Review Button - only show for completed projects where this company is the client,
+                                        both parties have marked as completed, and there's no existing review */}
+                                    {project.isOnCompedia && 
+                                     project.clientCompanyName === companyName && 
+                                     projectCompletionStatus[project.projectId]?.client &&
+                                     projectCompletionStatus[project.projectId]?.provider &&
+                                     !projectsWithReviews[project.projectId] && (
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            color="primary"
+                                            onClick={(e) => handleOpenReviewDialog(project, e)}
+                                            startIcon={<StarIcon size={16} />}
+                                            sx={{ ml: 1 }}
+                                        >
+                                            Post Review
                                         </Button>
                                     )}
                                 </Box>
@@ -1050,6 +1190,77 @@ return (
                     disabled={editProjectLoading}
                 >
                     {editProjectLoading ? 'Saving...' : 'Save Changes'}
+                </Button>
+            </DialogActions>
+        </Dialog>
+
+        {/* Review Dialog */}
+        <Dialog
+            open={reviewDialogOpen}
+            onClose={handleCloseReviewDialog}
+            maxWidth="sm"
+            fullWidth
+        >
+            <DialogTitle sx={{ fontWeight: 'bold' }}>
+                Post Review{reviewProject ? ` for ${reviewProject.providerCompanyName}` : ''}
+            </DialogTitle>
+            <DialogContent dividers>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Share your experience working with this provider on the project: {reviewProject?.projectName}
+                    </Typography>
+                </Box>
+                
+                <FormControl fullWidth sx={{ mb: 3 }}>
+                    <FormLabel sx={{ mb: 1, fontWeight: 500 }}>Rating</FormLabel>
+                    <Rating
+                        name="rating"
+                        value={reviewData.rating}
+                        onChange={handleRatingChange}
+                        precision={1}
+                        size="large"
+                        sx={{ color: 'primary.main' }}
+                    />
+                </FormControl>
+                
+                <FormControl fullWidth>
+                    <FormLabel sx={{ mb: 1, fontWeight: 500 }}>Review</FormLabel>
+                    <TextField
+                        name="reviewText"
+                        value={reviewData.reviewText}
+                        onChange={handleReviewInputChange}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        placeholder="Share details of your experience working with this provider..."
+                        variant="outlined"
+                    />
+                </FormControl>
+                
+                {reviewError && (
+                    <Alert severity="error" sx={{ mt: 2 }}>
+                        {reviewError}
+                    </Alert>
+                )}
+                
+                {reviewSuccess && (
+                    <Alert severity="success" sx={{ mt: 2 }}>
+                        Review submitted successfully!
+                    </Alert>
+                )}
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+                <Button onClick={handleCloseReviewDialog} color="inherit" disabled={reviewSubmitting}>
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSubmitReview}
+                    color="primary"
+                    variant="contained"
+                    disabled={reviewSubmitting}
+                    startIcon={reviewSubmitting ? null : <StarIcon />}
+                >
+                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
                 </Button>
             </DialogActions>
         </Dialog>
