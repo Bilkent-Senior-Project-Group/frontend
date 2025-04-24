@@ -47,6 +47,8 @@ const UserProfilePage = () => {
   const { user, token, isAdmin } = useAuth();
   const { username } = useParams(); // Get the username from the URL
   const navigate = useNavigate();
+  const [userCompanies, setUserCompanies] = useState([]);
+
 
 
 //   useEffect(() => {
@@ -67,69 +69,79 @@ const UserProfilePage = () => {
 //   }, [username, currentUser.token]);
 
 
-
-useEffect(() => {
-  const fetchData = async () => {
-    console.log("Fetching user data for:", username);
-    console.log("Current user token:", token);
-    const data = await UserService.fetchUserProfile(username, token);
-    console.log(data);
-
-    // Simulate API call (you can remove this if your real API returns the full data)
-    setTimeout(() => {
-      const mockData = {
-        firstName: data.firstName || "John",
-        lastName: data.lastName || "soyadımız",
-        photoUrl: data.photoUrl || "https://azurelogo.blob.core.windows.net/profile-photos/profile-photos/dd6811d7-c019-4c06-84b0-c6d7a27455a3/bc72c9da-f8bd-4bc0-9d63-7bfb01e267bc.jpeg",
-        phoneNumber: data.phoneNumber || "5123456789",
-        userName: data.userName || "abcdefg",
-        email: data.email || "john.doe@company.com",
-        // companyName: "Acme Solutions",
-        // position: "Head of Procurement",
-        // companySize: "50-100",
-        // industry: ["Technology", "Finance"],
-        // location: "Istanbul, Turkey",
-        // website: "www.acme-solutions.com",
-        linkedIn: data.linkedIn || "linkedin.com/in/johndoe",
-        bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
-        // interests: ["Software Development", "Cloud Services", "IoT Solutions"]
-      };
-
-      
-      // Set the user data and edited data
-      setEditedData(mockData);
-      setUserData(mockData);
-
-      
-      
-      setLoading(false);
-    }, 1000);
-  };
-
-  fetchData();
-}, []); // Don't forget this closing bracket!
-  const [userCompanies, setUserCompanies] = useState([]);
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      const companies = await getCompaniesOfUser();
-      console.log("Fetched companies:", companies);
-      setUserCompanies(companies);
-    };
-    fetchCompanies();
-  }, [userData]);
-
-
-  const getCompaniesOfUser = async () => {
+  const GetUserProfileByUsername = async () => {
     try {
-      const companies = await CompanyService.getCompaniesOfUser(user.id, token);
-      console.log("User companies:", companies);
-      return companies;
+      const data = await UserService.fetchUserProfile(username, token);
+      console.log("User data:", data);
+      setUserData(data);
+      setEditedData(data);
+      setLoading(false);
     } catch (error) {
-      console.error("Error fetching user companies:", error);
-      return [];
+      console.error("Error fetching user profile:", error);
+      setError(error.message);
+      setLoading(false);
     }
   };
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log("Fetching user data for:", username);
+      console.log("Current user token:", token);
+      const data = await UserService.fetchUserProfile(username, token);
+      console.log(data);
+
+      // Simulate API call (you can remove this if your real API returns the full data)
+      setTimeout(() => {
+        const mockData = {
+          firstName: data.firstName || "John",
+          lastName: data.lastName || "soyadımız",
+          photoUrl: data.photoUrl || "https://azurelogo.blob.core.windows.net/profile-photos/profile-photos/dd6811d7-c019-4c06-84b0-c6d7a27455a3/bc72c9da-f8bd-4bc0-9d63-7bfb01e267bc.jpeg",
+          phoneNumber: data.phoneNumber || "5123456789",
+          userName: data.userName || "abcdefg",
+          email: data.email || "john.doe@company.com",
+          // companyName: "Acme Solutions",
+          // position: "Head of Procurement",
+          // companySize: "50-100",
+          // industry: ["Technology", "Finance"],
+          // location: "Istanbul, Turkey",
+          // website: "www.acme-solutions.com",
+          linkedIn: data.linkedIn || "linkedin.com/in/johndoe",
+          bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
+          // interests: ["Software Development", "Cloud Services", "IoT Solutions"]
+        };
+
+        
+        // Set the user data and edited data
+        setEditedData(mockData);
+        setUserData(mockData);
+
+        
+        
+        // After setting userData, now we can fetch companies
+        const fetchCompanies = async () => {
+          const companies = await CompanyService.getCompaniesOfUserByUserName(data.userName, token);
+          console.log("Fetched companies:", companies);
+          setUserCompanies(companies);
+        };
+        fetchCompanies();
+        setLoading(false);
+    }, 1000);
+
+
+    };
+    fetchData();
+  }, [username, token]);
+
+
+
+
+
+
+
+
+
+  
 
   const handleEditProfile = () => {
     setIsEditing(true);
@@ -341,7 +353,7 @@ useEffect(() => {
                 <ListItemIcon>
                   <PhoneIcon />
                 </ListItemIcon>
-                <ListItemText primary={`+${userData.phoneNumber}`} />
+                <ListItemText primary={`${userData.phoneNumber}`} />
               </ListItem>
               <ListItem>
                 <ListItemIcon>

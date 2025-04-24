@@ -402,6 +402,36 @@ const editCompanyProfile = async (companyData, token) => {
   }
 };
 
+
+const getCompaniesOfUserByUserName = async (userName, token) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/Company/GetCompaniesOfUserByUserName/${userName}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    console.log('User companies data:', response.data);
+    return response.data; // Returns array of {companyId, companyName}
+  }
+  
+  catch (error) {
+    console.error('Error in getCompaniesOfUser:', error.response || error);
+
+    // Get a meaningful error message
+    const message = error.response?.data?.message ||
+      error.response?.data?.title ||
+      error.response?.data ||
+      "Failed to fetch user companies. Please check your connection and try again.";
+
+    console.error('Error details:', message);
+    throw new Error(message);
+  }
+};
+
 const CompanyService = {
   createCompany,
   getFeaturedCompanies,
@@ -412,7 +442,8 @@ const CompanyService = {
   uploadLogo,
   deleteLogo,
   getCompaniesOfUser,
-  editCompanyProfile
+  editCompanyProfile,
+  getCompaniesOfUserByUserName
 };
 
 export default CompanyService;
