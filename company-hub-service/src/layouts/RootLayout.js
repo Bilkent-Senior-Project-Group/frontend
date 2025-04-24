@@ -1,5 +1,5 @@
 // src/layouts/RootLayout.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Drawer, 
@@ -17,7 +17,17 @@ import {
   Collapse,
   Menu,
   MenuItem,
-  Typography
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  List as MuiList,
+  ListItemButton,
+  CircularProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   Home, 
@@ -37,12 +47,14 @@ import {
   HelpCircle as HelpCircleIcon,   // Rename import to HelpCircleIcon  
   ActivityIcon as AnalyticsIcon,
   Shield as ShieldIcon,  // Add this for admin icon
+  Mail as MailIcon,  // Add this import for invitation icon
 } from 'lucide-react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { styled, alpha } from '@mui/material/styles';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import UserInvitationService from '../services/UserInvitationService';
 
 const DRAWER_WIDTH = 240;
 const MINI_DRAWER_WIDTH = 65;
@@ -55,13 +67,21 @@ const RootLayout = () => {
   const [openCompanyId, setOpenCompanyId] = useState(null);
   const [addMenuAnchorEl, setAddMenuAnchorEl] = useState(null);  // Add this line
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   
   const isAdmin = user?.email === "admin@admin.com";  // Check if user is admin
   console.log('Is Admin:', isAdmin);
 
   // Sample companies data
   const companies = user?.companies || [];
+
+  const [invitationsDialogOpen, setInvitationsDialogOpen] = useState(false);
+  const [invitations, setInvitations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [respondedInvitations, setRespondedInvitations] = useState({}); // Add this state variable
 
   const toggleDrawer = () => {
     setIsDrawerCollapsed(!isDrawerCollapsed);
@@ -126,6 +146,106 @@ const RootLayout = () => {
   const handleSupport = () => {
     navigate('/support');
     handleAddMenuClose();
+  };
+
+  const handleViewInvitations = async () => {
+    handleAddMenuClose();
+    setInvitationsDialogOpen(true);
+    await fetchInvitations();
+  };
+  
+  const fetchInvitations = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const data = await UserInvitationService.getMyInvitations(token);
+      setInvitations(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load invitations');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleAcceptInvitation = async (invitationId, companyName, companyId) => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      // Fix: Send invitationId as an object property, not a raw string
+      await UserInvitationService.acceptInvitation(invitationId, token);
+      
+      // Update the responded invitations map with accept status
+      setRespondedInvitations(prev => ({
+        ...prev,
+        [invitationId]: { 
+          status: 'accepted', 
+          companyName 
+        }
+      }));
+      
+    // Instead of fetching the updated profile, we'll update the user object directly
+    // by adding the new company to the companies list
+    if (user && user.companies) {
+      // Create a new company object from the invitation data
+      const newCompany = {
+        companyId: companyId, // Use response companyId if available
+        companyName: companyName
+      };
+      
+      // Create a new companies array with the new company added
+      const updatedCompanies = [...user.companies, newCompany];
+      
+      // Create updated user object with the new companies list
+      const updatedUser = {
+        ...user,
+        companies: updatedCompanies
+      };
+      
+      // Update the user context with the new data
+      updateUser(updatedUser);
+    }
+      setSuccessMessage(`Invitation from ${companyName} accepted successfully!`);
+      setSnackbarOpen(true);
+    } catch (err) {
+      setError(err.message || 'Failed to accept invitation');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleRejectInvitation = async (invitationId, companyName) => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      // Fix: Send invitationId as an object property, not a raw string
+      await UserInvitationService.rejectInvitation(invitationId, token);
+      
+      // Update the responded invitations map with reject status
+      setRespondedInvitations(prev => ({
+        ...prev,
+        [invitationId]: { 
+          status: 'rejected', 
+          companyName 
+        }
+      }));
+      
+      setSuccessMessage(`Invitation from ${companyName} rejected.`);
+      setSnackbarOpen(true);
+    } catch (err) {
+      setError(err.message || 'Failed to reject invitation');
+      setSnackbarOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
   };
 
   return (
@@ -204,6 +324,13 @@ const RootLayout = () => {
               <FileTextIcon size={18} />
             </ListItemIcon>
             <Typography variant="inherit">Add Project</Typography>
+          </MenuItem>
+          {/* New menu item for company invitations */}
+          <MenuItem onClick={handleViewInvitations}>
+            <ListItemIcon>
+              <MailIcon size={18} />
+            </ListItemIcon>
+            <Typography variant="inherit">Company Invitations</Typography>
           </MenuItem>
           <MenuItem onClick={handleGetPremium}>
             <ListItemIcon>
@@ -532,6 +659,127 @@ const RootLayout = () => {
           <Outlet />
         </Box>
       </Box>
+
+      {/* New: Company Invitations Dialog */}
+      <Dialog
+        open={invitationsDialogOpen}
+        onClose={() => setInvitationsDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Company Invitations</DialogTitle>
+        <DialogContent>
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress />
+            </Box>
+          )}
+          
+          {invitations.length === 0 && !loading && Object.keys(respondedInvitations).length === 0 ? (
+            <Typography variant="body1" align="center" sx={{ py: 3 }}>
+              No invitations found.
+            </Typography>
+          ) : (
+            <MuiList>
+              {invitations.map((invitation) => {
+                const responded = respondedInvitations[invitation.invitationId];
+                
+                if (responded) {
+                  return (
+                    <Box 
+                      key={invitation.invitationId} 
+                      sx={{ 
+                        p: 2, 
+                        my: 1, 
+                        border: '1px solid',
+                        borderColor: responded.status === 'accepted' ? 'success.light' : 'error.light',
+                        borderRadius: 1,
+                        bgcolor: responded.status === 'accepted' ? alpha('#4caf50', 0.1) : alpha('#f44336', 0.1)
+                      }}
+                    >
+                      <Typography variant="body1">
+                        You have {responded.status} the invitation from <strong>{responded.companyName}</strong>
+                      </Typography>
+                    </Box>
+                  );
+                }
+                
+                return (
+                  <ListItemButton 
+                    key={invitation.invitationId} 
+                    divider 
+                    sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
+                  >
+                    <Typography variant="subtitle1" sx={{ width: '100%', fontWeight: 'bold' }}>
+                      {invitation.companyName}
+                    </Typography>
+                    <Typography variant="caption" sx={{ mb: 1 }}>
+                      Sent on {new Date(invitation.sentAt).toLocaleString()}
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, width: '100%', mt: 1 }}>
+                      <Button 
+                        variant="outlined" 
+                        color="error" 
+                        size="small"
+                        disabled={loading}
+                        onClick={() => handleRejectInvitation(invitation.invitationId, invitation.companyName)}
+                      >
+                        Reject
+                      </Button>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        size="small"
+                        disabled={loading}
+                        onClick={() => handleAcceptInvitation(invitation.invitationId, invitation.companyName, invitation.companyId)}
+                      >
+                        Accept
+                      </Button>
+                    </Box>
+                  </ListItemButton>
+                );
+              })}
+              
+              {/* Show message when all invitations have been responded to */}
+              {invitations.length === 0 && Object.keys(respondedInvitations).length > 0 && !loading && (
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    You have responded to all invitations.
+                  </Typography>
+                </Box>
+              )}
+            </MuiList>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setInvitationsDialogOpen(false);
+            // Clear responded invitations when closing dialog
+            if (Object.keys(respondedInvitations).length > 0) {
+              setInvitations(prev => prev.filter(inv => !respondedInvitations[inv.invitationId]));
+              setRespondedInvitations({});
+            }
+          }}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={error ? "error" : "success"} 
+          sx={{ width: '100%' }}
+        >
+          {error || successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Add useNavigate import
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { 
   Box, 
@@ -11,21 +11,35 @@ import {
   Divider,
   CircularProgress,
   Alert,
-  Button // Add Button import
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar
 } from '@mui/material';
-import { Email as EmailIcon, Phone as PhoneIcon, Person as PersonIcon } from '@mui/icons-material';
+import { Email as EmailIcon, Phone as PhoneIcon, Person as PersonIcon, Add as AddIcon } from '@mui/icons-material';
 import CompanyService from '../../services/CompanyService';
+import UserInvitationService from '../../services/UserInvitationService';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 
 const CompanyPeoplePage = () => {
   const { companyName } = useParams();
-  const navigate = useNavigate(); // Add navigate hook
+  const navigate = useNavigate();
   const [people, setPeople] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const {token} = useAuth();
+  
+  const [openInviteDialog, setOpenInviteDialog] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [companyId, setCompanyId] = useState(null);
 
-  // Add a function to handle navigation to user profile
   const handleViewUserProfile = (userName) => {
     if (userName) {
       navigate(`/profile/${userName}`);
@@ -39,6 +53,7 @@ const CompanyPeoplePage = () => {
         const companyData = await CompanyService.getCompany(companyName, token);
         console.log("Backend Company Data:", companyData);
         const companyProfile = new CompanyProfileDTO(companyData);
+        setCompanyId(companyProfile.companyId);
         const data = await CompanyService.getCompanyPeople(companyProfile.companyId, token);
         setPeople(data);
         console.log("Backend Company People Data:", data);
@@ -53,6 +68,42 @@ const CompanyPeoplePage = () => {
 
     fetchCompanyPeople();
   }, [companyName, token]);
+
+  const handleOpenInviteDialog = () => {
+    setOpenInviteDialog(true);
+    setInviteEmail('');
+    setInviteError(null);
+  };
+
+  const handleCloseInviteDialog = () => {
+    setOpenInviteDialog(false);
+  };
+
+  const handleInviteSubmit = async () => {
+    if (!inviteEmail) {
+      setInviteError('Email is required');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail)) {
+      setInviteError('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setInviteLoading(true);
+      await UserInvitationService.inviteUser(inviteEmail, companyId, token);
+      setInviteLoading(false);
+      handleCloseInviteDialog();
+      setSnackbarMessage('Invitation sent successfully!');
+      setSnackbarOpen(true);
+    } catch (err) {
+      console.error('Error sending invitation:', err);
+      setInviteLoading(false);
+      setInviteError('Failed to send invitation. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -72,9 +123,18 @@ const CompanyPeoplePage = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-        {companyName} - People
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 0 }}>
+          {companyName} - People
+        </Typography>
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />}
+          onClick={handleOpenInviteDialog}
+        >
+          Invite User
+        </Button>
+      </Box>
       
       {people.length === 0 ? (
         <Alert severity="info">No personnel information available for this company.</Alert>
@@ -106,7 +166,7 @@ const CompanyPeoplePage = () => {
                         bgcolor: 'primary.main',
                         mr: 2
                       }}
-                      src={person.profilePictureUrl} // Make sure to use the profile picture if available
+                      src={person.profilePictureUrl}
                     >
                       {person.firstName && person.lastName 
                         ? person.firstName.charAt(0).toUpperCase() + person.lastName.charAt(0).toUpperCase() 
@@ -130,7 +190,7 @@ const CompanyPeoplePage = () => {
                           cursor: person.email ? 'pointer' : 'default' 
                         }} 
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent card click event
+                          e.stopPropagation();
                           person.email && window.open(`mailto:${person.email}`)
                         }}
                       />
@@ -145,7 +205,7 @@ const CompanyPeoplePage = () => {
                           }
                         }}
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent card click event
+                          e.stopPropagation();
                           person.email && window.open(`mailto:${person.email}`)
                         }}
                       >
@@ -161,12 +221,11 @@ const CompanyPeoplePage = () => {
                     </Box>
                   </Box>
                   
-                  {/* Add a clear visual indication that this card is clickable */}
                   <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
                     <Button 
                       size="small" 
                       onClick={(e) => {
-                        e.stopPropagation(); // Technically redundant with the card click handler
+                        e.stopPropagation();
                         handleViewUserProfile(person.userName);
                       }}
                     >
@@ -179,6 +238,43 @@ const CompanyPeoplePage = () => {
           ))}
         </Grid>
       )}
+
+      <Dialog open={openInviteDialog} onClose={handleCloseInviteDialog}>
+        <DialogTitle>Invite User to {companyName}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="email"
+            label="Email Address"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            error={!!inviteError}
+            helperText={inviteError}
+            disabled={inviteLoading}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseInviteDialog} disabled={inviteLoading}>Cancel</Button>
+          <Button 
+            onClick={handleInviteSubmit} 
+            variant="contained" 
+            disabled={inviteLoading}
+          >
+            {inviteLoading ? 'Sending...' : 'Send Invitation'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
     </Box>
   );
 };

@@ -36,6 +36,7 @@ import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Uplo
 import { colors } from '../../theme/theme';
 import CompanyService from '../../services/CompanyService';
 import ProjectService from '../../services/ProjectService';
+import ReviewService from '../../services/ReviewService';
 import { useAuth } from '../../contexts/AuthContext';
 import CompanyProfileDTO from '../../DTO/company/CompanyProfileDTO';
 import { useMemo } from 'react';
@@ -173,6 +174,21 @@ const CompanyPage = () => {
       const data = await CompanyService.getCompanyPeople(companyProfile.companyId, token);
       setPeople(data);
       console.log("Backend Company People Data:", data);
+      
+      // Fetch reviews for the company
+      try {
+        const reviewsData = await ReviewService.getReviewsByCompany(companyProfile.companyId, token);
+        console.log("Company Reviews:", reviewsData);
+        
+        // Update company object with reviews
+        setCompany(prev => ({
+          ...prev,
+          reviews: reviewsData
+        }));
+      } catch (reviewError) {
+        console.error("Error fetching company reviews:", reviewError.message);
+      }
+      
     } catch (error) {
       console.error("Error fetching company:", error.message);
     }
@@ -737,7 +753,7 @@ const CompanyPage = () => {
                         precision={0.1}
                       />
                       <Typography variant="body1" sx={{ ml: 1 }}>
-                        {company.overallRating} ({company.totalReviews} reviews)
+                         ({company.totalReviews} reviews)
                       </Typography>
                     </Box>
                   ) : (
@@ -1356,7 +1372,9 @@ const CompanyPage = () => {
             <Button
               variant="outlined"
               startIcon={<Edit size={16} />}
-              onClick={() => navigate(`/company/edit-company/${company.name}`)}
+              onClick={() => {
+                navigate(`/company/edit-company/${company.name.replace(/ /g, '')}`)
+              }}
               size="small"
             >
               Edit Company
@@ -1795,7 +1813,120 @@ const CompanyPage = () => {
                 <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
                   Reviews
                 </Typography>
-                <List disablePadding></List>
+                {company.reviews && company.reviews.length > 0 ? (
+                  <List disablePadding>
+                    {company.reviews.map((review) => (
+                      <Card 
+                        key={review.reviewId} 
+                        sx={{ 
+                          mb: 3,
+                          borderRadius: 2,
+                          boxShadow: (theme) => `0 6px 16px -8px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000')}`,
+                          transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: (theme) => `0 8px 20px -6px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000', 0.15)}`
+                          },
+                          border: '1px solid',
+                          borderColor: 'divider',
+                        }}
+                      >
+                        <CardContent sx={{ p: 3 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                            <Box>
+                              <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
+                                Project: {review.projectName}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar 
+                                  sx={{ 
+                                    width: 28, 
+                                    height: 28, 
+                                    bgcolor: (theme) => theme.palette.primary.main,
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  {review.userName.charAt(0).toUpperCase()}
+                                </Avatar>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                  {review.userName}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                  • {new Date(review.datePosted).toLocaleDateString()}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            <Box sx={{ textAlign: 'right' }}>
+                              <Rating 
+                                value={review.rating} 
+                                readOnly 
+                                precision={0.5} 
+                                size="small" 
+                                sx={{ mb: 0.5 }}
+                              />
+                              <Typography 
+                                variant="caption" 
+                                sx={{ 
+                                  display: 'block',
+                                  fontWeight: 500,
+                                  color: (theme) => review.rating >= 4 
+                                    ? theme.palette.success.main
+                                    : review.rating >= 3 
+                                      ? theme.palette.warning.main
+                                      : theme.palette.error.main
+                                }}
+                              >
+                                {review.rating >= 4.5 ? 'Excellent' : 
+                                 review.rating >= 4 ? 'Very Good' : 
+                                 review.rating >= 3 ? 'Good' :
+                                 review.rating >= 2 ? 'Fair' : 'Poor'}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          <Divider sx={{ my: 2 }} />
+                          
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              lineHeight: 1.6,
+                              color: 'text.primary',
+                              fontSize: '1rem',
+                              fontStyle: 'italic',
+                              '&::before': { 
+                                content: '""',
+                                display: 'inline-block',
+                                verticalAlign: 'middle',
+                                mr: 1,
+                                width: 3,
+                                height: 20,
+                                backgroundColor: 'primary.main',
+                                borderRadius: 1
+                              }
+                            }}
+                          >
+                            {review.reviewText}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </List>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      textAlign: 'center', 
+                      py: 6, 
+                      borderRadius: 2, 
+                      backgroundColor: (theme) => alpha(theme.palette.primary.light, 0.05),
+                      border: '1px dashed',
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      No reviews available for this company yet.
+                    </Typography>
+                  </Box>
+                )}
               </Grid>
             </Grid>
           )}
