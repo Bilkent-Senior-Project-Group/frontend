@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { API_URL } from '../config/apiConfig';
-import { useAuth } from '../contexts/AuthContext';
 
 const fetchUserProfile = async (username, token) => {
   try {
@@ -63,22 +62,23 @@ const sendConfirmationEmail = async (token) => {
 };
 
 const updateProfilePhoto = async (file, token) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await axios.post(`${API_URL}/api/User/UploadProfilePhoto`, formData, {
+  if (!(file instanceof File)) {
+    throw new Error("You must pass a File object to updateProfilePhoto");
+  }
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await axios.post(
+    `${API_URL}/api/User/UploadProfilePhoto`,
+    formData,
+    {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
+        // NOTE: you do NOT need to set Content-Type manually; axios
+        // will set multipart/form-data with the correct boundary.
       },
-    });
-    return response.data;
-  }
-  catch (error) {
-    console.error('Error updating profile photo:', error);
-    throw new Error('Failed to update profile photo');
-  }
+    }
+  );
+  return response.data; // { message, photoUrl }
 };
 
 const UserService = {
