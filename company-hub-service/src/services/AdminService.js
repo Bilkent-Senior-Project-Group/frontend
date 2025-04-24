@@ -5,7 +5,7 @@ import { API_URL } from '../config/apiConfig';
 
 const fetchUsers = async (token) => {
   // Example: calling an admin-only endpoint that returns non-sensitive user data
-  const response = await axios.get(`${API_URL}/Admin/Users`, {
+  const response = await axios.get(`${API_URL}/api/Admin/Users`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -15,7 +15,7 @@ const fetchUsers = async (token) => {
 
 // AdminService.js
 const updateUserRole = async (token, userId, newRole) => {
-    const response = await axios.put(`${API_URL}/Admin/${userId}/Role`, 
+    const response = await axios.put(`${API_URL}/api/Admin/${userId}/Role`, 
       { role: newRole },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -24,8 +24,11 @@ const updateUserRole = async (token, userId, newRole) => {
 
 
     const getCompaniesToBeVerified = async (token) => {
-        const response = await axios.get(`${API_URL}/Admin/CompaniesToBeVerified`, {
-            headers: { Authorization: `Bearer ${token}` },
+        const response = await axios.get(`${API_URL}/api/Admin/CompaniesToBeVerified`, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            
+          }
         });
         return response.data;
     };
@@ -46,7 +49,7 @@ const updateUserRole = async (token, userId, newRole) => {
 const verifyCompany = async (token, companyId) => {
     // The request body must be just a JSON string with the GUID, not an object
     const response = await axios.put(
-      `${API_URL}/Admin/VerifyCompany`,
+      `${API_URL}/api/Admin/VerifyCompany`,
       `"${companyId}"`, // a raw string with the GUID
       {
         headers: { 

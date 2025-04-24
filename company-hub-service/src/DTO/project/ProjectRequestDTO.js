@@ -12,6 +12,7 @@ export class ProjectRequestDTO {
     this.clientType = data.clientType || '';  
     this.services = data.services || [];
     this.impact = data.impact || '';
+    console.log('clientcompname in constructor:', this.clientCompanyName);
     
   }
 
