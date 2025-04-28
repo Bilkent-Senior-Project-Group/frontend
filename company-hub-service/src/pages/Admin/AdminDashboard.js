@@ -6,11 +6,13 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, 
   TableRow, Button, Container, CircularProgress, Paper, Typography 
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
   const { user, token } = useAuth();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Fetch companies when currentUser is available
   useEffect(() => {
@@ -24,6 +26,16 @@ function AdminDashboard() {
       }
     }
   }, [user]);
+
+  const handleNavigate = (companyId) => {
+    const companyName = companies.find(company => company.companyId === companyId)?.companyName;
+    if (!companyName) {
+      console.error("Company not found for ID:", companyId);
+      return;
+    }
+    navigate(`/company/${companyName}`);
+    console.log("Navigate to company details for ID:", companyId);
+  };
   
   const getCompaniesToBeVerified = async (token) => {
     try {   
@@ -74,20 +86,24 @@ return (
                         <TableRow>
                             <TableCell>No</TableCell>
                             <TableCell>Name</TableCell>
-                            <TableCell>Website</TableCell>
-                            <TableCell>Registration Date</TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {companies.length > 0 ? (
                             companies.map((company, index) => (
-                                <TableRow key={company.companyId || index}>
+                                <TableRow key={company.companyId || index} 
+                                          onClick={() => handleNavigate(company.companyId)}
+                                          style={{ cursor: 'pointer' }}
+                                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
                                     <TableCell>{index + 1}</TableCell>
                                     <TableCell>{company.companyName}</TableCell>
-                                    <TableCell>{company.contactInfo}</TableCell>
+                                    <TableCell></TableCell>
                                     <TableCell>
-                                        {company.registrationDate ? new Date(company.registrationDate).toLocaleDateString() : 'N/A'}
+                                        
                                     </TableCell>
                                     <TableCell>
                                         <Button
