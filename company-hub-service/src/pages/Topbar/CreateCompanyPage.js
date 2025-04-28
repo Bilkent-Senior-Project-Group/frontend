@@ -628,7 +628,7 @@ const CreateCompanyPage = () => {
       });
       
       // Navigate away on success
-      navigate('/home', {
+      navigate('/company/' + response.data.data.companyName, {
         state: {
           message: 'Company added successfully!'
         }
