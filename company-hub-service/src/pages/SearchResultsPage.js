@@ -165,6 +165,29 @@ const SearchResultsPage = () => {
       
       // Execute search 
       const searchResponse = await axios.post(`${SEARCH_API_URL}/search`, searchPayload);
+
+
+
+      const payload = {
+        searchQueryLogDto: {
+          companyIds: searchResponse.data.results
+            .filter(c => c.CompanyId?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))
+            .map(c => c.CompanyId),
+          queryText: query,
+        }
+      };
+
+      
+      const searchLogResponse = await axios.post(`${API_URL}/api/analytics/InsertSearchQueryData`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+      );
+
+      
+      console.log("Search log response:", searchLogResponse.data);
       
       // Process search results
       setCompanies(searchResponse.data.results || []);

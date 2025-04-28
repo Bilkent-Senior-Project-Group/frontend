@@ -89,7 +89,6 @@ const AnalyticsPage = () => {
         }
     }, [companyId, token]);
 
-    
     // Daily views data
     const getDailyViewCounts = () => {
         if (!profileViews || profileViews.length === 0) return [];
@@ -113,21 +112,27 @@ const AnalyticsPage = () => {
         // Add actual profile views
         profileViews.forEach(view => {
             const date = new Date(view.viewDate);
+            const viewDate = new Date(date);
+            
             // Skip future dates
-            if (date > today) return;
+            if (viewDate > today) return;
+            
+            // Calculate date 7 days ago
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 6);
+            
+            // Skip if older than 7 days
+            if (viewDate < sevenDaysAgo) return;
             
             // Format date as DD/MM/YYYY
-            const dayKey = `${date.getDate().toString().padStart(2, '0')}/${
-                (date.getMonth() + 1).toString().padStart(2, '0')}/${
-                date.getFullYear()}`;
+            const dayKey = `${viewDate.getDate().toString().padStart(2, '0')}/${
+                (viewDate.getMonth() + 1).toString().padStart(2, '0')}/${
+                viewDate.getFullYear()}`;
             
             if (!viewsByDay[dayKey]) {
                 viewsByDay[dayKey] = new Set();
             }
             viewsByDay[dayKey].add(view.visitorUserId);
-
-            
-            
         });
         
         // Convert and sort by date
@@ -225,8 +230,16 @@ const AnalyticsPage = () => {
             if (!view.visitorUserId) return; // Skip if no visitor ID
             
             const date = new Date(view.viewDate);
+            
             // Skip future dates
             if (date > today) return;
+            
+            // Calculate date 4 weeks ago
+            const fourWeeksAgo = new Date(today);
+            fourWeeksAgo.setDate(today.getDate() - (28)); // Approximately 4 weeks
+            
+            // Skip if older than 4 weeks
+            if (date < fourWeeksAgo) return;
             
             // Get the Monday of the current week
             const day = date.getDay();
@@ -245,7 +258,6 @@ const AnalyticsPage = () => {
             
             // Add the visitor ID to the set for this week
             viewsByWeek[weekKey].add(view.visitorUserId);
-
         });
         
         // Convert and sort by date
@@ -260,6 +272,7 @@ const AnalyticsPage = () => {
                 return new Date(yearA, monthA - 1, dayA) - new Date(yearB, monthB - 1, dayB);
             });
     };
+    
     // Monthly views data
     const getMonthlyViewCounts = () => {
         if (!profileViews || profileViews.length === 0) return [];
@@ -279,20 +292,35 @@ const AnalyticsPage = () => {
         
         // Add actual profile views
         profileViews.forEach(view => {
+            if (!view.visitorUserId) return; // Skip if no visitor ID
+            
             const date = new Date(view.viewDate);
+            
             // Skip future dates
             if (date > today) return;
+
+            // Calculate date 6 months ago
+            const sixMonthsAgo = new Date(today);
+            sixMonthsAgo.setMonth(today.getMonth() - 5);
+            sixMonthsAgo.setDate(1); // First day of month
             
-            // Format date as MM/YYYY
+            // Skip if older than 6 months
+            if (date < sixMonthsAgo) return;
+            
+            // Ensure we use the correct month from the date object
+            // Format date as MM/YYYY for month tracking
             const monthKey = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
             
+            // Make sure the month exists in our tracker
             if (!viewsByMonth[monthKey]) {
                 viewsByMonth[monthKey] = new Set();
             }
+            
+            // Add the visitor ID to track unique visitors
             viewsByMonth[monthKey].add(view.visitorUserId);
         });
         
-        // Sort by date
+        // Sort by date (oldest to newest)
         return Object.entries(viewsByMonth)
             .map(([month, visitors]) => ({
                 month,
@@ -469,7 +497,7 @@ const AnalyticsPage = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4 }}>
             <Typography variant="h4" gutterBottom>
-                Analytics
+                Analytics {company ? `for ${company.name}` : ""}
             </Typography>
             {error && (
                 <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
@@ -478,7 +506,6 @@ const AnalyticsPage = () => {
             )}
             {company && (
                 <Box>
-                    <Typography variant="h6">Company Name: {companyName}</Typography>
 
                     <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
                         <Typography variant="h6" gutterBottom>Profile Views</Typography>
@@ -535,7 +562,7 @@ const AnalyticsPage = () => {
                     </Paper>
                     
 
-                    <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
+                    {/* <Paper elevation={3} sx={{ padding: 3, marginY: 2 }}>
                         <Typography variant="h6" gutterBottom>Search Queries Analysis</Typography>
                         <Typography variant="body1">
                             {searchQueries && searchQueries.length ? `${searchQueries.length} search quer${searchQueries.length > 1 ? "ies" : "y"} found.` : "No search queries found."}
@@ -569,7 +596,7 @@ const AnalyticsPage = () => {
                                 <Typography variant="body2">No search words data available</Typography>
                             )}
                         </Box>
-                    </Paper>
+                    </Paper> */}
                 </Box>
             )}
         </Container>

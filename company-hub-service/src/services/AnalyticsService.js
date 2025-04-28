@@ -23,12 +23,21 @@ const AnalyticsService = {
     }
   },
   
-  insertSearchQueryData: async (companyIds, queryText) => {
+  insertSearchQueryData: async (companyIds, queryText, token) => {
     try {
-      const response = await axios.post(`${API_URL}/api/analytics/InsertSearchQueryData`, {
-        companyIds,
-        queryText
-      });
+      const response = await axios.post(
+        `${API_URL}/api/analytics/InsertSearchQueryData`,
+        {
+          companyIds,
+          queryText
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${typeof token === 'string' ? token : token.token}`
+          }
+        }
+      );
       return response.data;
     } catch (error) {
       console.error('Error inserting search query data:', error);

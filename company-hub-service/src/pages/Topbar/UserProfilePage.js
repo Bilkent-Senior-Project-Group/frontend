@@ -106,7 +106,7 @@ const UserProfilePage = () => {
           // industry: ["Technology", "Finance"],
           // location: "Istanbul, Turkey",
           // website: "www.acme-solutions.com",
-          linkedIn: data.linkedIn || "linkedin.com/in/johndoe",
+          linkedIn: data.linkedInUrl || "linkedin.com/in/johndoe",
           bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
           // interests: ["Software Development", "Cloud Services", "IoT Solutions"]
         };
@@ -190,7 +190,7 @@ const UserProfilePage = () => {
         // location: editedData.location,
         // website: editedData.website,
         // interests: editedData.interests,
-        linkedIn: editedData.linkedIn,
+        linkedInUrl: editedData.linkedIn,
         bio: editedData.bio,
         photoUrl: editedData.photoUrl,
       };
@@ -372,73 +372,107 @@ const UserProfilePage = () => {
                   }} 
                 />
               </ListItem>
-              <ListItem>
-                {/* <ListItemIcon>
-                  <BusinessIcon />
-                </ListItemIcon>
-                <ListItemText primary={`${userData.companySize} employees`} /> */}
-              </ListItem>
-              <ListItem>
-                {/* <ListItemIcon>
-                  <LocationIcon />
-                </ListItemIcon>
-                <ListItemText primary={userData.location} /> */}
-              </ListItem>
-            </List>
-            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-              <IconButton color="primary" aria-label="linkedin profile">
-                <LinkedInIcon />
-              </IconButton>
-              <IconButton color="primary" aria-label="company website">
-                <WebsiteIcon />
-              </IconButton>
-            </Box>
-            {user.userName === username && (
-            <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<EditIcon />}
-                sx={{ mt: 2 }}
-                onClick={handleEditProfile}
-                fullWidth
-                disabled={isEditing}
-            >
-                Edit Profile
-            </Button>
-            )}
-            
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={8} lg={9}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h4">
-                Profile Information
-              </Typography>
-              {isEditing ? (
+              
+                <ListItem>
+                </ListItem>
+                </List>
+                <Box sx={{ mt: 2 }}>
+                  {isEditing ? (
+                    <>
+                      <TextField
+                        fullWidth
+                        label="LinkedIn Username"
+                        variant="outlined"
+                        size="small"
+                        value={(editedData.linkedIn || '').replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//, '')}
+                        onChange={(e) => handleChange('linkedIn', e.target.value)}
+                        margin="normal"
+                        InputProps={{
+                          startAdornment: <LinkedInIcon color="primary" sx={{ mr: 1 }} />,
+                          placeholder: "yourusername"
+                        }}
+                        helperText="Enter only your LinkedIn username (without linkedin.com/in/)"
+                      />
+                      <TextField
+                        fullWidth
+                        label="Website URL"
+                        variant="outlined"
+                        size="small"
+                        value={editedData.website || ''}
+                        onChange={(e) => handleChange('website', e.target.value)}
+                        margin="normal"
+                        InputProps={{
+                          startAdornment: <WebsiteIcon color="primary" sx={{ mr: 1 }} />
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <IconButton color="primary" aria-label="linkedin profile"
+                        component="a" 
+                        href={userData.linkedIn ? `https://www.linkedin.com/in/${userData.linkedIn.replace(/^(https?:\/\/)?(www\.)?linkedin\.com\/in\//, '')}` : '#'}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <LinkedInIcon />
+                      </IconButton>
+                      <IconButton color="primary" aria-label="company website"
+                        component="a" 
+                        href={userData.website ? (userData.website.startsWith('http') ? userData.website : `https://${userData.website}`) : '#'}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        <WebsiteIcon />
+                      </IconButton>
+                    </Box>
+                  )}
+                </Box>
+                {user && user.userName === username && (
                 <Button 
-                  variant="contained" 
-                  color="primary" 
-                  onClick={handleSaveProfile}
+                    variant="contained" 
+                    color="primary" 
+                    startIcon={<EditIcon />}
+                    sx={{ mt: 2 }}
+                    onClick={handleEditProfile}
+                    fullWidth
+                    disabled={isEditing}
                 >
-                  Save Changes
+                    Edit Profile
                 </Button>
-              ) : null}
-              {isEditing ? (
-                <Button 
-                  variant="outlined" 
-                  color="secondary" 
-                  onClick={handleCancelEdit}
-                  startIcon={<CancelIcon />}
-                >
-                  Cancel
-                </Button>
-              ) : null}
-            </Box>
-            <Divider sx={{ mb: 3 }} />
+                )}
 
-            <Grid container spacing={3}>
-              {/* Bio */}
+                </Paper>
+                </Grid>
+                <Grid item xs={12} md={8} lg={9}>
+                <Paper sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h4">
+                    Profile Information
+                  </Typography>
+                  {isEditing ? (
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleSaveProfile}
+                      >
+                        Save Changes
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        color="secondary" 
+                        onClick={handleCancelEdit}
+                        startIcon={<CancelIcon />}
+                      >
+                        Cancel
+                      </Button>
+                    </Box>
+                  ) : null}
+                </Box>
+                <Divider sx={{ mb: 3 }} />
+
+                <Grid container spacing={3}>
+                  {/* Bio */}
               <Grid item xs={12}>
                 <Card>
                   <CardContent>
