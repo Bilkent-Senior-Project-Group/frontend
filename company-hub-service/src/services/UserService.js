@@ -57,7 +57,7 @@ const sendConfirmationEmail = async (token) => {
     return response.data;
   } catch (error) {
     console.error('Error sending confirmation email:', error);
-    throw new Error('Failed to send confirmation email');
+    throw error;
   }
 };
 
@@ -81,12 +81,33 @@ const updateProfilePhoto = async (file, token) => {
   return response.data; // { message, photoUrl }
 };
 
+const changePassword = async (currentPassword, newPassword, token) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/Account/ChangePassword`, {
+      currentPassword,
+      newPassword,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error changing password:', error);
+    throw new Error('Failed to change password');
+  }
+}
+
+
+
 const UserService = {
   fetchUserProfile,
   updateUserProfile,
   checkEmailVerification,
   sendConfirmationEmail,
   updateProfilePhoto,
+  changePassword,
 };
 
 export default UserService;

@@ -15,7 +15,7 @@ const WaitingConfirmEmailPage = () => {
 
   const { user, token } = useAuth();
   
-  // Update the email verification check function
+  // Update the checkEmailVerification function to always redirect to login
   const checkEmailVerification = useCallback(async () => {
     if (!token) {
       navigate('/login');
@@ -27,26 +27,69 @@ const WaitingConfirmEmailPage = () => {
       console.log("API response emailConfirmed:", response.emailConfirmed);
       
       if (response.emailConfirmed) {
+        // Force immediate UI update with state change
         setIsVerified(true);
-        setEmailChecked(true); // Only mark as checked when verified
+        setEmailChecked(true);
         
-        // Add a short delay before redirecting to show the verified state
+        // Dispatch the custom event
+        const verificationEvent = new CustomEvent('emailVerified', { 
+          detail: { verified: true }
+        });
+        window.dispatchEvent(verificationEvent);
+        
+        // Always redirect to login page after verification, regardless of token
         setTimeout(() => {
-          if(token) {
-            navigate('/home');
-          } else {
-            navigate('/login');
-          }
-        }, 2000);
+          navigate('/login');
+        }, 1500);
+        
+        // Return true to indicate verification was successful
+        return true;
       } else {
         setIsVerified(false);
-        setEmailChecked(true); // Mark as checked even if not verified so we know we checked
+        setEmailChecked(true);
+        return false;
       }
     } catch (error) {
       console.error('Error checking email verification:', error);
-      setEmailChecked(true); // Mark as checked even on error so we know we attempted
+      setEmailChecked(true);
+      return false;
     }
   }, [token, navigate]);
+  
+  // Completely revise the useEffect to ensure proper state synchronization
+  useEffect(() => {
+    let intervalId = null;
+    
+    // Check verification status immediately if we have a token
+    if (token && !isVerified) {
+      // Initial check
+      const performCheck = async () => {
+        const verified = await checkEmailVerification();
+        
+        // Only set up interval if not verified
+        if (!verified) {
+          intervalId = setInterval(async () => {
+            const checkResult = await checkEmailVerification();
+            if (checkResult === true) {
+              // Clear interval immediately when verified
+              clearInterval(intervalId);
+            }
+          }, 5000);
+        }
+      };
+      
+      performCheck();
+    } else if (!token) {
+      navigate('/login');
+    }
+    
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [checkEmailVerification, token, navigate, isVerified]);
   
   // Function to resend verification email
   const handleResendEmail = async () => {
@@ -71,29 +114,6 @@ const WaitingConfirmEmailPage = () => {
       setIsLoading(false);
     }
   };
-  
-  // Update the useEffect to manage the interval more effectively
-  useEffect(() => {
-    let intervalId;
-    
-    // Only check for verification if we have a user and token
-    if (user && token) {
-      checkEmailVerification();
-      
-      // Only setup interval if not verified yet
-      if (!isVerified) {
-        intervalId = setInterval(() => {
-          checkEmailVerification();
-        }, 5000);
-      }
-    } else if (!token) {
-      navigate('/login');
-    }
-    
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [checkEmailVerification, isVerified, user, token, navigate]);
   
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
@@ -138,7 +158,7 @@ const WaitingConfirmEmailPage = () => {
                   variant="contained"
                   color="primary"
                   onClick={handleResendEmail}
-                  disabled={isLoading}
+                  disabled={isLoading || isVerified} // Also disable when verified
                   startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <MarkEmailReadIcon />}
                   sx={{ mb: 2 }}
                 >
@@ -146,13 +166,13 @@ const WaitingConfirmEmailPage = () => {
                 </Button>
               )}
               
-              {resendStatus === 'success' && (
+              {resendStatus === 'success' && !isVerified && (
                 <Typography color="success.main" sx={{ mt: 1 }}>
                   Verification email has been resent successfully!
                 </Typography>
               )}
               
-              {resendStatus === 'error' && (
+              {resendStatus === 'error' && !isVerified && (
                 <Typography color="error.main" sx={{ mt: 1 }}>
                   Failed to resend verification email. Please try again later.
                 </Typography>

@@ -49,99 +49,55 @@ const UserProfilePage = () => {
   const navigate = useNavigate();
   const [userCompanies, setUserCompanies] = useState([]);
 
-
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         setLoading(true);
-//         const data = await UserService.fetchUserProfile(username, currentUser.token);
-//         setUserData(data);
-//         setEditedData(data);
-//         setLoading(false);
-//       } catch (error) {
-//         setError(error.message);
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchData();
-//   }, [username, currentUser.token]);
-
-
-  const GetUserProfileByUsername = async () => {
-    try {
-      const data = await UserService.fetchUserProfile(username, token);
-      console.log("User data:", data);
-      setUserData(data);
-      setEditedData(data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setError(error.message);
-      setLoading(false);
-    }
-  };
-
-
   useEffect(() => {
     const fetchData = async () => {
       console.log("Fetching user data for:", username);
       console.log("Current user token:", token);
-      const data = await UserService.fetchUserProfile(username, token);
-      console.log(data);
+      
+      try {
+        const data = await UserService.fetchUserProfile(username, token);
+        console.log(data);
 
-      // Simulate API call (you can remove this if your real API returns the full data)
-      setTimeout(() => {
-        const mockData = {
-          firstName: data.firstName || "John",
-          lastName: data.lastName || "soyadımız",
-          photoUrl: data.photoUrl || "https://azurelogo.blob.core.windows.net/profile-photos/profile-photos/dd6811d7-c019-4c06-84b0-c6d7a27455a3/bc72c9da-f8bd-4bc0-9d63-7bfb01e267bc.jpeg",
-          phoneNumber: data.phoneNumber || "5123456789",
-          userName: data.userName || "abcdefg",
-          email: data.email || "john.doe@company.com",
-          // companyName: "Acme Solutions",
-          // position: "Head of Procurement",
-          // companySize: "50-100",
-          // industry: ["Technology", "Finance"],
-          // location: "Istanbul, Turkey",
-          // website: "www.acme-solutions.com",
-          linkedIn: data.linkedInUrl || "linkedin.com/in/johndoe",
-          bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
-          // interests: ["Software Development", "Cloud Services", "IoT Solutions"]
-        };
+        // Simulate API call (you can remove this if your real API returns the full data)
+        setTimeout(() => {
+          const mockData = {
+            firstName: data.firstName || "John",
+            lastName: data.lastName || "soyadımız",
+            photoUrl: data.photoUrl || "https://azurelogo.blob.core.windows.net/profile-photos/profile-photos/dd6811d7-c019-4c06-84b0-c6d7a27455a3/bc72c9da-f8bd-4bc0-9d63-7bfb01e267bc.jpeg",
+            phoneNumber: data.phoneNumber || "5123456789",
+            userName: data.userName || "abcdefg",
+            email: data.email || "john.doe@company.com",
+            linkedIn: data.linkedInUrl || "linkedin.com/in/johndoe",
+            bio: data.bio || "Procurement specialist with 10+ years of experience. Looking for manufacturing partners in the tech sector.",
+          };
 
-        
-        // Set the user data and edited data
-        setEditedData(mockData);
-        setUserData(mockData);
-
-        
-        
-        // After setting userData, now we can fetch companies
-        const fetchCompanies = async () => {
-          const companies = await CompanyService.getCompaniesOfUserByUserName(data.userName, token);
-          console.log("Fetched companies:", companies);
-          setUserCompanies(companies);
-        };
-        fetchCompanies();
+          // Set the user data and edited data
+          setEditedData(mockData);
+          setUserData(mockData);
+          
+          // After setting userData, now we can fetch companies
+          const fetchCompanies = async () => {
+            try {
+              const companies = await CompanyService.getCompaniesOfUserByUserName(data.userName, token);
+              console.log("Fetched companies:", companies);
+              setUserCompanies(companies || []);
+            } catch (error) {
+              console.error("Error fetching companies:", error);
+              setUserCompanies([]); // Set empty array if there's an error
+            }
+          };
+          
+          fetchCompanies();
+          setLoading(false);
+        }, 1000);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
         setLoading(false);
-    }, 1000);
-
-
+      }
     };
+    
     fetchData();
   }, [username, token]);
-
-
-
-
-
-
-
-
-
-  
 
   const handleEditProfile = () => {
     setIsEditing(true);
@@ -152,9 +108,6 @@ const UserProfilePage = () => {
     setIsEditing(false);
     setEditedData(userData); // Reset to original data
   };
-
-
-
 
   const handleSaveProfile = async () => {
     try {
@@ -183,13 +136,6 @@ const UserProfilePage = () => {
         phoneNumber: editedData.phoneNumber,
         userName: editedData.userName,
         email: editedData.email,
-        // companyName: editedData.companyName,
-        // position: editedData.position,
-        // companySize: editedData.companySize,
-        // industry: editedData.industry,
-        // location: editedData.location,
-        // website: editedData.website,
-        // interests: editedData.interests,
         linkedInUrl: editedData.linkedIn,
         bio: editedData.bio,
         photoUrl: editedData.photoUrl,
@@ -209,15 +155,6 @@ const UserProfilePage = () => {
     // In a real implementation, here you would make an API call to save changes
   };
 
-//   const handleSaveProfile = async () => {
-//     try {
-//       const updatedData = await UserService.updateUserProfile(editedData, currentUser.token);
-//       setUserData(updatedData);
-//       setIsEditing(false);
-//     } catch (error) {
-//       setError(error.message);
-//     }
-//   };
   const handleChange = (field, value) => {
     setEditedData({
       ...editedData,
@@ -261,9 +198,6 @@ const UserProfilePage = () => {
       </Container>
     );
   }
-
-  
-
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>

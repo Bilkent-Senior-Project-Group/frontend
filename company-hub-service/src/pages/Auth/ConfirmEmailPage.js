@@ -5,12 +5,14 @@ import { Box, Typography, Button, Container, Alert, CircularProgress } from '@mu
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import { API_URL } from '../../config/apiConfig';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ConfirmEmailPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState('loading'); // loading, success, error
   const [message, setMessage] = useState('');
+  const { user, token } = useAuth();
 
   useEffect(() => {
     const confirmEmail = async () => {
@@ -36,10 +38,23 @@ const ConfirmEmailPage = () => {
         if (response.status === 200) {
           setStatus('success');
           setMessage('Your email has been successfully confirmed!');
-          // Automatically redirect after 3 seconds
-          setTimeout(() => {
-            navigate('/login');
-          }, 3000);
+          
+          // Create a custom event that other components can listen for
+          const verificationEvent = new CustomEvent('emailVerified', { 
+            detail: { verified: true }
+          });
+          window.dispatchEvent(verificationEvent);
+          
+          // Simple redirect logic - if logged in, go to home; otherwise go to login
+          if (user && token) {
+            setTimeout(() => {
+              navigate('/home');
+            }, 2000);
+          } else {
+            setTimeout(() => {
+              navigate('/login');
+            }, 3000);
+          }
         } else {
           setStatus('error');
           setMessage('Failed to confirm email. Please try again or contact support.');
@@ -52,10 +67,14 @@ const ConfirmEmailPage = () => {
     };
 
     confirmEmail();
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, user, token]);
 
   const handleNavigateHome = () => {
-    navigate('/');
+    if (user && token) {
+      navigate('/home');
+    } else {
+      navigate('/login');
+    }
   };
 
   return (
@@ -82,7 +101,9 @@ const ConfirmEmailPage = () => {
                 {message}
               </Alert>
               <Typography variant="body2" sx={{ mb: 3 }}>
-                You will be redirected to the homepage in a few seconds...
+                {user && token 
+                  ? "You'll be redirected to the homepage in a few seconds..." 
+                  : "You will be redirected to the login page in a few seconds..."}
               </Typography>
               <Button 
                 variant="contained" 
@@ -90,7 +111,7 @@ const ConfirmEmailPage = () => {
                 onClick={handleNavigateHome}
                 sx={{ mt: 2, height: '48px', textTransform: 'none' }}
               >
-                Go to Homepage Now
+                {user && token ? "Go to Homepage Now" : "Go to Login Now"}
               </Button>
             </>
           )}
@@ -104,7 +125,7 @@ const ConfirmEmailPage = () => {
               <Button 
                 variant="contained" 
                 color="primary" 
-                onClick={handleNavigateHome}
+                onClick={() => navigate('/')}
                 sx={{ mt: 2, height: '48px', textTransform: 'none' }}
               >
                 Return to Homepage

@@ -86,6 +86,31 @@ const SignupPage = () => {
     return validatePhoneNumber(phone);
   };
 
+  const validateEnglishCharactersOnly = (text) => {
+    // Regex to match only English letters, numbers, and common symbols
+    const englishOnlyRegex = /^[a-zA-Z0-9_.-]*$/;
+    return englishOnlyRegex.test(text);
+  };
+
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    setUsername(value);
+    
+    // Clear previous username validation error when user types
+    setValidationErrors(prev => ({
+      ...prev,
+      username: ''
+    }));
+    
+    // Show validation error immediately if non-English characters are typed
+    if (value && !validateEnglishCharactersOnly(value)) {
+      setValidationErrors(prev => ({
+        ...prev,
+        username: 'Username must contain only English characters, numbers, and symbols (_, ., -)'
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -115,6 +140,11 @@ const SignupPage = () => {
   
     if (username.length < 3) {
       newValidationErrors.username = 'Username must be at least 3 characters';
+      hasErrors = true;
+    }
+    
+    if (!validateEnglishCharactersOnly(username)) {
+      newValidationErrors.username = 'Username must contain only English characters, numbers, and symbols (_, ., -)';
       hasErrors = true;
     }
   
@@ -219,7 +249,7 @@ const SignupPage = () => {
           <TextField
             fullWidth
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={handleUsernameChange}
             placeholder="Username"
             required
             variant="outlined"
