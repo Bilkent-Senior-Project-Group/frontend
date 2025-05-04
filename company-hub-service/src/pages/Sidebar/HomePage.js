@@ -440,6 +440,8 @@ const FilterSearchPage = () => {
   const [similarCompanies, setSimilarCompanies] = useState({});
   const [loadingSimilarCompanies, setLoadingSimilarCompanies] = useState(false);
 
+  const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -455,7 +457,7 @@ const FilterSearchPage = () => {
     };
     fetchServices();
   }, []);
-  
+
   useEffect(() => {
     // Only proceed if user exists
     if (!user?.id) return;
@@ -490,16 +492,51 @@ const FilterSearchPage = () => {
   }, [user?.id, token]); // Only depends on user.id and token
   
 
+  // Add this helper function inside your component
+  const getSavedSimilarCompanies = () => {
+    try {
+      const savedData = localStorage.getItem('similar_companies_cache');
+      if (!savedData) return null;
+      
+      const { data, timestamp } = JSON.parse(savedData);
+      
+      // Check if cache is expired
+      if (Date.now() - timestamp > CACHE_EXPIRATION) {
+        localStorage.removeItem('similar_companies_cache');
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error reading from localStorage:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     // Only proceed if we have user companies
     if (!userCompanies || userCompanies.length === 0) {
       return;
     }
+
+    // Create a cache key based on company IDs to ensure cache validity
+    const companyIdsKey = userCompanies.map(company => company.id).sort().join(',');
     
     const fetchSimilarCompaniesData = async () => {
       console.log('Starting to fetch similar companies for userCompanies');
-      setLoadingSimilarCompanies(true);
+
+      // Try to get from localStorage first
+      const cachedData = getSavedSimilarCompanies();
       
+      // If we have valid cached data and it matches our current companies, use it
+      if (cachedData && cachedData.companyIdsKey === companyIdsKey) {
+        console.log('Using cached similar companies data');
+        setSimilarCompanies(cachedData.companies);
+        return;
+      }
+      setLoadingSimilarCompanies(true);
+      // If no valid cache, fetch fresh data
+      console.log('Cache miss or expired, fetching similar companies...');
       try {
         const similarCompaniesData = {};
         
@@ -540,6 +577,19 @@ const FilterSearchPage = () => {
         }
         
         console.log('Processed all similar companies:', similarCompaniesData);
+
+        // Save to localStorage
+        try {
+          localStorage.setItem('similar_companies_cache', JSON.stringify({
+            data: {
+              companyIdsKey,
+              companies: similarCompaniesData
+            },
+            timestamp: Date.now()
+          }));
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
+        }
         setSimilarCompanies(similarCompaniesData);
       } catch (err) {
         console.error('Failed to fetch similar companies:', err);
