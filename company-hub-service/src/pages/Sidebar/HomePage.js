@@ -290,6 +290,9 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
             <Typography variant="h6" color="primary.main" fontWeight="bold">{company.entity.company_name.charAt(0)}</Typography>
           </Box>
         )}
+        <Typography variant="body" color="text.secondary" sx={{ ml: 0.8, fontSize: '0.85rem', position: 'absolute', top: 20, right: 20 }}>
+          %{Math.round(company.distance * 100)} similarity
+        </Typography>
         {/* {company.entity.verified && (<CheckCircle size={22} color="#4caf50" sx={{ position: 'absolute', top: 8, right: 8 }}/>)} */}
       </Box>
     
