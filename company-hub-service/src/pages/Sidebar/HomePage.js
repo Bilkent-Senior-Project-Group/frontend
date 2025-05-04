@@ -7,7 +7,7 @@ import {
 import { Search, MapPin, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
-import { API_URL } from '../../config/apiConfig.js';
+import { API_URL, SEARCH_API_URL } from '../../config/apiConfig.js';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.js';
 import debounce from 'lodash/debounce';
@@ -279,54 +279,39 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
         '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
         border: '1px solid', borderColor: 'divider', borderRadius: 2,
       }}
-      onClick={() => navigateToCompanyProfile(company.name)}
+      onClick={() => navigateToCompanyProfile(company.entity.company_name)}
     >
       {/* Logo Section */}
       <Box sx={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, position: 'relative' }}>
-        {company.logoUrl ? (
-          <Box component="img" src={company.logoUrl} alt={company.name} sx={{ maxHeight: 50, maxWidth: 50, borderRadius: '8px', objectFit: 'contain' }}/>
+        {company.entity.logoUrl ? (
+          <Box component="img" src={company.entity.logoUrl} alt={company.entity.company_name} sx={{ maxHeight: 50, maxWidth: 50, borderRadius: '8px', objectFit: 'contain' }}/>
         ) : (
           <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h6" color="primary.main" fontWeight="bold">{company.name.charAt(0)}</Typography>
+            <Typography variant="h6" color="primary.main" fontWeight="bold">{company.entity.company_name.charAt(0)}</Typography>
           </Box>
         )}
-        {company.verified && (<CheckCircle size={22} color="#4caf50" sx={{ position: 'absolute', top: 8, right: 8 }}/>)}
+        {/* {company.entity.verified && (<CheckCircle size={22} color="#4caf50" sx={{ position: 'absolute', top: 8, right: 8 }}/>)} */}
       </Box>
     
       {/* Content Section */}
       <CardContent sx={{ pt: 0, px: 2, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Typography variant="h6" fontWeight={600} noWrap>{company.name}</Typography>
+        <Typography variant="h6" fontWeight={600} noWrap>{company.entity.company_name}</Typography>
     
-        {(company.city && company.country) && (
+        {(company.entity.location_name) && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <MapPin size={16} color="#757575" />
             <Typography variant="body2" color="text.secondary" sx={{ ml: 0.8, fontSize: '0.85rem' }} noWrap>
-              {company.city}, {company.country}
+              {company.entity.location_name}
             </Typography>
           </Box>
         )}
     
-        {/* Company Size & Founded Year */}
-        {(company.size || company.foundedYear) && (
-          <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-            {company.size && `${company.size}`}
-            {company.size && company.foundedYear && ' • '}
-            {company.foundedYear && `${company.foundedYear}`}
-          </Typography>
-        )}
-
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-          {company.completedProjects > 0
-            ? `${company.completedProjects} completed project${company.completedProjects !== 1 ? 's' : ''}`
-            : 'No completed projects yet'}
-        </Typography>
-    
         {/* Services */}
         <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-          {company.services?.slice(0, 3).map((service, idx) => (
+          {company.entity.service_names?.slice(0, 3).map((service, idx) => (
             <Chip
               key={idx}
-              label={service.serviceName || service}
+              label={service}
               size="small"
               sx={{
                 borderRadius: '12px',
@@ -337,9 +322,9 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
               }}
             />
           ))}
-          {company.services?.length > 3 && (
+          {company.entity.service_names?.length > 3 && (
             <Chip
-              label={`+${company.services.length - 3}`}
+              label={`+${company.entity.service_names.length - 3}`}
               size="small"
               sx={{
                 borderRadius: '12px',
@@ -351,21 +336,6 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
             />
           )}
         </Box>
-    
-        {/* Rating Section */}
-        {typeof company.overallRating === 'number' && company.overallRating > 0 && (
-          <>
-            <Divider sx={{ my: 1 }} />
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box sx={{ bgcolor: '#FFC107', color: '#212121', px: 1.2, py: 0.3, borderRadius: 1, fontSize: '0.8rem', fontWeight: 700, minWidth: 36, textAlign: 'center' }}>
-                {company.overallRating.toFixed(1)}
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontSize: '0.8rem' }}>
-                {company.totalReviews} reviews
-              </Typography>
-            </Box>
-          </>
-        )}
       </CardContent>
     </Card>
   );
@@ -380,16 +350,16 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
       </Typography>
 
       {userCompanies.map((company) => (
-        <Box key={company.companyId} sx={{ mb: 6, width: '100%' }}>
+        <Box key={company.id} sx={{ mb: 6, width: '100%' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Typography variant="h6" fontWeight={600} color="text.primary">
-              Companies like {company.companyName}
+              Companies like {company.name}
             </Typography>
           </Box>
 
           {loadingSimilarCompanies ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>
-          ) : similarCompanies[company.companyId]?.length > 0 ? (
+          ) : similarCompanies[company.id]?.length > 0 ? (
             <Box sx={{ position: 'relative', width: '100%' }}>
               {/* Left Scroll Button */}
               <IconButton
@@ -399,7 +369,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
                   '&:hover': { backgroundColor: 'background.paper', boxShadow: 4 },
                 }}
                 onClick={() => {
-                  const container = document.getElementById(`scroll-container-${company.companyId}`);
+                  const container = document.getElementById(`scroll-container-${company.id}`);
                   if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
                 }}
               >
@@ -408,16 +378,16 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
               
               {/* Scrollable Container */}
               <Box 
-                id={`scroll-container-${company.companyId}`}
+                id={`scroll-container-${company.id}`}
                 sx={{ 
                   display: 'flex', gap: 3, overflowX: 'auto', pb: 2, pt: 1, px: 1,
                   scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' },
                   '-ms-overflow-style': 'none', scrollSnapType: 'x mandatory',
                 }}
               >
-                {similarCompanies[company.companyId].map((similarCompany) => (
+                {similarCompanies[company.id].map((similarCompany) => (
                   <SimilarCompanyCard 
-                    key={similarCompany.companyId} 
+                    key={similarCompany.id} 
                     company={similarCompany}
                     navigateToCompanyProfile={navigateToCompanyProfile}
                   />
@@ -432,7 +402,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
                   '&:hover': { backgroundColor: 'background.paper', boxShadow: 4 },
                 }}
                 onClick={() => {
-                  const container = document.getElementById(`scroll-container-${company.companyId}`);
+                  const container = document.getElementById(`scroll-container-${company.id}`);
                   if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
                 }}
               >
@@ -441,7 +411,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              No similar companies found for {company.companyName}.
+              No similar companies found for {company.name}.
             </Typography>
           )}
         </Box>
@@ -453,7 +423,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
 // Main FilterSearchPage Component
 const FilterSearchPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   
   // Search state
   const [searchText, setSearchText] = useState('');
@@ -470,7 +440,6 @@ const FilterSearchPage = () => {
   const [similarCompanies, setSimilarCompanies] = useState({});
   const [loadingSimilarCompanies, setLoadingSimilarCompanies] = useState(false);
 
-  // Fetch services
   useEffect(() => {
     const fetchServices = async () => {
       try {
@@ -486,47 +455,103 @@ const FilterSearchPage = () => {
     };
     fetchServices();
   }, []);
-
-  // Fetch user companies
+  
   useEffect(() => {
-    if (user?.id) {
-      // Mock data fetch
-      const mockResponseData = [
-        {
-          companyId: "b65ef568-000d-426e-8467-f81a708f3e6f",
-          companyName: "TechSolutions Inc.",
-          projects: [/* projects data */]
-        },
-        // ...other companies
-      ];
-      setUserCompanies(mockResponseData);
-      fetchSimilarCompanies(mockResponseData);
-    }
-  }, [user]);
-
-  // Fetch similar companies function
-  const fetchSimilarCompanies = useCallback(async (companies) => {
-    setLoadingSimilarCompanies(true);
-    try {
-      const similarCompaniesData = {};
-      // Mock data fetch for each company
-      for (const company of companies) {
-        similarCompaniesData[company.companyId] = [
+    // Only proceed if user exists
+    if (!user?.id) return;
+    
+    const fetchUserCompanies = async () => {
+      try {
+        console.log('Fetching user companies...');
+        const response = await axios.get(`${API_URL}/api/Company/GetCompaniesOfUser/${user.id}`,
           {
-            companyId: "101",
-            name: "Creative Solutions",
-            // ...other company data
-          },
-          // ...more similar companies
-        ];
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        
+        const fetchedCompanies = response.data.map((company) => ({
+          id: company.companyId,
+          name: company.companyName,
+          services: company.services,
+          technologiesUsed: company.technologiesUsed,
+        }));
+  
+        console.log('Fetched companies:', fetchedCompanies);
+        setUserCompanies(fetchedCompanies);
+      } catch (err) {
+        console.error('Failed to fetch user companies', err);
       }
-      setSimilarCompanies(similarCompaniesData);
-    } catch (err) {
-      console.error('Failed to fetch similar companies', err);
-    } finally {
-      setLoadingSimilarCompanies(false);
+    };
+  
+    fetchUserCompanies();
+  }, [user?.id, token]); // Only depends on user.id and token
+  
+
+  useEffect(() => {
+    // Only proceed if we have user companies
+    if (!userCompanies || userCompanies.length === 0) {
+      return;
     }
-  }, []);
+    
+    const fetchSimilarCompaniesData = async () => {
+      console.log('Starting to fetch similar companies for userCompanies');
+      setLoadingSimilarCompanies(true);
+      
+      try {
+        const similarCompaniesData = {};
+        
+        // Process each company
+        for (const company of userCompanies) {
+          console.log(`Fetching similar companies for ${company.name}`);
+          
+          // Create payload for this specific company
+          const payload = {
+            services: company.services || [],
+            technologies_used: company.technologiesUsed || []
+          };
+          
+          try {
+            // Make API call to get similar companies
+            const response = await axios.post(
+              `${SEARCH_API_URL}/get_featured_companies`,
+              payload
+            );
+  
+            // Process the results
+            let processedResults = [];
+            
+            if (response.data && response.data.results) {
+              processedResults = response.data.results.map(result => ({
+                id: result.id,
+                distance: result.distance,
+                entity: result.entity
+              }));
+            }
+            
+            similarCompaniesData[company.id] = processedResults;
+          } catch (companyError) {
+            console.error(`Error fetching similar companies for ${company.name}:`, companyError);
+            // Set empty array to indicate we tried but had an error
+            similarCompaniesData[company.id] = [];
+          }
+        }
+        
+        console.log('Processed all similar companies:', similarCompaniesData);
+        setSimilarCompanies(similarCompaniesData);
+      } catch (err) {
+        console.error('Failed to fetch similar companies:', err);
+      } finally {
+        setLoadingSimilarCompanies(false);
+      }
+    };
+  
+    // Execute the fetch
+    fetchSimilarCompaniesData();
+  }, [userCompanies]); // Only depends on userCompanies
+
 
   // Navigate to company profile
   const navigateToCompanyProfile = useCallback((companyName) => {
