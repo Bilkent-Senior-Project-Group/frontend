@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
   Box,
@@ -23,7 +23,51 @@ const DiscoverPage = () => {
   // Cache keys and configuration
   const SERVICES_CACHE_KEY = 'discover_services_cache';
   const COMPANIES_CACHE_KEY = 'discover_companies_cache';
+  const FETCH_STATUS_KEY = 'discover_fetch_status';
   const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  // Refs for tracking background fetch
+  const abortControllerRef = useRef(null);
+  const fetchingRef = useRef(false);
+  const industryProcessingRef = useRef(-1);
+
+  // Fetch status helpers
+  const getFetchStatus = () => {
+    try {
+      const status = localStorage.getItem(FETCH_STATUS_KEY);
+      if (!status) return null;
+      
+      const { inProgress, startTime, servicesHash, currentIndustryIndex } = JSON.parse(status);
+      
+      // If fetch has been running for more than 5 minutes, assume it failed
+      if (inProgress && Date.now() - startTime > 5 * 60 * 1000) {
+        localStorage.removeItem(FETCH_STATUS_KEY);
+        return null;
+      }
+      
+      return { inProgress, startTime, servicesHash, currentIndustryIndex };
+    } catch (error) {
+      console.error('Error reading fetch status from localStorage:', error);
+      return null;
+    }
+  };
+
+  const setFetchStatus = (inProgress, servicesHash = null, currentIndustryIndex = -1) => {
+    try {
+      if (inProgress) {
+        localStorage.setItem(FETCH_STATUS_KEY, JSON.stringify({
+          inProgress,
+          startTime: Date.now(),
+          servicesHash,
+          currentIndustryIndex
+        }));
+      } else {
+        localStorage.removeItem(FETCH_STATUS_KEY);
+      }
+    } catch (error) {
+      console.error('Error setting fetch status in localStorage:', error);
+    }
+  };
 
   // Fetch all services grouped by industry
   useEffect(() => {
@@ -43,10 +87,34 @@ const DiscoverPage = () => {
         console.log('Using cached companies data');
         setIndustriesWithCompanies(cachedCompanies);
       } else {
-        // If no valid cache, fetch fresh data for each industry
-        servicesByIndustry.forEach(industry => {
-          fetchCompaniesForIndustry(industry, servicesHash);
-        });
+        // Check if a fetch is already in progress
+        const fetchStatus = getFetchStatus();
+        
+        if (fetchStatus && fetchStatus.inProgress && fetchStatus.servicesHash === servicesHash) {
+          console.log('Fetch already in progress, checking current status');
+          
+          // Try to load any partially completed data
+          const partialData = getPartialCachedCompanies();
+          if (partialData) {
+            setIndustriesWithCompanies(partialData);
+          }
+          
+          // Show loading for the industry currently being processed
+          if (fetchStatus.currentIndustryIndex >= 0 && 
+              fetchStatus.currentIndustryIndex < servicesByIndustry.length) {
+            const industry = servicesByIndustry[fetchStatus.currentIndustryIndex].industry;
+            setLoadingCompanies(prev => ({
+              ...prev,
+              [industry]: true
+            }));
+          }
+          
+          // We'll continue the fetch in the background
+          continueFetchFromStatus(fetchStatus, servicesHash);
+        } else {
+          // If no valid cache or ongoing fetch, start a new fetch process
+          startBackgroundFetch(servicesByIndustry, servicesHash);
+        }
       }
     }
   }, [servicesByIndustry]);
@@ -85,11 +153,16 @@ const DiscoverPage = () => {
       const cachedData = localStorage.getItem(COMPANIES_CACHE_KEY);
       if (!cachedData) return null;
       
-      const { data, timestamp, hash } = JSON.parse(cachedData);
+      const { data, timestamp, hash, completed } = JSON.parse(cachedData);
       
-      // Check if cache is expired or services have changed
-      if (Date.now() - timestamp > CACHE_EXPIRATION || hash !== servicesHash) {
-        localStorage.removeItem(COMPANIES_CACHE_KEY);
+      // Check if cache is expired, services have changed, or fetch wasn't completed
+      if (Date.now() - timestamp > CACHE_EXPIRATION || 
+          hash !== servicesHash || 
+          completed !== true) {
+        // Don't remove if it's just incomplete - we might want partial data
+        if (hash !== servicesHash) {
+          localStorage.removeItem(COMPANIES_CACHE_KEY);
+        }
         return null;
       }
       
@@ -100,13 +173,28 @@ const DiscoverPage = () => {
     }
   };
 
+  // Get partial cached data (for in-progress fetches)
+  const getPartialCachedCompanies = () => {
+    try {
+      const cachedData = localStorage.getItem(COMPANIES_CACHE_KEY);
+      if (!cachedData) return null;
+      
+      const { data } = JSON.parse(cachedData);
+      return data;
+    } catch (error) {
+      console.error('Error reading partial companies from localStorage:', error);
+      return null;
+    }
+  };
+
   // Save companies data to cache
-  const saveCompaniesToCache = (companiesData, servicesHash) => {
+  const saveCompaniesToCache = (companiesData, servicesHash, completed = false) => {
     try {
       localStorage.setItem(COMPANIES_CACHE_KEY, JSON.stringify({
         data: companiesData,
         timestamp: Date.now(),
-        hash: servicesHash
+        hash: servicesHash,
+        completed
       }));
     } catch (error) {
       console.error('Error saving companies to localStorage:', error);
@@ -150,61 +238,127 @@ const DiscoverPage = () => {
     }
   };
 
-  const fetchCompaniesForIndustry = async (industryGroup, servicesHash) => {
-    const industry = industryGroup.industry;
-    const serviceIds = industryGroup.services.map(s => s.id);
+  // Continue fetch based on the stored status
+  const continueFetchFromStatus = (fetchStatus, servicesHash) => {
+    if (!fetchStatus || !fetchStatus.inProgress) return;
     
-    // Update loading state for this industry
-    setLoadingCompanies(prev => ({
-      ...prev,
-      [industry]: true
-    }));
+    // Only start from the industry that was being processed
+    const startIndex = Math.max(0, fetchStatus.currentIndustryIndex);
+    startBackgroundFetch(servicesByIndustry, servicesHash, startIndex);
+  };
 
-    try {
-      // Build search payload
-      const searchPayload = {
-        searchQuery: "", // Empty query to get all companies for the services
-        locations: null, // No location filter
-        serviceIds: serviceIds // Filter by services in this industry
-      };
-      
-      console.log(`Fetching companies for industry: ${industry}`, searchPayload);
-      
-      // Execute search
-      const searchResponse = await axios.post(`${SEARCH_API_URL}/search`, searchPayload);
-      
-      // Get top 4 companies for this industry
-      const companies = (searchResponse.data.results || []).slice(0, 4);
-      
-      console.log(`Found ${companies.length} companies for industry: ${industry}`);
-      
-      // Update state with companies for this industry
-      setIndustriesWithCompanies(prev => {
-        const newState = {
-          ...prev,
-          [industry]: companies
-        };
+  // Start a new background fetch for all industries
+  const startBackgroundFetch = (industries, servicesHash, startIndex = 0) => {
+    if (fetchingRef.current) return;
+    
+    fetchingRef.current = true;
+    
+    // Create a new AbortController for this fetch
+    abortControllerRef.current = new AbortController();
+    const { signal } = abortControllerRef.current;
+    
+    // This function will process industries one by one
+    const processIndustries = async () => {
+      try {
+        // Load existing partial data if any
+        let currentData = getPartialCachedCompanies() || {};
         
-        // Save to cache after each industry is loaded
-        // This gives partial caching in case the user navigates away before all industries load
-        saveCompaniesToCache(newState, servicesHash);
+        // Process each industry starting from startIndex
+        for (let i = startIndex; i < industries.length; i++) {
+          // Exit if aborted
+          if (signal.aborted) {
+            console.log('Fetch aborted, stopping industry processing');
+            break;
+          }
+          
+          // Update which industry we're working on
+          industryProcessingRef.current = i;
+          setFetchStatus(true, servicesHash, i);
+          
+          const industryGroup = industries[i];
+          const industry = industryGroup.industry;
+          const serviceIds = industryGroup.services.map(s => s.id);
+          
+          // Update loading state if component is still mounted
+          if (!signal.aborted) {
+            setLoadingCompanies(prev => ({
+              ...prev,
+              [industry]: true
+            }));
+          }
+          
+          try {
+            // Build search payload
+            const searchPayload = {
+              searchQuery: "", // Empty query to get all companies for the services
+              locations: null, // No location filter
+              serviceIds: serviceIds // Filter by services in this industry
+            };
+            
+            console.log(`Fetching companies for industry: ${industry}`, searchPayload);
+            
+            // Execute search
+            const searchResponse = await axios.post(
+              `${SEARCH_API_URL}/search`, 
+              searchPayload,
+              { signal } // Pass the signal to make it abortable
+            );
+            
+            // Get top 4 companies for this industry
+            const companies = (searchResponse.data.results || []).slice(0, 4);
+            
+            console.log(`Found ${companies.length} companies for industry: ${industry}`);
+            
+            // Update our data object
+            currentData = {
+              ...currentData,
+              [industry]: companies
+            };
+            
+            // Save to cache incrementally
+            saveCompaniesToCache(currentData, servicesHash, false);
+            
+            // Update UI if component is still mounted
+            if (!signal.aborted) {
+              setIndustriesWithCompanies(prev => ({
+                ...prev,
+                [industry]: companies
+              }));
+              setLoadingCompanies(prev => ({
+                ...prev,
+                [industry]: false
+              }));
+            }
+          } catch (err) {
+            if (!signal.aborted) {
+              console.error(`Failed to fetch companies for industry: ${industry}`, err);
+              // Update UI with empty array on error
+              setIndustriesWithCompanies(prev => ({
+                ...prev,
+                [industry]: []
+              }));
+              setLoadingCompanies(prev => ({
+                ...prev,
+                [industry]: false
+              }));
+            }
+          }
+        }
         
-        return newState;
-      });
-    } catch (err) {
-      console.error(`Failed to fetch companies for industry: ${industry}`, err);
-      // Set empty array on error
-      setIndustriesWithCompanies(prev => ({
-        ...prev,
-        [industry]: []
-      }));
-    } finally {
-      // Update loading state
-      setLoadingCompanies(prev => ({
-        ...prev,
-        [industry]: false
-      }));
-    }
+        // Mark as complete when all industries are processed
+        if (!signal.aborted) {
+          console.log('All industries processed successfully');
+          saveCompaniesToCache(currentData, servicesHash, true);
+          setFetchStatus(false);
+        }
+      } finally {
+        fetchingRef.current = false;
+        industryProcessingRef.current = -1;
+      }
+    };
+    
+    // Start processing in the background
+    processIndustries();
   };
 
   const handleViewMore = (serviceIds) => {
