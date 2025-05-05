@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { API_URL, SEARCH_API_URL } from '../../config/apiConfig';
+import { useAuth } from '../../contexts/AuthContext.js';
 
 const DiscoverPage = () => {
   const [servicesByIndustry, setServicesByIndustry] = useState([]);
@@ -19,6 +20,7 @@ const DiscoverPage = () => {
   const [industriesWithCompanies, setIndustriesWithCompanies] = useState({});
   const [loadingCompanies, setLoadingCompanies] = useState({});
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   // Cache keys and configuration
   const SERVICES_CACHE_KEY = 'discover_services_cache';
@@ -288,25 +290,24 @@ const DiscoverPage = () => {
           }
           
           try {
-            // Build search payload
-            const searchPayload = {
-              searchQuery: "", // Empty query to get all companies for the services
-              locations: null, // No location filter
-              serviceIds: serviceIds // Filter by services in this industry
-            };
             
-            console.log(`Fetching companies for industry: ${industry}`, searchPayload);
             
-            // Execute search
-            const searchResponse = await axios.post(
-              `${SEARCH_API_URL}/search`, 
-              searchPayload,
-              { signal } // Pass the signal to make it abortable
+            console.log(`Fetching companies for industry: ${industry}`, serviceIds);
+            
+            const response = await axios.post(
+              `${API_URL}/api/Company/GetTopCompaniesByServices`, 
+              serviceIds,
+              { 
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                signal // Pass the signal to make it abortable
+              }
             );
             
-            // Get top 4 companies for this industry
-            const companies = (searchResponse.data.results || []).slice(0, 4);
-            
+            const companies = response.data;
+            console.log(`Received companies for industry: ${industry} -`, companies);
             console.log(`Found ${companies.length} companies for industry: ${industry}`);
             
             // Update our data object
@@ -444,26 +445,28 @@ const DiscoverPage = () => {
                                   boxShadow: 3,
                                 },
                               }}
-                              onClick={() => navigate(`/company/${company.Name.replace(/\s+/g, '')}`)}
+                              onClick={() => navigate(`/company/${company.name.replace(/\s+/g, '')}`)}
                             >
                               <CardContent>
                                 <Typography variant="subtitle1" fontWeight="bold">
-                                  {company.Name || "Unnamed Company"}
+                                  {company.name || "Unnamed Company"}
                                 </Typography>
                                 <Typography variant="body2">
-                                  {company.Location || "Location not specified"}
+                                {(company.city || company.country) ? 
+                                    `${company.city}, ${company.country}` 
+                                    : "Location not specified"}
                                 </Typography>
                                 
                                 {/* Services */}
-                                {company.Services && company.Services.length > 0 && (
+                                {company.services && company.services.length > 0 && (
                                   <Box sx={{ mt: 1 }}>
                                     <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
                                       Services:
                                     </Typography>
                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                      {parseServiceNames(company.Services).slice(0, 3).map((service, idx) => (
+                                      {company.services.slice(0, 3).map((service) => (
                                         <Box
-                                          key={`${service}-${idx}`}
+                                          key={service.id}
                                           sx={{
                                             fontSize: '0.75rem',
                                             padding: '2px 8px',
@@ -474,10 +477,10 @@ const DiscoverPage = () => {
                                             whiteSpace: 'nowrap',
                                           }}
                                         >
-                                          {service}
+                                          {service.serviceName}
                                         </Box>
                                       ))}
-                                      {parseServiceNames(company.Services).length > 3 && (
+                                      {company.services.length > 3 && (
                                         <Box
                                           sx={{
                                             fontSize: '0.75rem',
@@ -488,15 +491,34 @@ const DiscoverPage = () => {
                                             display: 'inline-block',
                                           }}
                                         >
-                                          +{parseServiceNames(company.Services).length - 3}
+                                          +{company.services.length - 3}
                                         </Box>
                                       )}
                                     </Box>
                                   </Box>
                                 )}
-                                
+
+                                {/* Matching Service Count */}
+                                <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                                  <Box 
+                                    sx={{ 
+                                      mt: 1,
+                                      display: 'inline-block',
+                                      bgcolor: 'rgba(7, 243, 58, 0.15)', // Lighter green background
+                                      color: '#3a5a28', // Darker green text for better contrast
+                                      px: 1.5, 
+                                      py: 0.3, 
+                                      borderRadius: 1.5, 
+                                      fontSize: '0.75rem', 
+                                      fontWeight: 500 // Reduced from 700 (bold) to 500 (medium)
+                                    }}
+                                  >
+                                    {company.matchingServiceCount}/{company.totalServiceCount} services matched
+                                  </Box>
+                                </Box>
+
                                 {/* Rating if available */}
-                                {company.Rating > 0 && (
+                                {company.overallRating > 0 && (
                                   <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
                                     <Box 
                                       sx={{ 
@@ -509,11 +531,11 @@ const DiscoverPage = () => {
                                         fontWeight: 700 
                                       }}
                                     >
-                                      {company.Rating.toFixed(1)}
+                                      {company.overallRating.toFixed(1)}
                                     </Box>
-                                    {company.ReviewCount && (
+                                    {company.totalReviews > 0 && (
                                       <Typography variant="body2" sx={{ ml: 1, fontSize: '0.8rem' }}>
-                                        ({company.ReviewCount} reviews)
+                                        ({company.totalReviews} {company.totalReviews === 1 ? 'review' : 'reviews'})
                                       </Typography>
                                     )}
                                   </Box>
