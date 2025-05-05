@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("similar_companies_cache");
     localStorage.removeItem("discover_services_cache");
     localStorage.removeItem("discover_companies_cache");
+    localStorage.removeItem("similar_companies_fetch_status");
     localStorage.removeItem("isAdmin"); // Remove isAdmin from localStorage
     setIsAdmin(false); // Reset isAdmin state
     setToken(null); // Reset token state

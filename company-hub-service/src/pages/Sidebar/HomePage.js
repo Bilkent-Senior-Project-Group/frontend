@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Box, Typography, Container, Grid, Chip, TextField, InputAdornment,
   Button, Paper, CircularProgress, Tabs, Tab, Checkbox, Card,
@@ -11,6 +11,7 @@ import { API_URL, SEARCH_API_URL } from '../../config/apiConfig.js';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.js';
 import debounce from 'lodash/debounce';
+import { last } from 'lodash';
 
 // Location Search Component
 const LocationSearch = React.memo(({ selectedLocations, selectedLocationIds, setSelectedLocations, setSelectedLocationIds }) => {
@@ -443,7 +444,12 @@ const FilterSearchPage = () => {
   const [similarCompanies, setSimilarCompanies] = useState({});
   const [loadingSimilarCompanies, setLoadingSimilarCompanies] = useState(false);
 
+  const CACHE_KEY = 'similar_companies_cache';
+  const FETCH_STATUS_KEY = 'similar_companies_fetch_status';
   const CACHE_EXPIRATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  const abortControllerRef = useRef(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -498,14 +504,15 @@ const FilterSearchPage = () => {
   // Add this helper function inside your component
   const getSavedSimilarCompanies = () => {
     try {
-      const savedData = localStorage.getItem('similar_companies_cache');
+      const savedData = localStorage.getItem(CACHE_KEY);
       if (!savedData) return null;
       
       const { data, timestamp } = JSON.parse(savedData);
       
       // Check if cache is expired
       if (Date.now() - timestamp > CACHE_EXPIRATION) {
-        localStorage.removeItem('similar_companies_cache');
+        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(FETCH_STATUS_KEY);
         return null;
       }
       
@@ -513,6 +520,60 @@ const FilterSearchPage = () => {
     } catch (error) {
       console.error('Error reading from localStorage:', error);
       return null;
+    }
+  };
+
+  // Helper to save cache data incrementally
+  const saveSimilarCompaniesToCache = (companyIdsKey, companiesData) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data: {
+          companyIdsKey,
+          companies: companiesData,
+          lastUpdated: Date.now()
+        },
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
+  // Helper to check if a fetch is in progress
+  const getFetchStatus = () => {
+    try {
+      const status = localStorage.getItem(FETCH_STATUS_KEY);
+      if (!status) return null;
+      
+      const { inProgress, startTime, companyIdsKey } = JSON.parse(status);
+      
+      // If fetch has been running for more than 5 minutes, assume it failed
+      if (inProgress && Date.now() - startTime > 5 * 60 * 1000) {
+        localStorage.removeItem(FETCH_STATUS_KEY);
+        return null;
+      }
+      
+      return { inProgress, startTime, companyIdsKey };
+    } catch (error) {
+      console.error('Error reading fetch status from localStorage:', error);
+      return null;
+    }
+  };
+
+  // Helper to set fetch status
+  const setFetchStatus = (inProgress, companyIdsKey = null) => {
+    try {
+      if (inProgress) {
+        localStorage.setItem(FETCH_STATUS_KEY, JSON.stringify({
+          inProgress,
+          startTime: Date.now(),
+          companyIdsKey
+        }));
+      } else {
+        localStorage.removeItem(FETCH_STATUS_KEY);
+      }
+    } catch (error) {
+      console.error('Error setting fetch status in localStorage:', error);
     }
   };
 
@@ -526,6 +587,37 @@ const FilterSearchPage = () => {
     const companyIdsKey = userCompanies.map(company => company.id).sort().join(',');
     
     const fetchSimilarCompaniesData = async () => {
+      // Check if we're already fetching
+      if (fetchingRef.current) {
+        console.log('Fetch already in progress, skipping duplicate fetch');
+        return;
+      }
+
+      // Check if another tab/window is already fetching
+      const fetchStatus = getFetchStatus();
+      if (fetchStatus && fetchStatus.inProgress && fetchStatus.companyIdsKey === companyIdsKey) {
+        console.log('Fetch is already in progress in another tab/window, waiting for it to complete');
+        setLoadingSimilarCompanies(true);
+        
+        // Poll for changes in cache until fetch completes or times out
+        const checkInterval = setInterval(() => {
+          const status = getFetchStatus();
+          if (!status || !status.inProgress) {
+            clearInterval(checkInterval);
+            const cachedData = getSavedSimilarCompanies();
+            if (cachedData && cachedData.companyIdsKey === companyIdsKey) {
+              setSimilarCompanies(cachedData.companies);
+              setLoadingSimilarCompanies(false);
+            } else {
+              // If cache wasn't updated properly, try fetching again
+              fetchSimilarCompaniesData();
+            }
+          }
+        }, 1000); // Check every second
+        
+        return;
+      }
+
       console.log('Starting to fetch similar companies for userCompanies');
 
       // Try to get from localStorage first
@@ -538,6 +630,15 @@ const FilterSearchPage = () => {
         return;
       }
       setLoadingSimilarCompanies(true);
+      fetchingRef.current = true;
+
+      // Create a new AbortController for this fetch
+      abortControllerRef.current = new AbortController();
+      const { signal } = abortControllerRef.current;
+      
+      // Mark fetch as in progress
+      setFetchStatus(true, companyIdsKey);
+
       // If no valid cache, fetch fresh data
       console.log('Cache miss or expired, fetching similar companies...');
       try {
@@ -545,6 +646,12 @@ const FilterSearchPage = () => {
         
         // Process each company
         for (const company of userCompanies) {
+
+          if (signal.aborted) {
+            console.log('Fetch aborted, stopping');
+            break;
+          }
+
           console.log(`Fetching similar companies for ${company.name}`);
           
           // Create payload for this specific company
@@ -557,7 +664,8 @@ const FilterSearchPage = () => {
             // Make API call to get similar companies
             const response = await axios.post(
               `${SEARCH_API_URL}/get_featured_companies`,
-              payload
+              payload,
+              { signal }
             );
   
             // Process the results
@@ -572,38 +680,69 @@ const FilterSearchPage = () => {
             }
             
             similarCompaniesData[company.id] = processedResults;
+
+            // Incrementally save to cache after each company is processed
+            saveSimilarCompaniesToCache(companyIdsKey, similarCompaniesData);
+            
+            // Only update state if component is still mounted and fetch wasn't aborted
+            if (!signal.aborted) {
+              setSimilarCompanies(prev => ({
+                ...prev,
+                [company.id]: processedResults
+              }));
+            }
+
           } catch (companyError) {
-            console.error(`Error fetching similar companies for ${company.name}:`, companyError);
-            // Set empty array to indicate we tried but had an error
-            similarCompaniesData[company.id] = [];
+            // Only log error if not aborted
+            if (!signal.aborted) {
+              console.error(`Error fetching similar companies for ${company.name}:`, companyError);
+              // Set empty array to indicate we tried but had an error
+              similarCompaniesData[company.id] = [];
+              setSimilarCompanies(prev => ({
+                ...prev,
+                [company.id]: []
+              }));
+            }
           }
         }
         
-        console.log('Processed all similar companies:', similarCompaniesData);
-
-        // Save to localStorage
-        try {
-          localStorage.setItem('similar_companies_cache', JSON.stringify({
-            data: {
-              companyIdsKey,
-              companies: similarCompaniesData
-            },
-            timestamp: Date.now()
-          }));
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-        setSimilarCompanies(similarCompaniesData);
-      } catch (err) {
+       // Final save to ensure everything is persisted
+       if (!signal.aborted) {
+        console.log('Completed fetching similar companies:', similarCompaniesData);
+        saveSimilarCompaniesToCache(companyIdsKey, similarCompaniesData);
+      }
+    } catch (err) {
+      if (!signal.aborted) {
         console.error('Failed to fetch similar companies:', err);
-      } finally {
+      }
+    } finally {
+      // Only update state if component is still mounted and fetch wasn't aborted
+      if (!signal.aborted) {
         setLoadingSimilarCompanies(false);
       }
-    };
+      
+      // Reset fetch status regardless
+      fetchingRef.current = false;
+      setFetchStatus(false);
+    }
+  };
   
     // Execute the fetch
     fetchSimilarCompaniesData();
-  }, [userCompanies]); // Only depends on userCompanies
+
+    // Cleanup function that runs when component unmounts or dependencies change
+    return () => {
+      if (abortControllerRef.current) {
+        // Instead of aborting, we'll let the fetch continue in the background
+        // We just set a flag to prevent state updates after unmount
+        console.log('Component unmounting, detaching from fetch but allowing it to continue');
+        fetchingRef.current = false;
+        
+        // We DON'T abort the controller, letting the fetch complete in the background
+        // abortControllerRef.current.abort();
+      }
+    };
+  }, [userCompanies, SEARCH_API_URL]); // Only depends on userCompanies
 
 
   // Navigate to company profile
