@@ -387,7 +387,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
                 sx={{ 
                   display: 'flex', gap: 3, overflowX: 'auto', pb: 2, pt: 1, px: 1,
                   scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' },
-                  '-ms-overflow-style': 'none', scrollSnapType: 'x mandatory',
+                  msOverflowStyle: 'none', scrollSnapType: 'x mandatory',
                 }}
               >
                 {similarCompanies[company.id].map((similarCompany) => (
@@ -700,11 +700,18 @@ const FilterSearchPage = () => {
             let processedResults = [];
             
             if (response.data && response.data.results) {
-              processedResults = response.data.results.map(result => ({
-                id: result.id,
-                distance: result.distance,
-                entity: result.entity
-              }));
+              // Filter out the current company from the results
+              processedResults = response.data.results
+                .filter(result => {
+                  // Check if this result is not the user's own company
+                  // You can compare by ID, name, or any unique identifier
+                  return result.entity.company_name.toLowerCase() !== company.name.toLowerCase();
+                })
+                .map(result => ({
+                  id: result.id,
+                  distance: result.distance,
+                  entity: result.entity
+                }));
             }
             
             similarCompaniesData[company.id] = processedResults;

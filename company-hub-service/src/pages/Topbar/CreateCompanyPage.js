@@ -634,7 +634,7 @@ const CreateCompanyPage = () => {
       });
       
       // Navigate away on success
-      navigate('/company/' + response.data.data.companyName, {
+      navigate('/company/' + response.data.data.companyName.replace(/\s+/g, ''), {
         state: {
           message: 'Company added successfully!'
         }
