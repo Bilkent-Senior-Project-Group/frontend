@@ -429,6 +429,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
 const FilterSearchPage = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
+  const isAdmin = user?.email === "admin@admin.com";
   
   // Search state
   const [searchText, setSearchText] = useState('');
@@ -581,7 +582,7 @@ const FilterSearchPage = () => {
 
   useEffect(() => {
     // Only proceed if we have user companies
-    if (!userCompanies || userCompanies.length === 0) {
+    if (isAdmin || !userCompanies || userCompanies.length === 0) {
       return;
     }
 
@@ -773,7 +774,7 @@ const FilterSearchPage = () => {
         fetchingRef.current = false;
       }
     };
-  }, [userCompanies, SEARCH_API_URL]); // Only depends on userCompanies
+  }, [userCompanies, SEARCH_API_URL, isAdmin]); // Only depends on userCompanies
 
 
   // Navigate to company profile
@@ -893,32 +894,60 @@ const FilterSearchPage = () => {
       </Container>
       
       {/* Similar Companies Section */}
-      {userCompanies.length > 0 ? (
-      <SimilarCompaniesSection
-        userCompanies={userCompanies}
-        similarCompanies={similarCompanies}
-        loadingStates={loadingStates}
-        navigateToCompanyProfile={navigateToCompanyProfile}
-      />
-    ) : (
-      <Container sx={{ mt: 6, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          You don't have any companies yet
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Create your first company to discover similar businesses 
-          and get personalized recommendations.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate('/create-company')}
-          sx={{ textTransform: 'none' }}
-        >
-          Create Your First Company
-        </Button>
-      </Container>
-    )}
+      {!isAdmin ? (
+        // For regular users with no companies or with companies
+        userCompanies.length > 0 ? (
+          <SimilarCompaniesSection
+            userCompanies={userCompanies}
+            similarCompanies={similarCompanies}
+            loadingStates={loadingStates}
+            navigateToCompanyProfile={navigateToCompanyProfile}
+          />
+        ) : (
+          <Container sx={{ mt: 6, textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              You don't have any companies yet
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              Create your first company to discover similar businesses 
+              and get personalized recommendations.
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate('/create-company')}
+              sx={{ textTransform: 'none' }}
+            >
+              Create Your First Company
+            </Button>
+          </Container>
+        )
+      ) : (
+        // Admin-specific UI
+        <Container sx={{ mt: 6 }}>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
+            <Typography variant="h5" color="primary" fontWeight={600} gutterBottom>
+              Admin Dashboard Overview
+            </Typography>
+            <Typography variant="body1" paragraph>
+              Welcome to the admin view. As an administrator, you have access to admin dashboard.
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, mt: 3, flexWrap: 'wrap' }}>
+              <Button 
+                variant="outlined"
+                color="primary"
+                onClick={() => navigate('/admin')}
+                sx={{ textTransform: 'none' }}
+              >
+                Manage Admin Dashboard
+              </Button>
+              
+              
+            </Box>
+          </Paper>
+        </Container>
+      )}
     </Box>
   );
 };
