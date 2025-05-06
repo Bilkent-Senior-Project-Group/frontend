@@ -45,6 +45,8 @@ const CountryCodeSelector = ({
         if (codeEndIndex > 0) {
           setSelectedCode(value.substring(0, codeEndIndex));
           setPhoneNumber(value.substring(codeEndIndex + 1));
+          console.log("selectedCode", selectedCode);
+          console.log("phoneNumber", phoneNumber);
         } else {
           // No space found, assume the entire value is a phone number
           setPhoneNumber(value);
@@ -53,7 +55,7 @@ const CountryCodeSelector = ({
         setPhoneNumber(value);
       }
     }
-  }, []);
+  }, [value]);
 
   const handleCodeChange = (event) => {
     const newCode = event.target.value;

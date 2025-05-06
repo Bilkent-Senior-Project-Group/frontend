@@ -377,15 +377,21 @@ const CreateCompanyPage = () => {
 
   // Handle data extracted from PDF
   const handleExtractedData = (data) => {
+
+    console.log("Extracted data : ", data);
     // Update company details with extracted information
     if (data.companyDetails) {
       setCompanyDetails(data.companyDetails);
     }
+
+    console.log("Company details : ", companyDetails);
     
     // Update projects with extracted information
     if (data.projects && data.projects.length > 0) {
       setProjects(data.projects);
     }
+
+    console.log("Projects : ", projects);
     
     // Show notification
     setNotification({
