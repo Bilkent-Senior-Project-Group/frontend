@@ -351,7 +351,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
   return (
     <Box sx={{ mt: 4, width: '100%', px: 2 }}>
       <Typography variant="h5" fontWeight={700} gutterBottom color="text.primary" sx={{ mb: 3 }}>
-        Recommended For You
+        Possible Competitors
       </Typography>
 
       {userCompanies.map((company) => (
@@ -474,7 +474,7 @@ const FilterSearchPage = () => {
     
     const fetchUserCompanies = async () => {
       try {
-        console.log('Fetching user companies...');
+        console.log('Fetching user companies for user id:', user.id);
         const response = await axios.get(`${API_URL}/api/Company/GetCompaniesOfUser/${user.id}`,
           {
             headers: {
@@ -494,7 +494,8 @@ const FilterSearchPage = () => {
         console.log('Fetched companies:', fetchedCompanies);
         setUserCompanies(fetchedCompanies);
       } catch (err) {
-        console.error('Failed to fetch user companies', err);
+        console.log('No companies found for user or error fetching companies');
+        setUserCompanies([]);
       }
     };
   
@@ -892,14 +893,32 @@ const FilterSearchPage = () => {
       </Container>
       
       {/* Similar Companies Section */}
-      {userCompanies.length > 0 && (
-        <SimilarCompaniesSection
-          userCompanies={userCompanies}
-          similarCompanies={similarCompanies}
-          loadingStates={loadingStates}
-          navigateToCompanyProfile={navigateToCompanyProfile}
-        />
-      )}
+      {userCompanies.length > 0 ? (
+      <SimilarCompaniesSection
+        userCompanies={userCompanies}
+        similarCompanies={similarCompanies}
+        loadingStates={loadingStates}
+        navigateToCompanyProfile={navigateToCompanyProfile}
+      />
+    ) : (
+      <Container sx={{ mt: 6, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          You don't have any companies yet
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          Create your first company to discover similar businesses 
+          and get personalized recommendations.
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate('/create-company')}
+          sx={{ textTransform: 'none' }}
+        >
+          Create Your First Company
+        </Button>
+      </Container>
+    )}
     </Box>
   );
 };

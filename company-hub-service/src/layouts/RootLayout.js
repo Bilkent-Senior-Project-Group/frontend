@@ -422,7 +422,7 @@ const RootLayout = () => {
           {/* Homepage */}
           <Tooltip title={isDrawerCollapsed ? "Homepage" : ""} placement="right">
             <ListItem 
-              button 
+              button="true"
               onClick={() => navigate('/home')}
               selected={location.pathname === '/home'}
               sx={{ 
@@ -446,7 +446,7 @@ const RootLayout = () => {
           {/* Discover */}
           <Tooltip title={isDrawerCollapsed ? "Discover" : ""} placement="right">
             <ListItem 
-              button 
+              button="true"
               onClick={() => navigate('/discover')}
               selected={location.pathname === '/discover'}
               sx={{ 
@@ -471,7 +471,7 @@ const RootLayout = () => {
           {isAdmin && (
             <Tooltip title={isDrawerCollapsed ? "Admin Dashboard" : ""} placement="right">
               <ListItem 
-                button 
+                button="true"
                 onClick={() => navigate('/admin')}
                 selected={location.pathname.startsWith('/admin')}
                 sx={{ 
@@ -496,7 +496,7 @@ const RootLayout = () => {
           {/* Companies section */}
           <Tooltip title={isDrawerCollapsed ? "My Companies" : ""} placement="right">
             <ListItem 
-              button 
+              button="true"
               onClick={() => setCompaniesOpen(!companiesOpen)}
               sx={{ 
                 minHeight: 48,
