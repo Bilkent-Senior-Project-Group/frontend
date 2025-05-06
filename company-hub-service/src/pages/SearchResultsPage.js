@@ -546,7 +546,7 @@ const SearchResultsPage = () => {
                     boxShadow: 3,
                   },
                 }}
-                onClick={() => navigate(`/company/${encodeURIComponent(company.Name)}`)}
+                onClick={() => navigate(`/company/${company.Name.replace(/\s+/g, '')}`)}
               >
                 <CardContent>
                   <Grid container spacing={2} alignItems="center">
