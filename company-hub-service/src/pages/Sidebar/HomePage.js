@@ -345,8 +345,9 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
   );
 });
 
-// Similar Companies Section Component
-const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, loadingSimilarCompanies, navigateToCompanyProfile }) => {
+// First, let's update the SimilarCompaniesSection component to handle incremental loading
+
+const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, loadingStates, navigateToCompanyProfile }) => {
   return (
     <Box sx={{ mt: 4, width: '100%', px: 2 }}>
       <Typography variant="h5" fontWeight={700} gutterBottom color="text.primary" sx={{ mb: 3 }}>
@@ -361,7 +362,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
             </Typography>
           </Box>
 
-          {loadingSimilarCompanies ? (
+          {loadingStates[company.id] ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>
           ) : similarCompanies[company.id]?.length > 0 ? (
             <Box sx={{ position: 'relative', width: '100%' }}>
@@ -442,7 +443,7 @@ const FilterSearchPage = () => {
   // User companies state
   const [userCompanies, setUserCompanies] = useState([]);
   const [similarCompanies, setSimilarCompanies] = useState({});
-  const [loadingSimilarCompanies, setLoadingSimilarCompanies] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({});
 
   const CACHE_KEY = 'similar_companies_cache';
   const FETCH_STATUS_KEY = 'similar_companies_fetch_status';
@@ -597,7 +598,13 @@ const FilterSearchPage = () => {
       const fetchStatus = getFetchStatus();
       if (fetchStatus && fetchStatus.inProgress && fetchStatus.companyIdsKey === companyIdsKey) {
         console.log('Fetch is already in progress in another tab/window, waiting for it to complete');
-        setLoadingSimilarCompanies(true);
+        
+        // Initialize loading states for all companies
+        const initialLoadingStates = {};
+        userCompanies.forEach(company => {
+          initialLoadingStates[company.id] = true;
+        });
+        setLoadingStates(initialLoadingStates);
         
         // Poll for changes in cache until fetch completes or times out
         const checkInterval = setInterval(() => {
@@ -607,7 +614,13 @@ const FilterSearchPage = () => {
             const cachedData = getSavedSimilarCompanies();
             if (cachedData && cachedData.companyIdsKey === companyIdsKey) {
               setSimilarCompanies(cachedData.companies);
-              setLoadingSimilarCompanies(false);
+              
+              // Reset all loading states
+              const resetLoadingStates = {};
+              userCompanies.forEach(company => {
+                resetLoadingStates[company.id] = false;
+              });
+              setLoadingStates(resetLoadingStates);
             } else {
               // If cache wasn't updated properly, try fetching again
               fetchSimilarCompaniesData();
@@ -627,9 +640,23 @@ const FilterSearchPage = () => {
       if (cachedData && cachedData.companyIdsKey === companyIdsKey) {
         console.log('Using cached similar companies data');
         setSimilarCompanies(cachedData.companies);
+        
+        // Reset all loading states since we're using cached data
+        const resetLoadingStates = {};
+        userCompanies.forEach(company => {
+          resetLoadingStates[company.id] = false;
+        });
+        setLoadingStates(resetLoadingStates);
         return;
       }
-      setLoadingSimilarCompanies(true);
+      
+      // Initialize loading states for all companies
+      const initialLoadingStates = {};
+      userCompanies.forEach(company => {
+        initialLoadingStates[company.id] = true;
+      });
+      setLoadingStates(initialLoadingStates);
+      
       fetchingRef.current = true;
 
       // Create a new AbortController for this fetch
@@ -646,7 +673,6 @@ const FilterSearchPage = () => {
         
         // Process each company
         for (const company of userCompanies) {
-
           if (signal.aborted) {
             console.log('Fetch aborted, stopping');
             break;
@@ -686,9 +712,16 @@ const FilterSearchPage = () => {
             
             // Only update state if component is still mounted and fetch wasn't aborted
             if (!signal.aborted) {
+              // Update the similar companies for this specific company
               setSimilarCompanies(prev => ({
                 ...prev,
                 [company.id]: processedResults
+              }));
+              
+              // Mark this company as loaded
+              setLoadingStates(prev => ({
+                ...prev,
+                [company.id]: false
               }));
             }
 
@@ -698,48 +731,45 @@ const FilterSearchPage = () => {
               console.error(`Error fetching similar companies for ${company.name}:`, companyError);
               // Set empty array to indicate we tried but had an error
               similarCompaniesData[company.id] = [];
+              
               setSimilarCompanies(prev => ({
                 ...prev,
                 [company.id]: []
+              }));
+              
+              // Mark this company as loaded (with error)
+              setLoadingStates(prev => ({
+                ...prev,
+                [company.id]: false
               }));
             }
           }
         }
         
-       // Final save to ensure everything is persisted
-       if (!signal.aborted) {
-        console.log('Completed fetching similar companies:', similarCompaniesData);
-        saveSimilarCompaniesToCache(companyIdsKey, similarCompaniesData);
+        // Final save to ensure everything is persisted
+        if (!signal.aborted) {
+          console.log('Completed fetching similar companies:', similarCompaniesData);
+          saveSimilarCompaniesToCache(companyIdsKey, similarCompaniesData);
+        }
+      } catch (err) {
+        if (!signal.aborted) {
+          console.error('Failed to fetch similar companies:', err);
+        }
+      } finally {
+        // Reset fetch status regardless
+        fetchingRef.current = false;
+        setFetchStatus(false);
       }
-    } catch (err) {
-      if (!signal.aborted) {
-        console.error('Failed to fetch similar companies:', err);
-      }
-    } finally {
-      // Only update state if component is still mounted and fetch wasn't aborted
-      if (!signal.aborted) {
-        setLoadingSimilarCompanies(false);
-      }
-      
-      // Reset fetch status regardless
-      fetchingRef.current = false;
-      setFetchStatus(false);
-    }
-  };
-  
+    };
+    
     // Execute the fetch
     fetchSimilarCompaniesData();
 
-    // Cleanup function that runs when component unmounts or dependencies change
+    // Cleanup function
     return () => {
       if (abortControllerRef.current) {
-        // Instead of aborting, we'll let the fetch continue in the background
-        // We just set a flag to prevent state updates after unmount
         console.log('Component unmounting, detaching from fetch but allowing it to continue');
         fetchingRef.current = false;
-        
-        // We DON'T abort the controller, letting the fetch complete in the background
-        // abortControllerRef.current.abort();
       }
     };
   }, [userCompanies, SEARCH_API_URL]); // Only depends on userCompanies
@@ -866,7 +896,7 @@ const FilterSearchPage = () => {
         <SimilarCompaniesSection
           userCompanies={userCompanies}
           similarCompanies={similarCompanies}
-          loadingSimilarCompanies={loadingSimilarCompanies}
+          loadingStates={loadingStates}
           navigateToCompanyProfile={navigateToCompanyProfile}
         />
       )}
