@@ -100,6 +100,7 @@ const CompanyPDFExtractor = ({ onExtracted }) => {
             startDate: project.startDate || '',
             technologiesUsed: project.technologiesUsed || [],
             clientCompanyName: project.clientCompanyName || '',
+            providerCompanyName: extractedData.companyName || '',
             projectUrl: project.projectUrl || ''
           })) || [],
         };

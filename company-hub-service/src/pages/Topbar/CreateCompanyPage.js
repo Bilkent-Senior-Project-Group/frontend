@@ -328,6 +328,31 @@ const CreateCompanyPage = () => {
 
   const handleCompanyDetailsChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'companyName') {
+      // Update existing projects to use the new company name if they were using the old one
+      if (projects.length > 0 && companyDetails.companyName) {
+        const updatedProjects = projects.map(project => {
+          if (project.providerCompanyName === companyDetails.companyName) {
+            return {
+              ...project,
+              providerCompanyName: value
+            };
+          }
+          return project;
+        });
+        
+        setProjects(updatedProjects);
+      }
+      
+      // Also update the current project if open in dialog
+      if (openProjectDialog && currentProject.providerCompanyName === companyDetails.companyName) {
+        setCurrentProject(prev => ({
+          ...prev,
+          providerCompanyName: value,
+          providerInputValue: value
+        }));
+      }
+    }
     // Ensure employeeSize is stored as a string
     if (name === 'companyName' && value.trim() !== '') 
     {
