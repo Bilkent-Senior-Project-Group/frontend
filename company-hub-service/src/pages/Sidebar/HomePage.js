@@ -397,7 +397,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
             </Typography>
           </Box>
 
-          {loadingSimilarCompanies ? (
+          {loadingStates ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
               <CircularProgress sx={{ color: 'white' }} />
             </Box>
