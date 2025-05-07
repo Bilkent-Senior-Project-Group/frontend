@@ -4,7 +4,7 @@ import {
   Button, Paper, CircularProgress, Tabs, Tab, Checkbox, Card,
   CardContent, Divider, IconButton, alpha
 } from '@mui/material';
-import { Search, MapPin, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, CheckCircle, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 import { API_URL, SEARCH_API_URL } from '../../config/apiConfig.js';
@@ -274,11 +274,23 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
   return (
     <Card
       sx={{
-        width: 300, minWidth: 300, height: 'auto',
-        display: 'flex', flexDirection: 'column', cursor: 'pointer',
-        transition: 'all 0.2s', scrollSnapAlign: 'start',
-        '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 },
-        border: '1px solid', borderColor: 'divider', borderRadius: 2,
+        width: 300, 
+        minWidth: 300, 
+        height: 'auto',
+        display: 'flex', 
+        flexDirection: 'column', 
+        cursor: 'pointer',
+        transition: 'all 0.2s', 
+        scrollSnapAlign: 'start',
+        '&:hover': { 
+          transform: 'translateY(-4px)', 
+          boxShadow: '0 12px 20px rgba(0, 0, 0, 0.25)' 
+        },
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: 2,
+        background: 'rgba(25, 28, 41, 0.75)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
       }}
       onClick={() => navigateToCompanyProfile(company.entity.company_name)}
     >
@@ -287,24 +299,23 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
         {company.entity.logoUrl ? (
           <Box component="img" src={company.entity.logoUrl} alt={company.entity.company_name} sx={{ maxHeight: 50, maxWidth: 50, borderRadius: '8px', objectFit: 'contain' }}/>
         ) : (
-          <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Typography variant="h6" color="primary.main" fontWeight="bold">{company.entity.company_name.charAt(0)}</Typography>
+          <Box sx={{ width: 50, height: 50, borderRadius: '50%', bgcolor: 'rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography variant="h6" color="white" fontWeight="bold">{company.entity.company_name.charAt(0)}</Typography>
           </Box>
         )}
-        <Typography variant="body" color="text.secondary" sx={{ ml: 0.8, fontSize: '0.85rem', position: 'absolute', top: 20, right: 20 }}>
+        <Typography variant="body" color="rgba(255, 255, 255, 0.8)" sx={{ ml: 0.8, fontSize: '0.85rem', position: 'absolute', top: 20, right: 20 }}>
           %{Math.round(company.distance * 100)} similarity
         </Typography>
-        {/* {company.entity.verified && (<CheckCircle size={22} color="#4caf50" sx={{ position: 'absolute', top: 8, right: 8 }}/>)} */}
       </Box>
     
       {/* Content Section */}
       <CardContent sx={{ pt: 0, px: 2, pb: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <Typography variant="h6" fontWeight={600} noWrap>{company.entity.company_name}</Typography>
+        <Typography variant="h6" fontWeight={600} color="white" noWrap>{company.entity.company_name}</Typography>
     
         {(company.entity.location_name) && (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <MapPin size={16} color="#757575" />
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 0.8, fontSize: '0.85rem' }} noWrap>
+            <MapPin size={16} color="rgba(255, 255, 255, 0.7)" />
+            <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ ml: 0.8, fontSize: '0.85rem' }} noWrap>
               {company.entity.location_name}
             </Typography>
           </Box>
@@ -319,10 +330,11 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
               size="small"
               sx={{
                 borderRadius: '12px',
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                color: 'text.primary',
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.9)',
                 fontSize: '0.75rem',
                 height: '22px',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             />
           ))}
@@ -332,10 +344,11 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
               size="small"
               sx={{
                 borderRadius: '12px',
-                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.08),
-                color: 'secondary.main',
+                bgcolor: 'rgba(255, 255, 255, 0.15)',
+                color: 'rgba(255, 255, 255, 0.9)',
                 fontSize: '0.75rem',
                 height: '22px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
               }}
             />
           )}
@@ -350,28 +363,54 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
 const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, loadingStates, navigateToCompanyProfile }) => {
   return (
     <Box sx={{ mt: 4, width: '100%', px: 2 }}>
-      <Typography variant="h5" fontWeight={700} gutterBottom color="text.primary" sx={{ mb: 3 }}>
+
+      <Typography 
+        variant="h5" 
+        fontWeight={700} 
+        gutterBottom 
+        color="white" 
+        sx={{ 
+          mb: 3,
+          position: 'relative',
+          textShadow: '0px 2px 4px rgba(0,0,0,0.5)',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            bottom: -8,
+            left: 0,
+            width: 60,
+            height: 3,
+            backgroundColor: 'white',
+            borderRadius: 1.5
+          }
+        }}
+      >
+
         Possible Competitors
       </Typography>
 
       {userCompanies.map((company) => (
         <Box key={company.id} sx={{ mb: 6, width: '100%' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" fontWeight={600} color="text.primary">
+            <Typography variant="h6" fontWeight={600} color="white" sx={{ textShadow: '0px 1px 3px rgba(0,0,0,0.4)' }}>
               Companies like {company.name}
             </Typography>
           </Box>
 
-          {loadingStates[company.id] ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}><CircularProgress /></Box>
+          {loadingSimilarCompanies ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+              <CircularProgress sx={{ color: 'white' }} />
+            </Box>
+
           ) : similarCompanies[company.id]?.length > 0 ? (
             <Box sx={{ position: 'relative', width: '100%' }}>
               {/* Left Scroll Button */}
               <IconButton
                 sx={{
                   position: 'absolute', left: -30, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
-                  backgroundColor: 'background.paper', boxShadow: 2, width: 40, height: 40,
-                  '&:hover': { backgroundColor: 'background.paper', boxShadow: 4 },
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(5px)', boxShadow: 2, 
+                  width: 40, height: 40, color: 'white',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)', boxShadow: 4 },
                 }}
                 onClick={() => {
                   const container = document.getElementById(`scroll-container-${company.id}`);
@@ -403,8 +442,9 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
               <IconButton
                 sx={{
                   position: 'absolute', right: -30, top: '50%', transform: 'translateY(-50%)', zIndex: 2,
-                  backgroundColor: 'background.paper', boxShadow: 2, width: 40, height: 40,
-                  '&:hover': { backgroundColor: 'background.paper', boxShadow: 4 },
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(5px)', boxShadow: 2, 
+                  width: 40, height: 40, color: 'white',
+                  '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.25)', boxShadow: 4 },
                 }}
                 onClick={() => {
                   const container = document.getElementById(`scroll-container-${company.id}`);
@@ -415,12 +455,57 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
               </IconButton>
             </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mt: 1 }}>
               No similar companies found for {company.name}.
             </Typography>
           )}
         </Box>
       ))}
+    </Box>
+  );
+});
+
+const VideoBackground = React.memo(({ videoUrl }) => {
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0, // Start from the very top
+        left: 0, // Start from the very left (cover sidebar)
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dark overlay with 40% opacity
+          zIndex: 1,
+          pointerEvents: 'none',
+        }
+      }}
+    >
+      <Box
+        component="video"
+        autoPlay
+        muted
+        loop
+        sx={{
+          objectFit: 'cover',
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          pointerEvents: 'none',
+        }}
+      >
+        <source src={videoUrl} type="video/mp4" />
+        Your browser does not support the video tag.
+      </Box>
     </Box>
   );
 });
@@ -814,14 +899,58 @@ const FilterSearchPage = () => {
   }, [searchText, selectedLocations, selectedServices]);
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '100%', px: { xs: 2, sm: 3, md: 4 }, py: 4 }}>
-      <Container maxWidth="sm" sx={{ py: 4 }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom color="text.primary">
-          Discover the best companies
-        </Typography>
-        
-        {/* Main Card Container */}
-        <Card elevation={1} sx={{ mb: 3, borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+    <Box sx={{ 
+      width: '100%', 
+      maxWidth: '100%', 
+      px: { xs: 2, sm: 3, md: 4 }, 
+      py: 4, 
+      position: 'relative',
+      zIndex: 1 // Ensure this container is above the video
+    }}>
+      <VideoBackground videoUrl="/videos/bg.mp4" />
+      
+      /* Main Content Container - Remove background to show video directly */
+        <Container 
+          maxWidth="sm" 
+          sx={{ 
+            py: 4, 
+            position: 'relative',
+            zIndex: 2, // Ensure content is above the video
+            // Remove background color to show video
+            // backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            borderRadius: 2,
+            px: 3,
+            // Remove box shadow
+            // boxShadow: 3,
+            // Remove backdrop filter to avoid blurring
+          }}
+        >
+          
+            <Typography 
+              variant="h2" // Changed from h3 to h2 for bigger text
+              fontWeight={700} 
+              gutterBottom 
+              color="white" 
+              align="center" 
+              sx={{ 
+                mb: 4,
+                textShadow: '0px 2px 4px rgba(0,0,0,0.5)' // Add shadow for better visibility
+              }}
+            >
+              Discover Companies
+            </Typography>
+            
+            {/* Main Card Container - Use solid white background */}
+        <Card elevation={3} sx={{ 
+          mb: 3, 
+          borderRadius: 2, 
+          overflow: 'hidden', 
+          border: '1px solid', 
+          borderColor: 'divider',
+          display: 'block', // Ensure it's always displayed
+          backgroundColor: '#ffffff', // Solid white background
+          // Remove backdropFilter to eliminate blur
+        }}>
           {/* Section 1: Keyword Search */}
           <CardContent sx={{ pt: 3, pb: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} gutterBottom color="text.primary">
@@ -842,7 +971,7 @@ const FilterSearchPage = () => {
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                  backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.7), // More opaque input field
                   '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'primary.main',
                     borderWidth: 1,
@@ -858,7 +987,7 @@ const FilterSearchPage = () => {
           
           <Divider />
           
-          {/* Section 2: Location Search */}
+          {/* Section 2: Location Search - Always visible */}
           <LocationSearch
             selectedLocations={selectedLocations}
             selectedLocationIds={selectedLocationIds}
@@ -868,7 +997,7 @@ const FilterSearchPage = () => {
           
           <Divider />
           
-          {/* Section 3: Services */}
+          {/* Section 3: Services - Restore the collapsible ServicesPanel */}
           <ServicesPanel
             servicesByIndustry={servicesByIndustry}
             selectedServices={selectedServices}
@@ -878,38 +1007,113 @@ const FilterSearchPage = () => {
           />
         </Card>
 
-        {/* Search Button */}
-        <Button
-          variant="contained"
-          size="large"
-          fullWidth
-          disabled={shouldDisableSearch}
-          sx={{
-            py: 1.5,
-            fontSize: '1rem',
-            fontWeight: 600,
-            borderRadius: 2,
-            boxShadow: 2,
-            '&:hover': { boxShadow: 4 },
-            textTransform: 'none',
-            opacity: shouldDisableSearch ? 0.7 : 1,
+        
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            disabled={shouldDisableSearch}
+            sx={{
+              py: 1.5,
+              fontSize: '1rem',
+              fontWeight: 600,
+              borderRadius: 2,
+              boxShadow: 2,
+              bgcolor: 'white', 
+              color: 'primary.main',
+              '&:hover': { 
+                boxShadow: 4,
+                bgcolor: '#f5f5f5',
+              },
+              textTransform: 'none',
+              opacity: shouldDisableSearch ? 0.7 : 1,
+              background: 'white !important', // Use !important to override theme
+              '&:hover': {
+                background: '#f5f5f5 !important', // Also use !important for hover
+                boxShadow: 4,
+              },
+              backgroundImage: 'none !important',
+            }}
+            onClick={handleSearch}
+          >
+            Show matching providers
+          </Button>
+
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            mt: 4,
+            animation: 'bounce 2s infinite',
+            '@keyframes bounce': {
+              '0%, 20%, 50%, 80%, 100%': {
+                transform: 'translateY(0)'
+              },
+              '40%': {
+                transform: 'translateY(-10px)'
+              },
+              '60%': {
+                transform: 'translateY(-5px)'
+              }
+            },
+            cursor: 'pointer' // Add cursor pointer to indicate it's clickable
           }}
-          onClick={handleSearch}
-        >
-          Show matching providers
-        </Button>
-      </Container>
+          onClick={() => {
+            const competitorsSection = document.querySelector('[data-scroll-target="competitors"]');
+            if (competitorsSection) {
+              competitorsSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          >
+            <Typography 
+              variant="body2" 
+              color="white" 
+              sx={{ 
+                mb: 1, 
+                fontWeight: 500,
+                textShadow: '0px 1px 2px rgba(0,0,0,0.5)'
+              }}
+            >
+              Scroll to see competitors
+            </Typography>
+            <Box 
+              sx={{ 
+                color: 'white', 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}
+            >
+              <ChevronDown size={24} strokeWidth={2.5} />
+              <ChevronDown size={24} strokeWidth={2.5} style={{ marginTop: -12 }} />
+            </Box>
+          </Box>
+              </Container>
+     
       
       {/* Similar Companies Section */}
       {!isAdmin ? (
         // For regular users with no companies or with companies
         userCompanies.length > 0 ? (
-          <SimilarCompaniesSection
-            userCompanies={userCompanies}
-            similarCompanies={similarCompanies}
-            loadingStates={loadingStates}
-            navigateToCompanyProfile={navigateToCompanyProfile}
-          />
+          <Box 
+            sx={{ 
+              position: 'relative', 
+              zIndex: 2, 
+              mt: 8,
+              backgroundColor: 'transparent',
+              borderRadius: 2,
+              p: 3,
+            }}
+            data-scroll-target="competitors"
+          >
+          
+            <SimilarCompaniesSection
+              userCompanies={userCompanies}
+              similarCompanies={similarCompanies}
+              loadingStates={loadingStates}
+              navigateToCompanyProfile={navigateToCompanyProfile}
+            />
+              </Box>
         ) : (
           <Container sx={{ mt: 6, textAlign: 'center' }}>
             <Typography variant="h6" color="text.secondary" gutterBottom>
