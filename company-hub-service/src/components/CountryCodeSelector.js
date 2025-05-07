@@ -30,12 +30,20 @@ const CountryCodeSelector = ({
   ...props 
 }) => {
   const [countryCodes, setCountryCodes] = useState([]);
-  const [selectedCode, setSelectedCode] = useState('+1'); // Default to US
+  const [selectedCode, setSelectedCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
   useEffect(() => {
     // Get all country codes on component mount
-    setCountryCodes(getCountryCodes());
+    const codes = getCountryCodes();
+    setCountryCodes(codes);
+    
+    // Set default country code only after codes are loaded
+    if (codes.length > 0) {
+      // Find US code or use first code as default
+      const usCode = codes.find(code => code.code === '+1');
+      setSelectedCode(usCode ? usCode.code : codes[0].code);
+    }
     
     // Parse initial value if it exists
     if (value) {
@@ -45,6 +53,8 @@ const CountryCodeSelector = ({
         if (codeEndIndex > 0) {
           setSelectedCode(value.substring(0, codeEndIndex));
           setPhoneNumber(value.substring(codeEndIndex + 1));
+          console.log("selectedCode", selectedCode);
+          console.log("phoneNumber", phoneNumber);
         } else {
           // No space found, assume the entire value is a phone number
           setPhoneNumber(value);
@@ -53,7 +63,7 @@ const CountryCodeSelector = ({
         setPhoneNumber(value);
       }
     }
-  }, []);
+  }, [value]);
 
   const handleCodeChange = (event) => {
     const newCode = event.target.value;

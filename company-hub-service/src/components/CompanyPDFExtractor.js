@@ -74,28 +74,34 @@ const CompanyPDFExtractor = ({ onExtracted }) => {
       if (response.status === 200 && response.data) {
         // The backend already returns JSON, no need to parse
         let extractedData = response.data;
-        
+
         // If the response is a string (JSON), parse it
         if (typeof response.data === 'string') {
           extractedData = JSON.parse(response.data);
         }
         
-        // Map the extracted data to the format expected by the parent component
         const mappedData = {
           companyDetails: {
-            name: extractedData.companyName || '',
-            location: extractedData.location || '',
-            foundingYear: extractedData.foundingYear || '',
-            employeeSize: extractedData.employeeSize || '',
-            websiteUrl: extractedData.websiteUrl || '',
-            description: extractedData.description || ''
+            companyName: extractedData.companyName || '',
+            address: extractedData.address || '',
+            foundedYear: extractedData.foundedYear || '',
+            companySize: extractedData.companySize || '',
+            website: extractedData.website || '',
+            description: extractedData.description || '',
+            phone: extractedData.phone || '',
+            email: extractedData.email || '',
+            partnerships: extractedData.partnerships || []
           },
-          projects: extractedData.projects?.map(project => ({
-            name: project.name || '',
+          projects: extractedData.portfolio?.map(project => ({
+            projectName: project.projectName || '',
             description: project.description || '',
-            type: project.type || '',
-            completionDate: project.completionDate || ''
-          })) || []
+            clientType: project.clientType || '',
+            completionDate: project.completionDate || '',
+            startDate: project.startDate || '',
+            technologiesUsed: project.technologiesUsed || [],
+            clientCompanyName: project.clientCompanyName || '',
+            projectUrl: project.projectUrl || ''
+          })) || [],
         };
   
         // Pass the mapped data to parent component
