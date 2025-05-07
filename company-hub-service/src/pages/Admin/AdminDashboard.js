@@ -33,7 +33,7 @@ function AdminDashboard() {
       console.error("Company not found for ID:", companyId);
       return;
     }
-    navigate(`/company/${companyName}`);
+    navigate(`/company/${companyName.replace(/\s+/g, '')}`);
     console.log("Navigate to company details for ID:", companyId);
   };
   
@@ -95,14 +95,18 @@ return (
                         {companies.length > 0 ? (
                             companies.map((company, index) => (
                                 <TableRow key={company.companyId || index} 
-                                          onClick={() => handleNavigate(company.companyId)}
+                                          
                                           style={{ cursor: 'pointer' }}
                                           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                                           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}>
-                                    <TableCell>{index + 1}</TableCell>
-                                    <TableCell>{company.companyName}</TableCell>
-                                    <TableCell></TableCell>
-                                    <TableCell>
+                                    <TableCell
+                                    onClick={() => handleNavigate(company.companyId)}>{index + 1}</TableCell>
+                                    <TableCell
+                                    onClick={() => handleNavigate(company.companyId)}>{company.companyName}</TableCell>
+                                    <TableCell
+                                    onClick={() => handleNavigate(company.companyId)}></TableCell>
+                                    <TableCell
+                                    onClick={() => handleNavigate(company.companyId)}>
                                         
                                     </TableCell>
                                     <TableCell>
