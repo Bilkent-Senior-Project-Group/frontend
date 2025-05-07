@@ -200,7 +200,7 @@ const CreateProjectPage = () => {
             
             // Also check verification status for this pre-filled company
             try {
-              const companyData = await CompanyService.getCompany(firstCompany.companyName, token);
+              const companyData = await CompanyService.getCompany(firstCompany.companyName.replace(/\s+/g, ''), token);
               setClientCompanyVerified(companyData.verified === 1);
             } catch (err) {
               console.error('Error checking pre-filled client company verification:', err);
@@ -231,7 +231,7 @@ const CreateProjectPage = () => {
       if (projectDetails.clientCompanyName && projectDetails.clientCompanyName.trim().length > 0) {
         setIsCheckingClientVerification(true);
         try {
-          const companyData = await CompanyService.getCompany(projectDetails.clientCompanyName, token);
+          const companyData = await CompanyService.getCompany(projectDetails.clientCompanyName.replace(/\s+/g, ''), token);
           setClientCompanyVerified(companyData.verified === 1);
           
           // Clear validation errors if company is now verified
@@ -266,7 +266,7 @@ const CreateProjectPage = () => {
       if (projectDetails.providerCompanyName && projectDetails.providerCompanyName.trim().length > 0) {
         setIsCheckingProviderVerification(true);
         try {
-          const companyData = await CompanyService.getCompany(projectDetails.providerCompanyName, token);
+          const companyData = await CompanyService.getCompany(projectDetails.providerCompanyName.replace(/\s+/g, ''), token);
           setProviderCompanyVerified(companyData.verified === 1);
           
           // Clear validation errors if company is now verified
@@ -301,7 +301,7 @@ const CreateProjectPage = () => {
       const checkClientCompanyVerification = async () => {
         setIsCheckingClientVerification(true);
         try {
-          const companyData = await CompanyService.getCompany(clientCompanyFromNavigation, token);
+          const companyData = await CompanyService.getCompany(clientCompanyFromNavigation.replace(/\s+/g, ''), token);
           setClientCompanyVerified(companyData.verified === 1);
           
           // Clear validation errors if company is now verified
