@@ -98,7 +98,7 @@ const RootLayout = () => {
     e.preventDefault();
     await logout();
     handleUserMenuClose();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleSettingsClick = () => {

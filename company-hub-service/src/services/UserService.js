@@ -99,6 +99,24 @@ const changePassword = async (currentPassword, newPassword, token) => {
   }
 }
 
+const sendSupportMessage = async (name, email, message) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/User/SendSupportMessage`, {
+      name,
+      email,
+      message,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending support message:', error);
+    throw new Error('Failed to send support message');
+  }
+};
+
 
 
 const UserService = {
@@ -108,6 +126,7 @@ const UserService = {
   sendConfirmationEmail,
   updateProfilePhoto,
   changePassword,
+  sendSupportMessage,
 };
 
 export default UserService;

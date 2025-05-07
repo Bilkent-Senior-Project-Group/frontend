@@ -6,6 +6,49 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import UserService from '../../services/UserService';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Video Background Component - reusing from LoginPage
+const VideoBackground = React.memo(({ videoUrl }) => {
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+        overflow: 'hidden',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)', // Dark overlay with 40% opacity
+          zIndex: 1,
+        }
+      }}
+    >
+      <Box
+        component="video"
+        autoPlay
+        muted
+        loop
+        sx={{
+          objectFit: 'cover',
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+        }}
+      >
+        <source src="/videos/bg.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </Box>
+    </Box>
+  );
+});
+
 const WaitingConfirmEmailPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [resendStatus, setResendStatus] = useState('');
@@ -116,76 +159,121 @@ const WaitingConfirmEmailPage = () => {
   };
   
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-        <Box sx={{ mb: 3 }}>
-          {isVerified ? (
-            <MarkEmailReadIcon color="success" sx={{ fontSize: 60 }} />
-          ) : (
-            <EmailIcon color="primary" sx={{ fontSize: 60 }} />
-          )}
-        </Box>
-        
-        <Typography variant="h4" component="h1" gutterBottom>
-          {isVerified ? "Email Verified!" : "Verify Your Email"}
-        </Typography>
-        
-        {isVerified ? (
-          <>
-            <Typography variant="body1" paragraph>
-              Your email has been successfully verified. You'll be redirected to the dashboard shortly.
-            </Typography>
-            <CircularProgress size={24} sx={{ mt: 2 }} />
-          </>
-        ) : (
-          <>
-            <Typography variant="body1" paragraph>
-              We've sent a verification email to the registered email address.
-            </Typography>
-            
-            <Typography variant="body1" paragraph>
-              Please check your inbox and click on the verification link to complete your registration.
-              The email might take a few minutes to arrive.
-            </Typography>
-            
-            <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
-              Don't forget to check your spam or junk folder if you can't find the email in your inbox.
-            </Typography>
-            
-            <Box sx={{ my: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              {!isVerified && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleResendEmail}
-                  disabled={isLoading || isVerified} // Also disable when verified
-                  startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <MarkEmailReadIcon />}
-                  sx={{ mb: 2 }}
-                >
-                  {isLoading ? 'Sending...' : 'Resend Verification Email'}
-                </Button>
-              )}
-              
-              {resendStatus === 'success' && !isVerified && (
-                <Typography color="success.main" sx={{ mt: 1 }}>
-                  Verification email has been resent successfully!
-                </Typography>
-              )}
-              
-              {resendStatus === 'error' && !isVerified && (
-                <Typography color="error.main" sx={{ mt: 1 }}>
-                  Failed to resend verification email. Please try again later.
-                </Typography>
+    <Box
+      sx={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 1,
+        py: { xs: 6, md: 8 }
+      }}
+    >
+      {/* Video Background */}
+      <VideoBackground videoUrl="/videos/bg.mp4" />
+      
+      {/* Content container */}
+      <Container 
+        maxWidth="lg" 
+        sx={{ 
+          position: 'relative', 
+          zIndex: 2,
+          py: { xs: 4, md: 6 }
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+            my: { xs: 3, md: 4 }
+          }}
+        >
+          {/* Content card */}
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              width: { xs: '100%', md: '500px' },
+              bgcolor: 'white',
+              borderRadius: 2,
+              p: 4,
+              boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.2)',
+              my: { xs: 2, md: 3 },
+              textAlign: 'center'
+            }}
+          >
+            <Box sx={{ mb: 3 }}>
+              {isVerified ? (
+                <MarkEmailReadIcon color="success" sx={{ fontSize: 60 }} />
+              ) : (
+                <EmailIcon color="primary" sx={{ fontSize: 60 }} />
               )}
             </Box>
             
-            <Typography variant="body2" color="textSecondary">
-              Once your email is verified, you'll be automatically redirected to the dashboard.
+            <Typography variant="h4" component="h1" gutterBottom>
+              {isVerified ? "Email Verified!" : "Verify Your Email"}
             </Typography>
-          </>
-        )}
-      </Paper>
-    </Container>
+            
+            {isVerified ? (
+              <>
+                <Typography variant="body1" paragraph>
+                  Your email has been successfully verified. You'll be redirected to the dashboard shortly.
+                </Typography>
+                <CircularProgress size={24} sx={{ mt: 2 }} />
+              </>
+            ) : (
+              <>
+                <Typography variant="body1" paragraph>
+                  We've sent a verification email to the registered email address.
+                </Typography>
+                
+                <Typography variant="body1" paragraph>
+                  Please check your inbox and click on the verification link to complete your registration.
+                  The email might take a few minutes to arrive.
+                </Typography>
+                
+                <Typography variant="body1" paragraph sx={{ fontStyle: 'italic' }}>
+                  Don't forget to check your spam or junk folder if you can't find the email in your inbox.
+                </Typography>
+                
+                <Box sx={{ my: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  {!isVerified && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleResendEmail}
+                      disabled={isLoading || isVerified} // Also disable when verified
+                      startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <MarkEmailReadIcon />}
+                      sx={{ mb: 2 }}
+                    >
+                      {isLoading ? 'Sending...' : 'Resend Verification Email'}
+                    </Button>
+                  )}
+                  
+                  {resendStatus === 'success' && !isVerified && (
+                    <Typography color="success.main" sx={{ mt: 1 }}>
+                      Verification email has been resent successfully!
+                    </Typography>
+                  )}
+                  
+                  {resendStatus === 'error' && !isVerified && (
+                    <Typography color="error.main" sx={{ mt: 1 }}>
+                      Failed to resend verification email. Please try again later.
+                    </Typography>
+                  )}
+                </Box>
+                
+                <Typography variant="body2" color="textSecondary">
+                  Once your email is verified, you'll be automatically redirected to the dashboard.
+                </Typography>
+              </>
+            )}
+          </Paper>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

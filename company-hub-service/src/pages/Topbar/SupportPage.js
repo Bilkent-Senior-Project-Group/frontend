@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Box,
   Container,
@@ -12,7 +12,8 @@ import {
   Button,
   Grid,
   Alert,
-  Snackbar
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -23,6 +24,8 @@ import BusinessIcon from '@mui/icons-material/Business';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import UserService from '../../services/UserService';
+import AuthContext, { useAuth } from '../../contexts/AuthContext';
 
 const SupportPage = () => {
   const [expanded, setExpanded] = useState(false);
@@ -33,6 +36,9 @@ const SupportPage = () => {
     message: ''
   });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const { token } = useAuth();
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -50,16 +56,27 @@ const SupportPage = () => {
     });
   };
 
-  const handleContactSubmit = (event) => {
+  const handleContactSubmit = async (event) => {
     event.preventDefault();
-    console.log('Form submitted:', contactForm);
-    // Reset form
-    setContactForm({
-      name: '',
-      email: '',
-      message: ''
-    });
-    setSnackbarOpen(true);
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const { name, email, message } = contactForm;
+      await UserService.sendSupportMessage(name, email, message);
+
+      // Reset form on success
+      setContactForm({
+        name: '',
+        email: '',
+        message: ''
+      });
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSubmitError(error.message || 'Failed to send message. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const faqs = [
@@ -353,13 +370,20 @@ const SupportPage = () => {
               />
             </Grid>
             <Grid item xs={12}>
+              {submitError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {submitError}
+                </Alert>
+              )}
               <Button 
                 type="submit" 
                 variant="contained" 
                 color="primary"
+                disabled={isSubmitting}
                 sx={{ px: 4, py: 1 }}
+                startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
               >
-                Submit Request
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </Button>
             </Grid>
           </Grid>
