@@ -68,7 +68,7 @@ const Project = () => {
   };
 
   const handleBack = () => {
-    navigate(`/company/projects/${companyName}`);
+    navigate(`/company/projects/${companyName.replace(/\s+/g, '')}`);
   };
 
   const handleEdit = () => {

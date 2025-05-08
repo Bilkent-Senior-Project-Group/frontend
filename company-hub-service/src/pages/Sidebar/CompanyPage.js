@@ -1373,7 +1373,7 @@ const CompanyPage = () => {
               variant="outlined"
               startIcon={<Edit size={16} />}
               onClick={() => {
-                navigate(`/company/edit-company/${company.companyName.replace(/\s+/g, '')}`)
+                navigate(`/company/edit-company/${company.name.replace(/\s+/g, '')}`)
               }}
               size="small"
             >

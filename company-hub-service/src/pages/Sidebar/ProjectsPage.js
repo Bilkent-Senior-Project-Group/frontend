@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -44,6 +44,8 @@ import { API_URL } from '../../config/apiConfig.js';
 import ReviewService from '../../services/ReviewService.js';
 
 const ProjectsPage = () => {
+  const location = useLocation();
+  const originalCompanyName = location.state?.originalCompanyName;
   const { companyName } = useParams();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -200,7 +202,7 @@ const ProjectsPage = () => {
       const reviewCheckPromises = projects.map(async (project) => {
         try {
           // Only check for projects where this company is the client
-          if (project.clientCompanyName === companyName) {
+          if (project.clientCompanyName === originalCompanyName) {
             const response = await ReviewService.projectHasReview(project.projectId, token);
             return {
               projectId: project.projectId,
@@ -475,10 +477,14 @@ const ProjectsPage = () => {
           [reviewData.projectId]: true
         }));
       }
+
+      setReviewDialogOpen(false);
+
+      setReviewSuccess(true);
       
-      setTimeout(() => {
-        setReviewDialogOpen(false);
-      }, 2000);
+    //   setTimeout(() => {
+    //     setReviewDialogOpen(false);
+    //   }, 2000);
     } catch (error) {
       setReviewError(error.message || 'Failed to submit review');
     } finally {
@@ -538,7 +544,7 @@ return (
                         <Button 
                             onClick={() => navigate('/create-project', {
                                 state: {
-                                    clientCompany: companyName
+                                    clientCompany: originalCompanyName
                                 }
                             })}
                             variant="contained" 
@@ -573,7 +579,7 @@ return (
                     <Button 
                         onClick={() => navigate('/create-project', {
                             state: {
-                                providerCompany: companyName
+                                providerCompany: originalCompanyName
                             }
                         })} 
                         variant="contained" 
@@ -736,8 +742,8 @@ return (
                                 
                                 <Box sx={{ p: 1.5, pt: 0, display: 'flex', justifyContent: 'flex-end', mt: 'auto' }}>
                                     {project.isOnCompedia && (!projectCompletionStatus[project.projectId] || 
-                                     (project.providerCompanyName === companyName && !projectCompletionStatus[project.projectId]?.provider) ||
-                                     (project.clientCompanyName === companyName && !projectCompletionStatus[project.projectId]?.client)) && (
+                                     (project.providerCompanyName === originalCompanyName && !projectCompletionStatus[project.projectId]?.provider) ||
+                                     (project.clientCompanyName === originalCompanyName && !projectCompletionStatus[project.projectId]?.client)) && (
                                         <Button
                                             variant="contained"
                                             size="small"
@@ -752,7 +758,7 @@ return (
                                     {/* Post Review Button - only show for completed projects where this company is the client,
                                         both parties have marked as completed, and there's no existing review */}
                                     {project.isOnCompedia && 
-                                     project.clientCompanyName === companyName && 
+                                     project.clientCompanyName === originalCompanyName && 
                                      projectCompletionStatus[project.projectId]?.client &&
                                      projectCompletionStatus[project.projectId]?.provider &&
                                      !projectsWithReviews[project.projectId] && (

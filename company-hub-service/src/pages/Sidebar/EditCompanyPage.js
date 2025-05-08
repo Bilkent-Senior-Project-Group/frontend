@@ -569,7 +569,7 @@ const EditCompanyPage = () => {
       
       // Navigate back to company page after successful update
       setTimeout(() => {
-        navigate(`/company/${companyDetails.name}`);
+        navigate(`/company/${companyDetails.name.replace(/\s+/g, '')}`);
       }, 2000);
       
     } catch (error) {
@@ -1040,7 +1040,7 @@ const EditCompanyPage = () => {
             <Button 
               variant="outlined" 
               color="secondary"
-              onClick={() => navigate(`/company/${companyName}`)}
+              onClick={() => navigate(`/company/${companyName.replace(/\s+/g, '')}`)}
             >
               Cancel
             </Button>

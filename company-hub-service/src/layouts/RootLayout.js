@@ -536,7 +536,9 @@ const RootLayout = () => {
 
                       <ListItem
                         button
-                        onClick={() => navigate(`/company/projects/${company.companyName.replace(/\s+/g, '')}`)}
+                        onClick={() => navigate(`/company/projects/${company.companyName.replace(/\s+/g, '')}`, {
+                          state: { originalCompanyName: company.companyName }
+                        })}
                         sx={{ 
                           pl: 6,
                           py: 0.5,
