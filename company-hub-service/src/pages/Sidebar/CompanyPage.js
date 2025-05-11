@@ -28,11 +28,12 @@ import {
   Avatar,
   TextField,
   FormHelperText,
-  Autocomplete
+  Autocomplete,
+  Paper
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit, Plus, Trash2 } from 'lucide-react';
+import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import CompanyService from '../../services/CompanyService';
 import ProjectService from '../../services/ProjectService';
@@ -744,7 +745,59 @@ const CompanyPage = () => {
                         sx={{ ml: 2 }}
                       />
                     )}
+                    
                   </Box>
+
+                  {!company.verified && isCompanyOwner && (
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        mt: 2,
+                        mb: 3,
+                        p: 2, 
+                        border: '1px solid',
+                        borderColor: 'warning.light',
+                        borderRadius: 2,
+                        bgcolor: 'warning.50',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box sx={{ 
+                          mr: 2, 
+                          bgcolor: 'warning.main', 
+                          color: 'white', 
+                          width: 40, 
+                          height: 40,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <AlertTriangle size={24} />
+                        </Box>
+                        <Box>
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            Your company is pending verification
+                          </Typography>
+                          <Typography variant="body2">
+                            Only verified companies can create projects.
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Button 
+                        variant="contained"
+                        color="warning"
+                        sx={{ whiteSpace: 'nowrap', ml: 2 }}
+                        onClick={() => navigate('/support')}
+                      >
+                        Learn About Verification
+                      </Button>
+                    </Paper>
+                  )}
+
                   {company.totalReviews > 0 ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
                       <Rating

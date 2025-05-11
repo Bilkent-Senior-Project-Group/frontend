@@ -27,6 +27,76 @@ import { colors } from '../../theme/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig.js';
+import { Info } from 'react-feather';
+
+const ProjectCreationGuide = ({ onClose }) => {
+  const [currentStep, setCurrentStep] = useState(0);
+  const steps = [
+    {
+      title: "Project Basics",
+      content: "Start by entering your project name and description. Select the provider company that will be working on this project."
+    },
+    {
+      title: "Choose Services",
+      content: "Select all services relevant to your project. This helps with discoverability when companies search for specific services."
+    },
+    {
+      title: "Company Verification",
+      content: "Make sure both client and provider companies are verified."
+    }
+  ];
+  
+  return (
+    <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 2, border: '1px solid', borderColor: 'primary.light' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Info size={20} color="#1976d2" style={{ marginRight: 8 }} />
+          <Typography variant="h6">Project Creation Guide</Typography>
+        </Box>
+        <Button onClick={onClose} size="small" color="inherit">Skip Guide</Button>
+      </Box>
+      
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" fontWeight={600}>{steps[currentStep].title}</Typography>
+        <Typography variant="body2">{steps[currentStep].content}</Typography>
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Button 
+          disabled={currentStep === 0} 
+          onClick={() => setCurrentStep(prev => prev - 1)}
+        >
+          Back
+        </Button>
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
+          {steps.map((_, idx) => (
+            <Box 
+              key={idx} 
+              sx={{ 
+                width: 8, 
+                height: 8, 
+                borderRadius: '50%', 
+                bgcolor: idx === currentStep ? 'primary.main' : 'grey.300' 
+              }}
+            />
+          ))}
+        </Box>
+        <Button 
+          variant={currentStep === steps.length - 1 ? "contained" : "outlined"}
+          onClick={() => {
+            if (currentStep < steps.length - 1) {
+              setCurrentStep(prev => prev + 1);
+            } else {
+              onClose();
+            }
+          }}
+        >
+          {currentStep === steps.length - 1 ? "Start Creating" : "Next"}
+        </Button>
+      </Box>
+    </Paper>
+  );
+};
 
 const CreateProjectPage = () => {
   const location = useLocation();
@@ -106,6 +176,9 @@ const CreateProjectPage = () => {
   const [providerCompanyVerified, setProviderCompanyVerified] = useState(null);
   const [isCheckingClientVerification, setIsCheckingClientVerification] = useState(false);
   const [isCheckingProviderVerification, setIsCheckingProviderVerification] = useState(false);
+
+  // Add this state in your component
+  const [showGuide, setShowGuide] = useState(true);
 
   // Update the fetchClientCompanies function in the useEffect
   useEffect(() => {
@@ -511,6 +584,10 @@ const CreateProjectPage = () => {
       <Typography variant="h4" gutterBottom sx={{ mb: 4, color: colors.neutral[800] }}>
         Create New Project
       </Typography>
+
+      {userCompanies.length > 0 && showGuide && (
+        <ProjectCreationGuide onClose={() => setShowGuide(false)} />
+      )}
 
       {isLoadingUserCompanies ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>

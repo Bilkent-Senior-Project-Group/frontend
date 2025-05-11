@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import UserService from '../services/UserService';
 import { useAuth } from '../contexts/AuthContext';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, CircularProgress, Box, Typography } from '@mui/material';
+import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 
 const EmailVerificationPopup = ({ open, onClose }) => {
   const [sending, setSending] = useState(false);
@@ -24,30 +25,45 @@ const EmailVerificationPopup = ({ open, onClose }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Email Verification Required</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
+        Verify Your Email to Unlock Full Features
+      </DialogTitle>
       <DialogContent>
-        <DialogContentText>
-          You need to verify your email address before creating a company.
-          {error && (
-            <p style={{ color: 'red' }}>{error}</p>
-          )}
-          {sent && (
-            <p style={{ color: 'green' }}>Verification email sent successfully! Please check your inbox.</p>
-          )}
-        </DialogContentText>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+          <MarkEmailReadIcon color="primary" sx={{ fontSize: 60, mb: 2 }} />
+          <DialogContentText sx={{ textAlign: 'center' }}>
+            To create companies and access all features, please verify your email address.
+            {error && (
+              <Typography color="error" sx={{ mt: 1 }}>{error}</Typography>
+            )}
+            {sent && (
+              <Typography color="success.main" sx={{ mt: 1, fontWeight: 500 }}>
+                Verification email sent! Please check your inbox and spam folder.
+              </Typography>
+            )}
+          </DialogContentText>
+        </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="primary">
-          Close
-        </Button>
+      <DialogActions sx={{ justifyContent: 'center', pb: 3, flexDirection: 'column', gap: 1 }}>
         <Button 
           onClick={handleResendEmail} 
           color="primary" 
           disabled={sending || sent}
           variant="contained"
+          fullWidth
+          size="large"
+          startIcon={sending ? <CircularProgress size={20} /> : <MarkEmailReadIcon />}
+          sx={{ borderRadius: 2 }}
         >
-          {sending ? <CircularProgress size={24} /> : "Resend Verification Email"}
+          {sending ? "Sending..." : sent ? "Email Sent" : "Send Verification Email"}
+        </Button>
+        <Button 
+          onClick={onClose} 
+          color="inherit" 
+          sx={{ mt: 1 }}
+        >
+          I'll do this later
         </Button>
       </DialogActions>
     </Dialog>

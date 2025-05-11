@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Box, Typography, Container, Grid, Chip, TextField, InputAdornment,
   Button, Paper, CircularProgress, Tabs, Tab, Checkbox, Card,
-  CardContent, Divider, IconButton, alpha
+  CardContent, Divider, IconButton, alpha, SpeedDial, SpeedDialIcon, SpeedDialAction
 } from '@mui/material';
-import { Search, MapPin, CheckCircle, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, MapPin, CheckCircle, ChevronLeft, ChevronRight, ChevronDown, Plus, Building, FileText } from 'lucide-react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import axios from 'axios';
 import { API_URL, SEARCH_API_URL } from '../../config/apiConfig.js';
@@ -1159,6 +1159,23 @@ const FilterSearchPage = () => {
           </Paper>
         </Container>
       )}
+      
+      <SpeedDial
+        ariaLabel="Create new"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon icon={<Plus />} openIcon={<Plus />} />}
+      >
+        <SpeedDialAction
+          icon={<Building size={20} />}
+          tooltipTitle="Create Company"
+          onClick={() => navigate('/create-company')}
+        />
+        <SpeedDialAction
+          icon={<FileText size={20} />}
+          tooltipTitle="Create Project"
+          onClick={() => navigate('/create-project')}
+        />
+      </SpeedDial>
     </Box>
   );
 };
