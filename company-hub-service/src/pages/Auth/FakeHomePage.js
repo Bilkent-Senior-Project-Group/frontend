@@ -574,28 +574,48 @@ export default function FakeHomepage() {
             backgroundColor: 'background.paper'
           }}
         >
-          <Toolbar>
+          <Toolbar sx={{ position: 'relative' }}>
             <Box sx={{ flexGrow: 1 }} />
 
-            <Box
-              sx={{
-                display: 'flex',
+            {/* Centered Logo - positioned absolutely to center in entire toolbar */}
+            <Box 
+              sx={{ 
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                display: 'flex', 
                 alignItems: 'center',
-                gap: 1,
+                gap: 1.5,
                 cursor: 'pointer',
-                justifyContent: 'center',
-                flexGrow: 1
               }}
               onClick={goToHomepage}
             >
-              <Building size={24} />
-              <Typography variant="h6">
-                COMPEDIA
-              </Typography>
+              <Box 
+                component="img"
+                src="/images/logo.png"  
+                alt="Compedia Logo"
+                sx={{ 
+                  height: 40,
+                  width: 'auto',
+                  objectFit: 'contain'
+                }}
+              />
+              <Box 
+                component="img"
+                src="/images/compedia-text.png"  
+                alt="Compedia"
+                sx={{ 
+                  height: 32,
+                  width: 'auto',
+                  objectFit: 'contain'
+                }}
+              />
             </Box>
 
             <Box sx={{ flexGrow: 1 }} />
 
+            
             <Button
               variant="contained"
               color="primary"

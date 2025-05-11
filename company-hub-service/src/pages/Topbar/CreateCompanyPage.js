@@ -427,6 +427,16 @@ const CreateCompanyPage = () => {
   };
 
   const handleCreateProject = () => {
+    // Check if services are selected
+    if (addProjectSelectedServices.length === 0) {
+      setNotification({
+        open: true,
+        message: 'Please select at least one service for this project',
+        severity: 'warning'
+      });
+      return; // Prevent project creation until services are selected
+    }
+
     // Get the company name from the form
     const companyBeingCreated = companyDetails.companyName;
     
@@ -585,6 +595,15 @@ const CreateCompanyPage = () => {
       
       if (!hasCompanyInProjects) {
         errors.projects = `At least one project must include "${companyBeingCreated}" as either client or provider.`;
+      }
+      
+      // Check if all projects have at least one service
+      const projectsWithoutServices = projects.filter(project => 
+        !project.services || project.services.length === 0
+      );
+      
+      if (projectsWithoutServices.length > 0) {
+        errors.projectServices = `All projects must have at least one service. ${projectsWithoutServices.length} project(s) have no services selected.`;
       }
     }
     
@@ -1213,6 +1232,22 @@ const CreateCompanyPage = () => {
           </Typography>
         </Alert>
 
+        {/* Service requirement alert */}
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mb: 2, 
+            backgroundColor: `${colors.primary[100]}20`,
+            border: `1px solid ${colors.primary[300]}`,
+            borderRadius: 2
+          }}
+        >
+          <Typography variant="body2">
+            <strong>Note:</strong> Each project must have at least one service selected. Projects without services will be highlighted in red.
+          </Typography>
+        </Alert>
+
+        {/* Project list */}
         <Grid container spacing={3}>
         {projects.map((project, index) => (
           <Grid item xs={12} md={4} key={index}>
@@ -1222,8 +1257,32 @@ const CreateCompanyPage = () => {
                 p: 2, 
                 position: 'relative',
                 borderRadius: 2,
+                // Add a red border to projects without services
+                ...((!project.services || project.services.length === 0) && {
+                  border: '1px solid',
+                  borderColor: 'error.main',
+                  boxShadow: '0 0 0 1px rgba(211, 47, 47, 0.3)'
+                })
               }}
             >
+              {/* Add a warning indicator for projects without services */}
+              {(!project.services || project.services.length === 0) && (
+                <Box sx={{ 
+                  position: 'absolute',
+                  top: '-10px',
+                  left: '20px',
+                  px: 1,
+                  py: 0.5,
+                  bgcolor: 'error.main',
+                  color: 'white',
+                  borderRadius: 1,
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold'
+                }}>
+                  No services selected
+                </Box>
+              )}
+
               {/* Add control buttons at top-right */}
               <Box sx={{ 
                 position: 'absolute', 
@@ -1587,23 +1646,30 @@ const CreateCompanyPage = () => {
               <Box sx={{ width: '100%' }}>
                 <Typography variant="h6" fontWeight={600} color={colors.neutral[700]} sx={{ mb: 2 }}>
                   Services
+                  <Typography component="span" color="error.main" sx={{ ml: 0.5 }}>*</Typography>
                 </Typography>
                 
                 <Box
                   sx={{
-                    border: '1px solid rgba(0, 0, 0, 0.23)',  // Match TextField border style
+                    border: '1px solid',
+                    borderColor: addProjectSelectedServices.length === 0 ? 'error.main' : 'rgba(0, 0, 0, 0.23)',
                     borderRadius: 1,
                     p: 2,
                     minHeight: 56,
                     '&:hover': {
-                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                      borderColor: addProjectSelectedServices.length === 0 ? 'error.main' : 'rgba(0, 0, 0, 0.87)',
                     },
                     '&:focus-within': {
-                      borderColor: 'primary.main',
+                      borderColor: addProjectSelectedServices.length === 0 ? 'error.main' : 'primary.main',
                       borderWidth: 2,
                     },
                   }}
                 >
+                  {addProjectSelectedServices.length === 0 && (
+                    <Typography variant="body2" color="error.main" sx={{ mb: 2 }}>
+                      Please select at least one service
+                    </Typography>
+                  )}
                   {/* Display selected services as chips */}
                   {addProjectSelectedServices.length > 0 && (
                     <Box sx={{ 

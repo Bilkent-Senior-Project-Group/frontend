@@ -149,7 +149,7 @@ const RootLayout = () => {
   };
 
   const handleViewProjectRequests = (companyName) => {
-    navigate(`/company/projects/project-requests/${companyName}`);
+    navigate(`/company/projects/project-requests/${companyName.replace(/\s+/g, '')}`);
     handleProjectRequestsMenuClose();
   };
 
@@ -171,38 +171,55 @@ const RootLayout = () => {
           backgroundColor: 'background.paper'
         }}
       >
-        <Toolbar>
-          {/* Menu Icon and Logo */}
-            <IconButton 
+        <Toolbar sx={{ position: 'relative' }}>
+          {/* Menu Icon */}
+          <IconButton 
             edge="start" 
             onClick={toggleDrawer} 
             sx={{ mr: 2 }}
-            >
+          >
             <MenuIcon />
-            </IconButton>
+          </IconButton>
 
-            <Box sx={{ flexGrow: 1 }} />
-
-            <Box 
+          {/* Centered Logo - positioned absolutely to center in entire toolbar */}
+          <Box 
             sx={{ 
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
               display: 'flex', 
               alignItems: 'center',
-              gap: 1,
+              gap: 1.5, // Increased gap for better spacing between logo and text
               cursor: 'pointer',
-              justifyContent: 'center',
-              flexGrow: 1
             }}
             onClick={() => navigate('/home')}
-            >
-            <Building size={24} />
-            <Typography variant="h6">
-              COMPEDIA
-            </Typography>
-            </Box>
+          >
+            <Box 
+              component="img"
+              src="/images/logo.png"  
+              alt="Compedia Logo"
+              sx={{ 
+                height: 40, // Increased from 30 to 40
+                width: 'auto',
+                objectFit: 'contain'
+              }}
+            />
+            <Box 
+              component="img"
+              src="/images/compedia-text.png"  
+              alt="Compedia"
+              sx={{ 
+                height: 32, // Increased from 24 to 32
+                width: 'auto',
+                objectFit: 'contain'
+              }}
+            />
+          </Box>
 
-            <Box sx={{ flexGrow: 1 }} />
+          <Box sx={{ flexGrow: 1 }} />
 
-            {/* New Add Menu */}
+          {/* New Add Menu */}
           <IconButton 
             sx={{ ml: 1 }}
             onClick={handleAddMenuOpen}
@@ -280,7 +297,7 @@ const RootLayout = () => {
               companies.map((company) => (
                 <MenuItem 
                   key={company.companyId} 
-                  onClick={() => handleViewProjectRequests(company.companyName)}
+                  onClick={() => handleViewProjectRequests(company.companyName.replace(/\s+/g, ''))}
                 >
                   <ListItemIcon>
                     <Building size={18} />

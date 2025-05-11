@@ -25,7 +25,7 @@ import HandshakeIcon from '@mui/icons-material/Handshake';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import UserService from '../../services/UserService';
-import AuthContext, { useAuth } from '../../contexts/AuthContext';
+
 
 const SupportPage = () => {
   const [expanded, setExpanded] = useState(false);
@@ -38,7 +38,7 @@ const SupportPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const { token } = useAuth();
+ 
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -87,22 +87,27 @@ const SupportPage = () => {
         {
           id: 'account-1',
           question: 'How do I verify my email address?',
-          answer: 'After registration, a verification email will be sent to your registered email address. Click the verification link in the email to complete the verification process. You can also request a new verification email from the email verification page if needed.'
+          answer: 'After registration, a verification email will be sent to your registered email address. Click the verification link in the email to complete the verification process. You can also request a new verification email from the email verification section in the settings page.'
         },
         {
           id: 'account-2',
+          question: 'How can I check if my email is verified?',
+          answer: 'You can check your email verification status in the settings page. If your email is verified, you will see a green checkmark next to your email address. If it\'s not verified, you will see a prompt to verify your email.'
+        },
+        {
+          id: 'account-3',
           question: 'What happens if my email is not verified?',
           answer: 'Without email verification, you\'ll have limited access to platform features. You\'ll be prompted to verify your email before accessing most features of the platform such as creating company profiles.'
         },
         {
-          id: 'account-3',
+          id: 'account-4',
           question: 'How do I reset my password?',
-          answer: 'You can reset your password by clicking the "Forgot Password" link on the login page. You\'ll receive an email with instructions to create a new password.'
+          answer: 'You can reset your password by clicking the "Change Password" link on the settings page. Enter your current password and the new password you want to set. Make sure to follow the password requirements. If you forgot your password, click "Forgot Password?" on the page and follow the instructions to reset it.'
         },
         {
-          id: 'account-4',
+          id: 'account-5',
           question: 'How can I update my profile information?',
-          answer: 'Go to your user profile page by clicking on your username in the top navigation bar. Then click "Edit Profile" to update your information, including profile photo, contact details, and bio.'
+          answer: 'Go to your user profile page by clicking on My Profile icon in the top navigation bar. Then click "Edit Profile" to update your information, including profile photo, contact details, and bio.'
         }
       ]
     },
@@ -113,7 +118,7 @@ const SupportPage = () => {
         {
           id: 'company-1',
           question: 'How do I create a new company?',
-          answer: 'Click the "+" button in the top navigation bar and select "Create Company". Fill out the required information including company name, address, size, and services offered. You can also upload a company logo in PNG format after creating your company profile.'
+          answer: 'Click the "+" button in the top navigation bar and select "Create Company". Fill out the required information including company name, founded year, location, address and size. You can also upload a company logo in PNG format after creating your company profile.'
         },
         {
           id: 'company-2',
@@ -149,7 +154,7 @@ const SupportPage = () => {
         {
           id: 'project-3',
           question: 'How do project requests work?',
-          answer: 'Project requests are sent when you create a project involving another company. The other company needs to approve the request before the project is officially created. You can view received and sent project requests in the Project Requests page.'
+          answer: 'Project requests are sent when you create a project involving another company. The other company needs to approve the request before the project is officially created. You can view received and sent project requests by clicking View Project Requests in the Projects page of your company.'
         },
         {
           id: 'project-4',
@@ -212,7 +217,7 @@ const SupportPage = () => {
         {
           id: 'invite-1',
           question: 'How do I view and respond to company invitations?',
-          answer: 'Click the bell icon in the top navigation bar to see your notifications, including company invitations. You can also access invitations through the "+" menu. For each invitation, you can choose to accept or reject it.'
+          answer: 'You can view invitations in the Invitations section of Settings page. Choose to accept or decline the invitation. If you accept, you\'ll be added to that company.'
         },
         {
           id: 'invite-2',
@@ -222,7 +227,7 @@ const SupportPage = () => {
         {
           id: 'invite-3',
           question: 'What happens when I accept a company invitation?',
-          answer: 'When you accept an invitation, you become a member of that company. You\'ll have access to the company\'s projects, analytics, and other information based on your role within the company.'
+          answer: 'When you accept an invitation, you become a member of that company. You\'ll have access to the company\'s projects, analytics, and other information.'
         }
       ]
     }
