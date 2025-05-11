@@ -33,7 +33,7 @@ import {
 } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend } from 'recharts';
-import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Star, Map, Users, DollarSign, Phone, Mail, Globe, Check, Calendar, Upload, Edit, Plus, Trash2, AlertTriangle, Settings, HelpCircle, Lightbulb, Briefcase } from 'lucide-react';
 import { colors } from '../../theme/theme';
 import CompanyService from '../../services/CompanyService';
 import ProjectService from '../../services/ProjectService';
@@ -44,6 +44,10 @@ import { useMemo } from 'react';
 import axios from 'axios';
 import { API_URL } from '../../config/apiConfig';
 import { alpha } from '@mui/material/styles';
+import OnboardingTour from '../../components/OnboardingTour';
+import FeatureCard from '../../components/FeatureCard';
+import EmptyState from '../../components/EmptyState';
+import HelpCenter from '../../components/HelpCenter';
 
 const CompanyPage = () => {
   const { companyName } = useParams();
@@ -123,6 +127,11 @@ const CompanyPage = () => {
 
   // New state for project completion status
   const [projectCompletionStatus, setProjectCompletionStatus] = useState({});
+
+  // New state for onboarding and help center
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [isFirstProjectCreation, setIsFirstProjectCreation] = useState(true); // Get from local storage
 
   // Fetch user's companies to determine ownership
   const fetchUserCompanies = async () => {
@@ -322,6 +331,15 @@ const CompanyPage = () => {
     
     loadCompletionStatus();
   }, [company.projects, token]);
+
+  // Check if it's the user's first visit
+  useEffect(() => {
+    const isFirstVisit = localStorage.getItem('hasVisitedBefore') !== 'true';
+    if (isFirstVisit) {
+      setShowOnboarding(true);
+      localStorage.setItem('hasVisitedBefore', 'true');
+    }
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -631,1114 +649,1166 @@ const CompanyPage = () => {
   });
 
   return (
-    <Box>
-      <Box
-        sx={{
-          backgroundColor: colors.neutral[100],
-          py: 4,
-          borderBottom: `1px solid ${colors.neutral[300]}`,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Button variant="text" onClick={handleBack} sx={{ mb: 2 }}>
-            ← Back to results
-          </Button>
+    <>
+      
+      
+      <HelpCenter
+        open={showHelpCenter}
+        onClose={() => setShowHelpCenter(false)}
+      />
+      
+      <Tooltip title="Help Center">
+        <IconButton 
+          sx={{ 
+            position: 'fixed', 
+            bottom: 20, 
+            right: 20,
+            bgcolor: 'background.paper',
+            boxShadow: 2,
+            '&:hover': { bgcolor: 'background.paper' }
+          }}
+          onClick={() => setShowHelpCenter(true)}
+        >
+          <HelpCircle />
+        </IconButton>
+      </Tooltip>
+      
+      <Box>
+        <Box
+          sx={{
+            backgroundColor: colors.neutral[100],
+            py: 4,
+            borderBottom: `1px solid ${colors.neutral[300]}`,
+          }}
+        >
+          <Container maxWidth="lg">
+            <Button variant="text" onClick={handleBack} sx={{ mb: 2 }}>
+              ← Back to results
+            </Button>
 
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Box
-                  sx={{
-                    width: 100,
-                    height: 100,
-                    borderRadius: 2,
-                    backgroundColor: colors.neutral[200],
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mr: 3,
-                    overflow: 'hidden',
-                    position: 'relative',
-                  }}
-                >
-                  {company.logoUrl ? (
-                    <>
-                      <img
-                        src={company.logoUrl}
-                        alt={`${company.name} logo`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'contain',
-                        }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src =
-                            'https://azurelogo.blob.core.windows.net/company-logos/defaultcompany.png';
-                        }}
-                      />
-                      {isCompanyOwner && (
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          bottom: 0, 
-                          right: 0, 
-                          display: 'flex' 
-                        }}>
-                          <Tooltip title="Change logo">
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={8}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 100,
+                      height: 100,
+                      borderRadius: 2,
+                      backgroundColor: colors.neutral[200],
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 3,
+                      overflow: 'hidden',
+                      position: 'relative',
+                    }}
+                  >
+                    {company.logoUrl ? (
+                      <>
+                        <img
+                          src={company.logoUrl}
+                          alt={`${company.name} logo`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                          }}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              'https://azurelogo.blob.core.windows.net/company-logos/defaultcompany.png';
+                          }}
+                        />
+                        {isCompanyOwner && (
+                          <Box sx={{ 
+                            position: 'absolute', 
+                            bottom: 0, 
+                            right: 0, 
+                            display: 'flex' 
+                          }}>
+                            <Tooltip title="Change logo">
+                              <IconButton
+                                size="small"
+                                onClick={handleLogoUploadOpen}
+                                sx={{
+                                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                  },
+                                }}
+                              >
+                                <Edit size={16} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          Logo
+                        </Typography>
+                        {isCompanyOwner && (
+                          <Tooltip title="Upload logo">
                             <IconButton
                               size="small"
                               onClick={handleLogoUploadOpen}
                               sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                right: 0,
                                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                 '&:hover': {
                                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
                                 },
                               }}
                             >
-                              <Edit size={16} />
+                              <Upload size={16} />
                             </IconButton>
                           </Tooltip>
-                        </Box>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Typography variant="body2" color="text.secondary">
-                        Logo
-                      </Typography>
-                      {isCompanyOwner && (
-                        <Tooltip title="Upload logo">
-                          <IconButton
-                            size="small"
-                            onClick={handleLogoUploadOpen}
-                            sx={{
-                              position: 'absolute',
-                              bottom: 0,
-                              right: 0,
-                              backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                              },
-                            }}
-                          >
-                            <Upload size={16} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </>
-                  )}
-                </Box>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography
-                      variant="h4"
-                      component="h1"
-                      sx={{ fontWeight: 600 }}
-                    >
-                      {company.name}
-                    </Typography>
-                    {company.verified && (
-                      <Chip
-                        label="Verified"
-                        size="small"
-                        color="primary"
-                        sx={{ ml: 2 }}
-                      />
+                        )}
+                      </>
                     )}
-                    
                   </Box>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant="h4"
+                        component="h1"
+                        sx={{ fontWeight: 600 }}
+                      >
+                        {company.name}
+                      </Typography>
+                      {company.verified && (
+                        <Chip
+                          label="Verified"
+                          size="small"
+                          color="primary"
+                          sx={{ ml: 2 }}
+                        />
+                      )}
+                      
+                    </Box>
 
-                  {!company.verified && isCompanyOwner && (
-                    <Paper 
-                      elevation={0}
-                      sx={{ 
-                        mt: 2,
-                        mb: 3,
-                        p: 2, 
-                        border: '1px solid',
-                        borderColor: 'warning.light',
-                        borderRadius: 2,
-                        bgcolor: 'warning.50',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Box sx={{ 
-                          mr: 2, 
-                          bgcolor: 'warning.main', 
-                          color: 'white', 
-                          width: 40, 
-                          height: 40,
-                          borderRadius: '50%',
+                    {!company.verified && isCompanyOwner && (
+                      <Paper 
+                        elevation={0}
+                        sx={{ 
+                          mt: 2,
+                          mb: 3,
+                          p: 2, 
+                          border: '1px solid',
+                          borderColor: 'warning.light',
+                          borderRadius: 2,
+                          bgcolor: 'warning.50',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <AlertTriangle size={24} />
-                        </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={600}>
-                            Your company is pending verification
-                          </Typography>
-                          <Typography variant="body2">
-                            Only verified companies can create projects.
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Button 
-                        variant="contained"
-                        color="warning"
-                        sx={{ whiteSpace: 'nowrap', ml: 2 }}
-                        onClick={() => navigate('/support')}
+                          justifyContent: 'space-between'
+                        }}
                       >
-                        Learn About Verification
-                      </Button>
-                    </Paper>
-                  )}
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Box sx={{ 
+                            mr: 2, 
+                            bgcolor: 'warning.main', 
+                            color: 'white', 
+                            width: 40, 
+                            height: 40,
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <AlertTriangle size={24} />
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight={600}>
+                              Your company is pending verification
+                            </Typography>
+                            <Typography variant="body2">
+                              Only verified companies can create projects.
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Button 
+                          variant="contained"
+                          color="warning"
+                          sx={{ whiteSpace: 'nowrap', ml: 2 }}
+                          onClick={() => navigate('/support')}
+                        >
+                          Learn About Verification
+                        </Button>
+                      </Paper>
+                    )}
 
-                  {company.totalReviews > 0 ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
-                      <Rating
-                        value={company.overallRating}
-                        readOnly
-                        precision={0.1}
-                      />
-                      <Typography variant="body1" sx={{ ml: 1 }}>
-                         ({company.totalReviews} reviews)
+                    {company.totalReviews > 0 ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', my: 1 }}>
+                        <Rating
+                          value={company.overallRating}
+                          readOnly
+                          precision={0.1}
+                        />
+                        <Typography variant="body1" sx={{ ml: 1 }}>
+                           ({company.totalReviews} reviews)
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Typography variant="body1" sx={{ my: 1 }}>
+                        No Reviews
                       </Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="body1" sx={{ my: 1 }}>
-                      No Reviews
-                    </Typography>
-                  )}
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Map size={16} />
-                      <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.city}, {company.country}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Users size={16} />
-                      <Typography variant="body2" sx={{ ml: 1 }}>
-                        {company.companySize}
-                      </Typography>
+                    )}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Map size={16} />
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          {company.city}, {company.country}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Users size={16} />
+                        <Typography variant="body2" sx={{ ml: 1 }}>
+                          {company.companySize}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
                 </Box>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                  justifyContent: 'center',
-                }}
-              >
-                <Button
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                  href={`mailto:${company.email}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                    justifyContent: 'center',
+                  }}
                 >
-                  Contact Company
-                </Button>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    sx={{ mb: 2 }}
+                    href={`mailto:${company.email}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Contact Company
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    fullWidth
+                    href={
+                      company.website?.startsWith('http')
+                        ? company.website
+                        : `https://${company.website}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Visit Website
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
+
+        <Dialog open={logoUploadOpen} onClose={handleLogoUploadClose}>
+          <DialogTitle>
+            {company.logoUrl ? 'Change Company Logo' : 'Upload Company Logo'}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ my: 2 }}>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                {company.logoUrl 
+                  ? 'Upload a new logo for your company or delete the current one. Only PNG files are supported for uploads.'
+                  : 'Upload a new logo for your company. Only PNG files are supported.'}
+              </Typography>
+
+              <input
+                accept="image/png"
+                style={{ display: 'none' }}
+                id="logo-upload-button"
+                type="file"
+                onChange={handleFileChange}
+              />
+              <label htmlFor="logo-upload-button">
                 <Button
                   variant="outlined"
-                  size="large"
-                  fullWidth
-                  href={
-                    company.website?.startsWith('http')
-                      ? company.website
-                      : `https://${company.website}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  component="span"
+                  startIcon={<Upload size={16} />}
                 >
-                  Visit Website
+                  Select PNG File
                 </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
+              </label>
 
-      <Dialog open={logoUploadOpen} onClose={handleLogoUploadClose}>
-        <DialogTitle>
-          {company.logoUrl ? 'Change Company Logo' : 'Upload Company Logo'}
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ my: 2 }}>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              {company.logoUrl 
-                ? 'Upload a new logo for your company or delete the current one. Only PNG files are supported for uploads.'
-                : 'Upload a new logo for your company. Only PNG files are supported.'}
-            </Typography>
+              {selectedFile && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    Selected file: {selectedFile.name}
+                  </Typography>
+                </Box>
+              )}
 
-            <input
-              accept="image/png"
-              style={{ display: 'none' }}
-              id="logo-upload-button"
-              type="file"
-              onChange={handleFileChange}
-            />
-            <label htmlFor="logo-upload-button">
+              {uploadError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {uploadError}
+                </Alert>
+              )}
+
+              {uploadSuccess && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  Logo uploaded successfully!
+                </Alert>
+              )}
+              
+              {deleteLogoError && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                  {deleteLogoError}
+                </Alert>
+              )}
+
+              {deleteLogoSuccess && (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  Logo deleted successfully!
+                </Alert>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'space-between', px: 3 }}>
+            <Box>
+              {company.logoUrl && (
+                <Button
+                  onClick={handleDeleteLogo}
+                  color="error"
+                  disabled={deletingLogo || uploading}
+                  startIcon={<Trash2 size={16} />}
+                >
+                  {deletingLogo ? 'Deleting...' : 'Delete Logo'}
+                </Button>
+              )}
+            </Box>
+            <Box>
+              <Button onClick={handleLogoUploadClose} sx={{ mr: 1 }}>Cancel</Button>
               <Button
-                variant="outlined"
-                component="span"
-                startIcon={<Upload size={16} />}
+                onClick={handleLogoUpload}
+                variant="contained"
+                disabled={!selectedFile || uploading || deletingLogo}
               >
-                Select PNG File
+                {uploading ? 'Uploading...' : 'Upload'}
               </Button>
-            </label>
+            </Box>
+          </DialogActions>
+        </Dialog>
 
-            {selectedFile && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2">
-                  Selected file: {selectedFile.name}
-                </Typography>
-              </Box>
-            )}
-
-            {uploadError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {uploadError}
-              </Alert>
-            )}
-
-            {uploadSuccess && (
-              <Alert severity="success" sx={{ mt: 2 }}>
-                Logo uploaded successfully!
-              </Alert>
-            )}
-            
+        <Dialog open={deleteLogoConfirmOpen} onClose={handleDeleteLogoClose}>
+          <DialogTitle>Delete Company Logo</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Are you sure you want to delete the company logo? This action cannot be undone.
+            </Typography>
             {deleteLogoError && (
               <Alert severity="error" sx={{ mt: 2 }}>
                 {deleteLogoError}
               </Alert>
             )}
-
             {deleteLogoSuccess && (
               <Alert severity="success" sx={{ mt: 2 }}>
                 Logo deleted successfully!
               </Alert>
             )}
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'space-between', px: 3 }}>
-          <Box>
-            {company.logoUrl && (
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteLogoClose}>Cancel</Button>
+            <Button
+              onClick={handleDeleteLogo}
+              variant="contained"
+              color="error"
+              disabled={deletingLogo}
+            >
+              {deletingLogo ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Project Details Dialog */}
+        <Dialog 
+          open={projectDialogOpen} 
+          onClose={handleProjectDialogClose}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedProject && (
+            <>
+              <DialogTitle sx={{ fontWeight: 'bold' }}>
+                Project Details
+              </DialogTitle>
+              <DialogContent dividers>
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                    {selectedProject.projectName || 'Unnamed Project'}
+                  </Typography>
+                  <Chip 
+                    label={selectedProject.isCompleted ? 'Completed' : 'Ongoing'} 
+                    color={getStatusColor(selectedProject.isCompleted)}
+                    size="small"
+                  />
+                </Box>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body1" paragraph>
+                    {selectedProject.description || 'No description provided.'}
+                  </Typography>
+                </Box>
+                
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Calendar size={16} color={colors.neutral[500]} />
+                      <Typography
+                        variant="body2"
+                        sx={{ ml: 1 }}
+                        color="text.secondary"
+                      >
+                        {selectedProject.startDate
+                          ? new Date(selectedProject.startDate).toLocaleDateString()
+                          : 'Unknown'}{' '}
+                        -{' '}
+                        {selectedProject.completionDate
+                          ? new Date(selectedProject.completionDate).toLocaleDateString()
+                          : 'Present'}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Client:</strong>{' '}
+                      {selectedProject.clientCompanyName || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Provider:</strong>{' '}
+                      {selectedProject.providerCompanyName || 'Not specified'}
+                    </Typography>
+                  </Grid>
+                  {selectedProject.clientType && (
+                    <Grid item xs={12} sm={6}>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Client Type:</strong>{' '}
+                        {selectedProject.clientType}
+                      </Typography>
+                    </Grid>
+                  )}
+                  {selectedProject.projectUrl && (
+                    <Grid item xs={12}>
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Project URL:</strong>{' '}
+                        <Typography 
+                          component="a" 
+                          href={selectedProject.projectUrl} 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          color="primary"
+                          variant="body2"
+                        >
+                          {selectedProject.projectUrl}
+                        </Typography>
+                      </Typography>
+                    </Grid>
+                  )}
+                  
+                  {/* Technologies */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      <strong>Technologies</strong>
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {Array.isArray(selectedProject.technologiesUsed) && selectedProject.technologiesUsed.length > 0 ? (
+                        selectedProject.technologiesUsed.map((tech, index) => (
+                          <Chip key={index} label={tech} size="small" />
+                        ))
+                      ) : (
+                        <Typography variant="body2">No technologies specified</Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                  
+                  {/* Services */}
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      <strong>Services</strong>
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {Array.isArray(selectedProject.services) && selectedProject.services.length > 0 ? (
+                        selectedProject.services.map((service) => (
+                          <Chip 
+                            key={service.id} 
+                            label={service.name} 
+                            size="small"
+                            sx={{
+                              backgroundColor: colors.primary[500],
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: colors.primary[700],
+                                color: 'white',
+                              },
+                            }}
+                          />
+                        ))
+                      ) : (
+                        <Typography variant="body2">No services specified</Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </DialogContent>
+              <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                <Box></Box>
+                <Box>
+                  <Button onClick={handleProjectDialogClose} variant="outlined" sx={{ mr: 1 }}>
+                    Close
+                  </Button>
+                  {canEditProject && (
+                    <Button
+                      startIcon={<Edit size={16} />}
+                      variant="contained"
+                      onClick={handleEditProjectClick}
+                    >
+                      Edit Project
+                    </Button>
+                  )}
+                </Box>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+
+        {/* Edit Project Dialog */}
+        <Dialog 
+          open={editProjectDialogOpen} 
+          onClose={handleEditProjectDialogClose}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle sx={{ fontWeight: 'bold' }}>Edit Project</DialogTitle>
+          <DialogContent dividers>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  name="projectName"
+                  label="Project Name"
+                  value={editProjectFormData.projectName}
+                  onChange={handleProjectInputChange}
+                  fullWidth
+                  margin="normal"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  name="description"
+                  label="Description"
+                  value={editProjectFormData.description}
+                  onChange={handleProjectInputChange}
+                  fullWidth
+                  multiline
+                  rows={4}
+                  margin="normal"
+                />
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="startDate"
+                  label="Start Date"
+                  type="date"
+                  value={editProjectFormData.startDate ? new Date(editProjectFormData.startDate).toISOString().split('T')[0] : ''}
+                  onChange={handleProjectInputChange}
+                  fullWidth
+                  margin="normal"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  name="completionDate"
+                  label="Completion Date"
+                  type="date"
+                  value={editProjectFormData.completionDate ? new Date(editProjectFormData.completionDate).toISOString().split('T')[0] : ''}
+                  onChange={handleProjectInputChange}
+                  fullWidth
+                  margin="normal"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  name="projectUrl"
+                  label="Project URL"
+                  value={editProjectFormData.projectUrl}
+                  onChange={handleProjectInputChange}
+                  fullWidth
+                  margin="normal"
+                />
+              </Grid>
+              
+              {/* Technologies Section */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                  Technologies Used
+                </Typography>
+                <Autocomplete
+                  multiple
+                  id="technologies-autocomplete"
+                  options={technologyOptions}
+                  freeSolo
+                  value={editProjectFormData.technologiesUsed || []}
+                  onChange={(event, newValue) => {
+                    setEditProjectFormData(prev => ({
+                      ...prev,
+                      technologiesUsed: newValue.map(item => item.trim()).filter(item => item !== '')
+                    }));
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        label={option}
+                        {...getTagProps({ index })}
+                        key={index}
+                        size="small"
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      placeholder={editProjectFormData.technologiesUsed?.length > 0 ? "" : "Add technologies..."}
+                      fullWidth
+                    />
+                  )}
+                  filterOptions={(options, params) => {
+                    const filtered = options.filter(option => 
+                      option.toLowerCase().includes(params.inputValue.toLowerCase())
+                    );
+                    
+                    // Add the option to add a new value if it's not in our list
+                    const isExisting = options.some(
+                      option => option.toLowerCase() === params.inputValue.toLowerCase()
+                    );
+                    
+                    if (params.inputValue !== '' && !isExisting) {
+                      filtered.push(params.inputValue);
+                    }
+                    
+                    return filtered;
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      paddingLeft: 1,
+                      '& input': { paddingTop: 1, paddingBottom: 1 }
+                    }
+                  }}
+                />
+                <FormHelperText>
+                  Start typing to see suggestions or add your own technologies
+                </FormHelperText>
+              </Grid>
+              
+              {/* Services Section */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom mt={2}>
+                  Services
+                </Typography>
+                
+                {/* Industry tabs */}
+                {servicesByIndustry.length > 0 && (
+                  <Box sx={{ width: '100%', mb: 2, mt: 1 }}>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                      <Tabs 
+                        value={activeIndustryTab}
+                        onChange={(_, newValue) => setActiveIndustryTab(newValue)}
+                        variant="scrollable"
+                        scrollButtons="auto"
+                        aria-label="industry tabs"
+                      >
+                        {servicesByIndustry.map((industry, index) => (
+                          <Tab key={index} label={industry.industry} id={`industry-tab-${index}`} />
+                        ))}
+                      </Tabs>
+                    </Box>
+                    
+                    {/* Services as checkboxes by selected industry */}
+                    <Box sx={{ pt: 2 }}>
+                      {servicesByIndustry.length > 0 && servicesByIndustry[activeIndustryTab] && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                          {servicesByIndustry[activeIndustryTab]?.services.map((service) => (
+                            <Box 
+                              key={service.id} 
+                              sx={{ 
+                                width: 'calc(50% - 8px)',
+                                maxWidth: '340px',
+                                padding: '12px 16px',
+                                borderRadius: '4px',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                display: 'flex',
+                                alignItems: 'center',
+                                mb: 1,
+                                bgcolor: 'background.paper'
+                              }}
+                            >
+                              <input 
+                                type="checkbox" 
+                                id={`service-${service.id}`}
+                                checked={selectedServices.includes(service.id)}
+                                onChange={() => toggleService(service.id)}
+                                style={{ 
+                                  marginRight: '12px',
+                                  width: '18px',
+                                  height: '18px',
+                                  cursor: 'pointer'
+                                }}
+                              />
+                              <label 
+                                htmlFor={`service-${service.id}`} 
+                                style={{ 
+                                  cursor: 'pointer',
+                                  fontWeight: selectedServices.includes(service.id) ? 500 : 400
+                                }}
+                              >
+                                {service.name}
+                              </label>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Selected services summary */}
+                <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                  <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+                    Selected Services ({getSelectedServiceCount()})
+                  </Typography>
+                  
+                  {selectedServices.length === 0 ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No services selected yet.
+                    </Typography>
+                  ) : (
+                    <>
+                      {/* Service chips */}
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {selectedServices.map((serviceId) => {
+                          const service = servicesByIndustry
+                            .flatMap(industry => industry.services)
+                            .find(service => service.id === serviceId);
+                          
+                          return (
+                            <Chip
+                              key={serviceId}
+                              label={service ? service.name : 'Unknown Service'}
+                              onDelete={() => toggleService(serviceId)}
+                              color="primary"
+                            />
+                          );
+                        })}
+                      </Box>
+                    </>
+                  )}
+                </Box>
+              </Grid>
+            </Grid>
+            
+            {editProjectError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {editProjectError}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={handleEditProjectDialogClose} color="inherit">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmitProjectEdit} 
+              color="primary" 
+              variant="contained"
+              disabled={editProjectLoading}
+            >
+              {editProjectLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Box sx={{ 
+            borderBottom: 1, 
+            borderColor: 'divider', 
+            mb: 4,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <Tabs value={activeTab} onChange={handleTabChange} aria-label="company tabs">
+              {tabs.map((tab) => (
+                <Tab key={tab.id} label={tab.label} />
+              ))}
+            </Tabs>
+            
+            {isCompanyOwner && (
               <Button
-                onClick={handleDeleteLogo}
-                color="error"
-                disabled={deletingLogo || uploading}
-                startIcon={<Trash2 size={16} />}
+                variant="outlined"
+                startIcon={<Edit size={16} />}
+                onClick={() => {
+                  navigate(`/company/edit-company/${company.name.replace(/\s+/g, '')}`)
+                }}
+                size="small"
               >
-                {deletingLogo ? 'Deleting...' : 'Delete Logo'}
+                Edit Company
               </Button>
             )}
           </Box>
+
           <Box>
-            <Button onClick={handleLogoUploadClose} sx={{ mr: 1 }}>Cancel</Button>
-            <Button
-              onClick={handleLogoUpload}
-              variant="contained"
-              disabled={!selectedFile || uploading || deletingLogo}
-            >
-              {uploading ? 'Uploading...' : 'Upload'}
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={deleteLogoConfirmOpen} onClose={handleDeleteLogoClose}>
-        <DialogTitle>Delete Company Logo</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2 }}>
-            Are you sure you want to delete the company logo? This action cannot be undone.
-          </Typography>
-          {deleteLogoError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {deleteLogoError}
-            </Alert>
-          )}
-          {deleteLogoSuccess && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              Logo deleted successfully!
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteLogoClose}>Cancel</Button>
-          <Button
-            onClick={handleDeleteLogo}
-            variant="contained"
-            color="error"
-            disabled={deletingLogo}
-          >
-            {deletingLogo ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Project Details Dialog */}
-      <Dialog 
-        open={projectDialogOpen} 
-        onClose={handleProjectDialogClose}
-        maxWidth="md"
-        fullWidth
-      >
-        {selectedProject && (
-          <>
-            <DialogTitle sx={{ fontWeight: 'bold' }}>
-              Project Details
-            </DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                  {selectedProject.projectName || 'Unnamed Project'}
-                </Typography>
-                <Chip 
-                  label={selectedProject.isCompleted ? 'Completed' : 'Ongoing'} 
-                  color={getStatusColor(selectedProject.isCompleted)}
-                  size="small"
-                />
-              </Box>
-              
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="body1" paragraph>
-                  {selectedProject.description || 'No description provided.'}
-                </Typography>
-              </Box>
-              
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Calendar size={16} color={colors.neutral[500]} />
-                    <Typography
-                      variant="body2"
-                      sx={{ ml: 1 }}
-                      color="text.secondary"
-                    >
-                      {selectedProject.startDate
-                        ? new Date(selectedProject.startDate).toLocaleDateString()
-                        : 'Unknown'}{' '}
-                      -{' '}
-                      {selectedProject.completionDate
-                        ? new Date(selectedProject.completionDate).toLocaleDateString()
-                        : 'Present'}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Client:</strong>{' '}
-                    {selectedProject.clientCompanyName || 'Not specified'}
+            {activeTab === 0 && (
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={8}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                    About us
                   </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Provider:</strong>{' '}
-                    {selectedProject.providerCompanyName || 'Not specified'}
+                  <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
+                    {company.description}
                   </Typography>
-                </Grid>
-                {selectedProject.clientType && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Client Type:</strong>{' '}
-                      {selectedProject.clientType}
-                    </Typography>
-                  </Grid>
-                )}
-                {selectedProject.projectUrl && (
-                  <Grid item xs={12}>
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Project URL:</strong>{' '}
-                      <Typography 
-                        component="a" 
-                        href={selectedProject.projectUrl} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        color="primary"
-                        variant="body2"
-                      >
-                        {selectedProject.projectUrl}
+
+                  {company.services && company.services.length > 0 && (
+                    <>
+                      <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
+                        Services Breakdown
                       </Typography>
-                    </Typography>
-                  </Grid>
-                )}
-                
-                {/* Technologies */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    <strong>Technologies</strong>
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {Array.isArray(selectedProject.technologiesUsed) && selectedProject.technologiesUsed.length > 0 ? (
-                      selectedProject.technologiesUsed.map((tech, index) => (
-                        <Chip key={index} label={tech} size="small" />
-                      ))
-                    ) : (
-                      <Typography variant="body2">No technologies specified</Typography>
-                    )}
-                  </Box>
-                </Grid>
-                
-                {/* Services */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    <strong>Services</strong>
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {Array.isArray(selectedProject.services) && selectedProject.services.length > 0 ? (
-                      selectedProject.services.map((service) => (
-                        <Chip 
-                          key={service.id} 
-                          label={service.name} 
-                          size="small"
-                          sx={{
-                            backgroundColor: colors.primary[500],
-                            color: 'white',
-                            '&:hover': {
-                              backgroundColor: colors.primary[700],
-                              color: 'white',
-                            },
-                          }}
-                        />
-                      ))
-                    ) : (
-                      <Typography variant="body2">No services specified</Typography>
-                    )}
-                  </Box>
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
-              <Box></Box>
-              <Box>
-                <Button onClick={handleProjectDialogClose} variant="outlined" sx={{ mr: 1 }}>
-                  Close
-                </Button>
-                {canEditProject && (
-                  <Button
-                    startIcon={<Edit size={16} />}
-                    variant="contained"
-                    onClick={handleEditProjectClick}
-                  >
-                    Edit Project
-                  </Button>
-                )}
-              </Box>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
-
-      {/* Edit Project Dialog */}
-      <Dialog 
-        open={editProjectDialogOpen} 
-        onClose={handleEditProjectDialogClose}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Edit Project</DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField
-                name="projectName"
-                label="Project Name"
-                value={editProjectFormData.projectName}
-                onChange={handleProjectInputChange}
-                fullWidth
-                margin="normal"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                name="description"
-                label="Description"
-                value={editProjectFormData.description}
-                onChange={handleProjectInputChange}
-                fullWidth
-                multiline
-                rows={4}
-                margin="normal"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="startDate"
-                label="Start Date"
-                type="date"
-                value={editProjectFormData.startDate ? new Date(editProjectFormData.startDate).toISOString().split('T')[0] : ''}
-                onChange={handleProjectInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                name="completionDate"
-                label="Completion Date"
-                type="date"
-                value={editProjectFormData.completionDate ? new Date(editProjectFormData.completionDate).toISOString().split('T')[0] : ''}
-                onChange={handleProjectInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                name="projectUrl"
-                label="Project URL"
-                value={editProjectFormData.projectUrl}
-                onChange={handleProjectInputChange}
-                fullWidth
-                margin="normal"
-              />
-            </Grid>
-            
-            {/* Technologies Section */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                Technologies Used
-              </Typography>
-              <Autocomplete
-                multiple
-                id="technologies-autocomplete"
-                options={technologyOptions}
-                freeSolo
-                value={editProjectFormData.technologiesUsed || []}
-                onChange={(event, newValue) => {
-                  setEditProjectFormData(prev => ({
-                    ...prev,
-                    technologiesUsed: newValue.map(item => item.trim()).filter(item => item !== '')
-                  }));
-                }}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option}
-                      {...getTagProps({ index })}
-                      key={index}
-                      size="small"
-                    />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    placeholder={editProjectFormData.technologiesUsed?.length > 0 ? "" : "Add technologies..."}
-                    fullWidth
-                  />
-                )}
-                filterOptions={(options, params) => {
-                  const filtered = options.filter(option => 
-                    option.toLowerCase().includes(params.inputValue.toLowerCase())
-                  );
-                  
-                  // Add the option to add a new value if it's not in our list
-                  const isExisting = options.some(
-                    option => option.toLowerCase() === params.inputValue.toLowerCase()
-                  );
-                  
-                  if (params.inputValue !== '' && !isExisting) {
-                    filtered.push(params.inputValue);
-                  }
-                  
-                  return filtered;
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    paddingLeft: 1,
-                    '& input': { paddingTop: 1, paddingBottom: 1 }
-                  }
-                }}
-              />
-              <FormHelperText>
-                Start typing to see suggestions or add your own technologies
-              </FormHelperText>
-            </Grid>
-            
-            {/* Services Section */}
-            <Grid item xs={12}>
-              <Typography variant="subtitle1" gutterBottom mt={2}>
-                Services
-              </Typography>
-              
-              {/* Industry tabs */}
-              {servicesByIndustry.length > 0 && (
-                <Box sx={{ width: '100%', mb: 2, mt: 1 }}>
-                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs 
-                      value={activeIndustryTab}
-                      onChange={(_, newValue) => setActiveIndustryTab(newValue)}
-                      variant="scrollable"
-                      scrollButtons="auto"
-                      aria-label="industry tabs"
-                    >
-                      {servicesByIndustry.map((industry, index) => (
-                        <Tab key={index} label={industry.industry} id={`industry-tab-${index}`} />
-                      ))}
-                    </Tabs>
-                  </Box>
-                  
-                  {/* Services as checkboxes by selected industry */}
-                  <Box sx={{ pt: 2 }}>
-                    {servicesByIndustry.length > 0 && servicesByIndustry[activeIndustryTab] && (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {servicesByIndustry[activeIndustryTab]?.services.map((service) => (
-                          <Box 
-                            key={service.id} 
-                            sx={{ 
-                              width: 'calc(50% - 8px)',
-                              maxWidth: '340px',
-                              padding: '12px 16px',
-                              borderRadius: '4px',
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              display: 'flex',
-                              alignItems: 'center',
-                              mb: 1,
-                              bgcolor: 'background.paper'
-                            }}
-                          >
-                            <input 
-                              type="checkbox" 
-                              id={`service-${service.id}`}
-                              checked={selectedServices.includes(service.id)}
-                              onChange={() => toggleService(service.id)}
-                              style={{ 
-                                marginRight: '12px',
-                                width: '18px',
-                                height: '18px',
-                                cursor: 'pointer'
-                              }}
-                            />
-                            <label 
-                              htmlFor={`service-${service.id}`} 
-                              style={{ 
-                                cursor: 'pointer',
-                                fontWeight: selectedServices.includes(service.id) ? 500 : 400
-                              }}
-                            >
-                              {service.name}
-                            </label>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-              )}
-              
-              {/* Selected services summary */}
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-                <Typography variant="subtitle1" gutterBottom fontWeight="medium">
-                  Selected Services ({getSelectedServiceCount()})
-                </Typography>
-                
-                {selectedServices.length === 0 ? (
-                  <Typography variant="body2" color="text.secondary">
-                    No services selected yet.
-                  </Typography>
-                ) : (
-                  <>
-                    {/* Service chips */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedServices.map((serviceId) => {
-                        const service = servicesByIndustry
-                          .flatMap(industry => industry.services)
-                          .find(service => service.id === serviceId);
-                        
-                        return (
-                          <Chip
-                            key={serviceId}
-                            label={service ? service.name : 'Unknown Service'}
-                            onDelete={() => toggleService(serviceId)}
-                            color="primary"
-                          />
-                        );
-                      })}
-                    </Box>
-                  </>
-                )}
-              </Box>
-            </Grid>
-          </Grid>
-          
-          {editProjectError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {editProjectError}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleEditProjectDialogClose} color="inherit">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmitProjectEdit} 
-            color="primary" 
-            variant="contained"
-            disabled={editProjectLoading}
-          >
-            {editProjectLoading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ 
-          borderBottom: 1, 
-          borderColor: 'divider', 
-          mb: 4,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Tabs value={activeTab} onChange={handleTabChange} aria-label="company tabs">
-            {tabs.map((tab) => (
-              <Tab key={tab.id} label={tab.label} />
-            ))}
-          </Tabs>
-          
-          {isCompanyOwner && (
-            <Button
-              variant="outlined"
-              startIcon={<Edit size={16} />}
-              onClick={() => {
-                navigate(`/company/edit-company/${company.name.replace(/\s+/g, '')}`)
-              }}
-              size="small"
-            >
-              Edit Company
-            </Button>
-          )}
-        </Box>
-
-        <Box>
-          {activeTab === 0 && (
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={8}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  About us
-                </Typography>
-                <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
-                  {company.description}
-                </Typography>
-
-                {company.services && company.services.length > 0 && (
-                  <>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mt: 4 }}>
-                      Services Breakdown
-                    </Typography>
-                    <Box sx={{ 
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      mb: 4
-                    }}>
-                      {/* Chart container */}
                       <Box sx={{ 
-                        width: '100%',
-                        display: 'flex', 
-                        justifyContent: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
                         mb: 4
                       }}>
-                        <PieChart width={300} height={220}>
-                          <Pie
-                            data={company.services}
-                            cx={150}
-                            cy={100}
-                            innerRadius={60}
-                            outerRadius={90}
-                            dataKey="percentage"
-                            nameKey="serviceName"
-                            labelLine={false}
-                          >
-                            {company.services.map((_, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={[
+                        {/* Chart container */}
+                        <Box sx={{ 
+                          width: '100%',
+                          display: 'flex', 
+                          justifyContent: 'center',
+                          mb: 4
+                        }}>
+                          <PieChart width={300} height={220}>
+                            <Pie
+                              data={company.services}
+                              cx={150}
+                              cy={100}
+                              innerRadius={60}
+                              outerRadius={90}
+                              dataKey="percentage"
+                              nameKey="serviceName"
+                              labelLine={false}
+                            >
+                              {company.services.map((_, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={[
+                                    colors.primary[500],
+                                    colors.primary[400],
+                                    colors.primary[300],
+                                    colors.primary[600],
+                                  ][index % 4]}
+                                />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip 
+                              formatter={(value, name) => [`${value}%`, name]} 
+                              contentStyle={{ backgroundColor: 'white', borderRadius: '4px', padding: '8px' }}
+                            />
+                          </PieChart>
+                        </Box>
+
+                        {/* Legend container - without borders and with larger text */}
+                        <Box sx={{ 
+                          display: 'flex',
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          justifyContent: 'center',
+                          maxWidth: '600px',
+                          gap: 3
+                        }}>
+                          {company.services.map((service, index) => (
+                            <Box 
+                              key={index} 
+                              sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center',
+                                padding: '4px 8px',
+                                minWidth: '150px'
+                              }}
+                            >
+                              <Box sx={{ 
+                                width: 16, 
+                                height: 16, 
+                                borderRadius: '50%',
+                                backgroundColor: [
                                   colors.primary[500],
                                   colors.primary[400],
                                   colors.primary[300],
                                   colors.primary[600],
-                                ][index % 4]}
-                              />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip 
-                            formatter={(value, name) => [`${value}%`, name]} 
-                            contentStyle={{ backgroundColor: 'white', borderRadius: '4px', padding: '8px' }}
-                          />
-                        </PieChart>
+                                ][index % 4],
+                                mr: 1.5
+                              }} />
+                              <Typography variant="subtitle2" sx={{ fontSize: '1rem' }}>
+                                {service.serviceName}
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
                       </Box>
+                    </>
+                  )}
+                </Grid>
 
-                      {/* Legend container - without borders and with larger text */}
-                      <Box sx={{ 
-                        display: 'flex',
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        justifyContent: 'center',
-                        maxWidth: '600px',
-                        gap: 3
-                      }}>
-                        {company.services.map((service, index) => (
-                          <Box 
-                            key={index} 
-                            sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center',
-                              padding: '4px 8px',
-                              minWidth: '150px'
-                            }}
-                          >
-                            <Box sx={{ 
-                              width: 16, 
-                              height: 16, 
-                              borderRadius: '50%',
-                              backgroundColor: [
-                                colors.primary[500],
-                                colors.primary[400],
-                                colors.primary[300],
-                                colors.primary[600],
-                              ][index % 4],
-                              mr: 1.5
-                            }} />
-                            <Typography variant="subtitle2" sx={{ fontSize: '1rem' }}>
-                              {service.serviceName}
-                            </Typography>
+                <Grid item xs={12} md={4}>
+                  {company.projects && company.projects.length > 0 && (
+                    <>
+                      <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                        Projects Overview
+                      </Typography>
+                      <Stack spacing={3}>
+                        {serviceStats.map((project, index) => (
+                          <Box key={index}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                              <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
+                                {project.name}
+                              </Typography>
+                              <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
+                                {project.percentage}%
+                              </Typography>
+                            </Box>
+                            <LinearProgress
+                              variant="determinate"
+                              value={project.percentage}
+                              sx={{
+                                height: 10,
+                                borderRadius: 5,
+                                '& .MuiLinearProgress-bar': {
+                                  backgroundColor: project.color,
+                                },
+                              }}
+                            />
                           </Box>
                         ))}
-                      </Box>
-                    </Box>
-                  </>
-                )}
+                      </Stack>
+                    </>
+                  )}
+                </Grid>
               </Grid>
+            )}
 
-              <Grid item xs={12} md={4}>
-                {company.projects && company.projects.length > 0 && (
-                  <>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                      Projects Overview
-                    </Typography>
-                    <Stack spacing={3}>
-                      {serviceStats.map((project, index) => (
-                        <Box key={index}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography variant="subtitle1" sx={{ color: colors.neutral[700] }}>
-                              {project.name}
-                            </Typography>
-                            <Typography variant="subtitle1" sx={{ color: colors.primary[600] }}>
-                              {project.percentage}%
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={project.percentage}
-                            sx={{
-                              height: 10,
-                              borderRadius: 5,
-                              '& .MuiLinearProgress-bar': {
-                                backgroundColor: project.color,
-                              },
+            {activeTab === 1 && (
+              <Grid container spacing={4}>
+                <Grid item xs={12}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}> 
+                    {isCompanyOwner && (
+                      <Button
+                        variant="contained"
+                        startIcon={<Plus size={16} />}
+                        onClick={handleCreateProject}
+                      >
+                        Create Project
+                      </Button>
+                    )}
+                  </Box>
+
+                  {isCompanyOwner && isFirstProjectCreation && (
+                    <Box sx={{ mb: 4 }}>
+                      <Typography variant="h6" gutterBottom>
+                        Getting Started
+                      </Typography>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={4}>
+                          <FeatureCard
+                            title="Create Your First Project"
+                            description="Add details about your projects to showcase your company's expertise and attract potential clients."
+                            icon={<Lightbulb size={24} />}
+                            action={{ 
+                              label: "Create Project", 
+                              onClick: handleCreateProject 
+                            }}
+                            isNew={true}
+                          />
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <FeatureCard
+                            title="Complete Your Profile"
+                            description="Enhance your company profile with detailed information to stand out in search results."
+                            icon={<Settings size={24} />}
+                            action={{ 
+                              label: "Edit Profile", 
+                              onClick: () => navigate(`/company/edit-company/${company.name.replace(/\s+/g, '')}`) 
                             }}
                           />
-                        </Box>
-                      ))}
-                    </Stack>
-                  </>
-                )}
-              </Grid>
-            </Grid>
-          )}
-
-          {activeTab === 1 && (
-            <Grid container spacing={4}>
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}> 
-                  {isCompanyOwner && (
-                    <Button
-                      variant="contained"
-                      startIcon={<Plus size={16} />}
-                      onClick={handleCreateProject}
-                    >
-                      Create Project
-                    </Button>
+                        </Grid>
+                      </Grid>
+                    </Box>
                   )}
-                </Box>
 
-                {company.projects && company.projects.filter(project => 
-                  // Only show projects where this company is the provider
-                  project.providerCompanyName === company.name
-                ).length > 0 ? (
-                  <Grid container spacing={3}>
-                    {company.projects
-                      .filter(project => project.providerCompanyName === company.name)
-                      .map((project, index) => (
-                        <Grid item xs={12} md={6} key={index}>
-                          <Card
-                            elevation={2}
-                            sx={{ 
-                              height: '100%', 
-                              display: 'flex', 
-                              flexDirection: 'column',
-                              cursor: 'pointer',
-                              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                              '&:hover': {
-                                transform: 'translateY(-4px)',
-                                boxShadow: 4
-                              }
-                            }}
-                            onClick={() => handleProjectCardClick(project)}
-                          >
-                            <CardContent sx={{ flexGrow: 1 }}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                                <Typography variant="h6" gutterBottom>
-                                  {project.projectName}
-                                </Typography>
-                                <Chip 
-                                  label={project.isCompleted ? 'Completed' : 'Ongoing'} 
-                                  color={getStatusColor(project.isCompleted)} 
-                                  size="small" 
-                                />
-                              </Box>
-                              
-                              {/* New completion status display */}
-                              {projectCompletionStatus[project.projectId] && project.isOnCompedia && (
-                                <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+                  {company.projects && company.projects.filter(project => 
+                    project.providerCompanyName === company.name
+                  ).length === 0 ? (
+                    <EmptyState
+                      title="No Portfolio Projects Yet"
+                      description="Showcase your work by adding projects to your portfolio. Projects help potential clients understand your capabilities."
+                      actionText={isCompanyOwner ? "Create First Project" : null}
+                      onAction={isCompanyOwner ? handleCreateProject : null}
+                      icon={<Briefcase size={48} />}
+                    />
+                  ) : (
+                    <Grid container spacing={3}>
+                      {company.projects
+                        .filter(project => project.providerCompanyName === company.name)
+                        .map((project, index) => (
+                          <Grid item xs={12} md={6} key={index}>
+                            <Card
+                              elevation={2}
+                              sx={{ 
+                                height: '100%', 
+                                display: 'flex', 
+                                flexDirection: 'column',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                                '&:hover': {
+                                  transform: 'translateY(-4px)',
+                                  boxShadow: 4
+                                }
+                              }}
+                              onClick={() => handleProjectCardClick(project)}
+                            >
+                              <CardContent sx={{ flexGrow: 1 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                  <Typography variant="h6" gutterBottom>
+                                    {project.projectName}
+                                  </Typography>
                                   <Chip 
-                                    icon={<Check size={14} />}
-                                    label={projectCompletionStatus[project.projectId].client ? "Client Completed" : "Awaiting Client Completion"}
-                                    size="small"
-                                    variant={projectCompletionStatus[project.projectId].client ? "filled" : "outlined"}
-                                    color={projectCompletionStatus[project.projectId].client ? "success" : "warning"}
-                                    sx={{ 
-                                      fontWeight: projectCompletionStatus[project.projectId].client ? 'bold' : 'normal',
-                                      borderWidth: projectCompletionStatus[project.projectId].client ? 2 : 1,
-                                    }}
-                                  />
-                                  <Chip 
-                                    icon={<Check size={14} />}
-                                    label={projectCompletionStatus[project.projectId].provider ? "Provider Completed" : "Awaiting Provider Completion"}
-                                    size="small"
-                                    variant={projectCompletionStatus[project.projectId].provider ? "filled" : "outlined"}
-                                    color={projectCompletionStatus[project.projectId].provider ? "success" : "warning"}
-                                    sx={{ 
-                                      fontWeight: projectCompletionStatus[project.projectId].provider ? 'bold' : 'normal',
-                                      borderWidth: projectCompletionStatus[project.projectId].provider ? 2 : 1,
-                                    }}
+                                    label={project.isCompleted ? 'Completed' : 'Ongoing'} 
+                                    color={getStatusColor(project.isCompleted)} 
+                                    size="small" 
                                   />
                                 </Box>
-                              )}
-                              
-                              <Typography variant="body2" color="text.secondary" paragraph>
-                                {project.description}
-                              </Typography>
-                              {(project.startDate || project.completionDate) && (
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                  <Calendar size={16} color={colors.neutral[500]} />
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ ml: 1 }}
-                                    color="text.secondary"
-                                  >
-                                    {project.startDate
-                                      ? new Date(project.startDate).toLocaleDateString()
-                                      : 'Unknown'}{' '}
-                                    -{' '}
-                                    {project.completionDate
-                                      ? new Date(project.completionDate).toLocaleDateString()
-                                      : 'Present'}
-                                  </Typography>
-                                </Box>
-                              )}
-                              {project.clientCompanyName && (
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                  sx={{ mb: 1 }}
-                                >
-                                  <strong>Client:</strong>{' '}
-                                  {project.clientCompanyName}
-                                </Typography>
-                              )}
-                              {/* Removed provider company name display since it's redundant */}
-                              {project.services && project.services.length > 0 && (
-                                <Box sx={{ mt: 2 }}>
-                                  <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{ mb: 1 }}
-                                  >
-                                    <strong>Services:</strong>
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                    {project.services.map((service, serviceIndex) => (
-                                      <Chip
-                                        key={serviceIndex}
-                                        label={service.name}
-                                        size="small"
-                                        sx={{
-                                          backgroundColor: colors.primary[500],
-                                          color: 'white',
-                                          '&:hover': {
-                                            backgroundColor: colors.primary[700],
-                                            color: 'white',
-                                          },
-                                        }}
-                                      />
-                                    ))}
+                                
+                                {/* New completion status display */}
+                                {projectCompletionStatus[project.projectId] && project.isOnCompedia && (
+                                  <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+                                    <Chip 
+                                      icon={<Check size={14} />}
+                                      label={projectCompletionStatus[project.projectId].client ? "Client Completed" : "Awaiting Client Completion"}
+                                      size="small"
+                                      variant={projectCompletionStatus[project.projectId].client ? "filled" : "outlined"}
+                                      color={projectCompletionStatus[project.projectId].client ? "success" : "warning"}
+                                      sx={{ 
+                                        fontWeight: projectCompletionStatus[project.projectId].client ? 'bold' : 'normal',
+                                        borderWidth: projectCompletionStatus[project.projectId].client ? 2 : 1,
+                                      }}
+                                    />
+                                    <Chip 
+                                      icon={<Check size={14} />}
+                                      label={projectCompletionStatus[project.projectId].provider ? "Provider Completed" : "Awaiting Provider Completion"}
+                                      size="small"
+                                      variant={projectCompletionStatus[project.projectId].provider ? "filled" : "outlined"}
+                                      color={projectCompletionStatus[project.projectId].provider ? "success" : "warning"}
+                                      sx={{ 
+                                        fontWeight: projectCompletionStatus[project.projectId].provider ? 'bold' : 'normal',
+                                        borderWidth: projectCompletionStatus[project.projectId].provider ? 2 : 1,
+                                      }}
+                                    />
                                   </Box>
-                                </Box>
-                              )}
-                              {project.technologiesUsed && project.technologiesUsed.length > 0 && (
-                                <Box sx={{ mt: 2 }}>
+                                )}
+                                
+                                <Typography variant="body2" color="text.secondary" paragraph>
+                                  {project.description}
+                                </Typography>
+                                {(project.startDate || project.completionDate) && (
+                                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                    <Calendar size={16} color={colors.neutral[500]} />
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ ml: 1 }}
+                                      color="text.secondary"
+                                    >
+                                      {project.startDate
+                                        ? new Date(project.startDate).toLocaleDateString()
+                                        : 'Unknown'}{' '}
+                                      -{' '}
+                                      {project.completionDate
+                                        ? new Date(project.completionDate).toLocaleDateString()
+                                        : 'Present'}
+                                    </Typography>
+                                  </Box>
+                                )}
+                                {project.clientCompanyName && (
                                   <Typography
                                     variant="body2"
                                     color="text.secondary"
                                     sx={{ mb: 1 }}
                                   >
-                                    <strong>Technologies:</strong>
+                                    <strong>Client:</strong>{' '}
+                                    {project.clientCompanyName}
                                   </Typography>
-                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                    {Array.isArray(project.technologiesUsed) 
-                                      ? project.technologiesUsed.map((tech, techIndex) => (
+                                )}
+                                {/* Removed provider company name display since it's redundant */}
+                                {project.services && project.services.length > 0 && (
+                                  <Box sx={{ mt: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 1 }}
+                                    >
+                                      <strong>Services:</strong>
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                      {project.services.map((service, serviceIndex) => (
                                         <Chip
-                                          key={techIndex}
-                                          label={tech}
+                                          key={serviceIndex}
+                                          label={service.name}
                                           size="small"
                                           sx={{
-                                            backgroundColor: colors.primary[300],
+                                            backgroundColor: colors.primary[500],
                                             color: 'white',
+                                            '&:hover': {
+                                              backgroundColor: colors.primary[700],
+                                              color: 'white',
+                                            },
                                           }}
                                         />
-                                      ))
-                                      : typeof project.technologiesUsed === 'string' 
-                                        ? project.technologiesUsed.split(',').map((tech, techIndex) => (
+                                      ))}
+                                    </Box>
+                                  </Box>
+                                )}
+                                {project.technologiesUsed && project.technologiesUsed.length > 0 && (
+                                  <Box sx={{ mt: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 1 }}
+                                    >
+                                      <strong>Technologies:</strong>
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                      {Array.isArray(project.technologiesUsed) 
+                                        ? project.technologiesUsed.map((tech, techIndex) => (
                                           <Chip
                                             key={techIndex}
-                                            label={tech.trim()}
+                                            label={tech}
                                             size="small"
                                             sx={{
                                               backgroundColor: colors.primary[300],
@@ -1746,305 +1816,314 @@ const CompanyPage = () => {
                                             }}
                                           />
                                         ))
-                                        : null
-                                    }
+                                        : typeof project.technologiesUsed === 'string' 
+                                          ? project.technologiesUsed.split(',').map((tech, techIndex) => (
+                                            <Chip
+                                              key={techIndex}
+                                              label={tech.trim()}
+                                              size="small"
+                                              sx={{
+                                                backgroundColor: colors.primary[300],
+                                                color: 'white',
+                                              }}
+                                            />
+                                          ))
+                                          : null
+                                      }
+                                    </Box>
                                   </Box>
-                                </Box>
+                                )}
+                              </CardContent>
+                              <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                                {project.projectUrl && (
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    href={project.projectUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    Visit Project
+                                  </Button>
+                                )}
+                                
+                                {/* Mark as Completed Button for company owners */}
+                                {isCompanyOwner && project.isOnCompedia && (
+                                  <Box sx={{ display: 'flex', gap: 1 }}>
+                                    {/* Show Mark as Completed button only if not already marked as completed by this company */}
+                                    {(!projectCompletionStatus[project.projectId] || 
+                                      (project.providerCompanyName === company.name && !projectCompletionStatus[project.projectId]?.provider) ||
+                                      (project.clientCompanyName === company.name && !projectCompletionStatus[project.projectId]?.client)) && (
+                                      <Button
+                                        variant="contained"
+                                        size="small"
+                                        color="success"
+                                        onClick={(e) => handleMarkProjectAsCompleted(project.projectId, e)}
+                                        startIcon={<Check size={16} />}
+                                      >
+                                        Mark Completed
+                                      </Button>
+                                    )}
+                                  </Box>
+                                )}
+                              </Box>
+                            </Card>
+                          </Grid>
+                        ))}
+                    </Grid>
+                  )}
+                </Grid>
+              </Grid>
+            )}
+            
+            {!isCompanyOwner && activeTab === 2 && (
+              <Grid container spacing={4}>
+                <Grid item xs={12}>
+                  {people && people.length > 0 ? (
+                    <Grid container spacing={3}>
+                      {people.map((member, index) => (
+                        <Grid item xs={12} sm={6} md={4} key={index}>
+                          <Card 
+                            elevation={1} 
+                            sx={{ 
+                              cursor: 'pointer',
+                              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-4px)',
+                                boxShadow: 3
+                              }
+                            }}
+                            onClick={() => handleViewUserProfile(member.userName)}
+                          >
+                            <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                              <Avatar
+                                src={member.profilePictureUrl}
+                                alt={`${member.firstName} ${member.lastName}`}
+                                sx={{ width: 80, height: 80, mx: 'auto', mb: 2 }}
+                              />
+                              <Typography variant="h6" gutterBottom>
+                                {member.firstName} {member.lastName}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {member.role || 'Member'}
+                              </Typography>
+                              {member.title && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                  {member.title}
+                                </Typography>
                               )}
+                              <Button
+                                variant="text"
+                                size="small"
+                                sx={{ mt: 2 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewUserProfile(member.userName);
+                                }}
+                              >
+                                View Profile
+                              </Button>
                             </CardContent>
-                            <Box sx={{ p: 2, pt: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                              {project.projectUrl && (
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  href={project.projectUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  Visit Project
-                                </Button>
-                              )}
-                              
-                              {/* Mark as Completed Button for company owners */}
-                              {isCompanyOwner && project.isOnCompedia && (
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                  {/* Show Mark as Completed button only if not already marked as completed by this company */}
-                                  {(!projectCompletionStatus[project.projectId] || 
-                                    (project.providerCompanyName === company.name && !projectCompletionStatus[project.projectId]?.provider) ||
-                                    (project.clientCompanyName === company.name && !projectCompletionStatus[project.projectId]?.client)) && (
-                                    <Button
-                                      variant="contained"
-                                      size="small"
-                                      color="success"
-                                      onClick={(e) => handleMarkProjectAsCompleted(project.projectId, e)}
-                                      startIcon={<Check size={16} />}
-                                    >
-                                      Mark Completed
-                                    </Button>
-                                  )}
-                                </Box>
-                              )}
-                            </Box>
                           </Card>
                         </Grid>
                       ))}
-                  </Grid>
-                ) : (
-                  <Typography variant="body1" color="text.secondary">
-                    No portfolio projects available.
-                  </Typography>
-                )}
+                    </Grid>
+                  ) : (
+                    <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                      No members available for this company.
+                    </Typography>
+                  )}
+                </Grid>
               </Grid>
-            </Grid>
-          )}
-          
-          {!isCompanyOwner && activeTab === 2 && (
-            <Grid container spacing={4}>
-              <Grid item xs={12}>
-                {people && people.length > 0 ? (
-                  <Grid container spacing={3}>
-                    {people.map((member, index) => (
-                      <Grid item xs={12} sm={6} md={4} key={index}>
+            )}
+
+            {hasReviews && activeTab === (isCompanyOwner ? 2 : 3) && (
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={8}>
+                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                    Reviews
+                  </Typography>
+                  {company.reviews && company.reviews.length > 0 ? (
+                    <List disablePadding>
+                      {company.reviews.map((review) => (
                         <Card 
-                          elevation={1} 
+                          key={review.reviewId} 
                           sx={{ 
-                            cursor: 'pointer',
+                            mb: 3,
+                            borderRadius: 2,
+                            boxShadow: (theme) => `0 6px 16px -8px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000')}`,
                             transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                             '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: 3
-                            }
+                              transform: 'translateY(-2px)',
+                              boxShadow: (theme) => `0 8px 20px -6px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000', 0.15)}`
+                            },
+                            border: '1px solid',
+                            borderColor: 'divider',
                           }}
-                          onClick={() => handleViewUserProfile(member.userName)}
                         >
-                          <CardContent sx={{ textAlign: 'center', py: 3 }}>
-                            <Avatar
-                              src={member.profilePictureUrl}
-                              alt={`${member.firstName} ${member.lastName}`}
-                              sx={{ width: 80, height: 80, mx: 'auto', mb: 2 }}
-                            />
-                            <Typography variant="h6" gutterBottom>
-                              {member.firstName} {member.lastName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {member.role || 'Member'}
-                            </Typography>
-                            {member.title && (
-                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                {member.title}
-                              </Typography>
-                            )}
-                            <Button
-                              variant="text"
-                              size="small"
-                              sx={{ mt: 2 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewUserProfile(member.userName);
-                              }}
-                            >
-                              View Profile
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : (
-                  <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No members available for this company.
-                  </Typography>
-                )}
-              </Grid>
-            </Grid>
-          )}
-
-          {hasReviews && activeTab === (isCompanyOwner ? 2 : 3) && (
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={8}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-                  Reviews
-                </Typography>
-                {company.reviews && company.reviews.length > 0 ? (
-                  <List disablePadding>
-                    {company.reviews.map((review) => (
-                      <Card 
-                        key={review.reviewId} 
-                        sx={{ 
-                          mb: 3,
-                          borderRadius: 2,
-                          boxShadow: (theme) => `0 6px 16px -8px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000')}`,
-                          transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: (theme) => `0 8px 20px -6px ${alpha(theme.palette.mode === 'light' ? '#1c273133' : '#000000', 0.15)}`
-                          },
-                          border: '1px solid',
-                          borderColor: 'divider',
-                        }}
-                      >
-                        <CardContent sx={{ p: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                            <Box>
-                              <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
-                                Project: {review.projectName}
-                              </Typography>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Avatar 
+                          <CardContent sx={{ p: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                              <Box>
+                                <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
+                                  Project: {review.projectName}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Avatar 
+                                    sx={{ 
+                                      width: 28, 
+                                      height: 28, 
+                                      bgcolor: (theme) => theme.palette.primary.main,
+                                      fontSize: '0.875rem'
+                                    }}
+                                  >
+                                    {review.userName.charAt(0).toUpperCase()}
+                                  </Avatar>
+                                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                                    {review.userName}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+                                    • {new Date(review.datePosted).toLocaleDateString()}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <Box sx={{ textAlign: 'right' }}>
+                                <Rating 
+                                  value={review.rating} 
+                                  readOnly 
+                                  precision={0.5} 
+                                  size="small" 
+                                  sx={{ mb: 0.5 }}
+                                />
+                                <Typography 
+                                  variant="caption" 
                                   sx={{ 
-                                    width: 28, 
-                                    height: 28, 
-                                    bgcolor: (theme) => theme.palette.primary.main,
-                                    fontSize: '0.875rem'
+                                    display: 'block',
+                                    fontWeight: 500,
+                                    color: (theme) => review.rating >= 4 
+                                      ? theme.palette.success.main
+                                      : review.rating >= 3 
+                                        ? theme.palette.warning.main
+                                        : theme.palette.error.main
                                   }}
                                 >
-                                  {review.userName.charAt(0).toUpperCase()}
-                                </Avatar>
-                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                                  {review.userName}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                                  • {new Date(review.datePosted).toLocaleDateString()}
+                                  {review.rating >= 4.5 ? 'Excellent' : 
+                                   review.rating >= 4 ? 'Very Good' : 
+                                   review.rating >= 3 ? 'Good' :
+                                   review.rating >= 2 ? 'Fair' : 'Poor'}
                                 </Typography>
                               </Box>
                             </Box>
-                            <Box sx={{ textAlign: 'right' }}>
-                              <Rating 
-                                value={review.rating} 
-                                readOnly 
-                                precision={0.5} 
-                                size="small" 
-                                sx={{ mb: 0.5 }}
-                              />
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  display: 'block',
-                                  fontWeight: 500,
-                                  color: (theme) => review.rating >= 4 
-                                    ? theme.palette.success.main
-                                    : review.rating >= 3 
-                                      ? theme.palette.warning.main
-                                      : theme.palette.error.main
-                                }}
-                              >
-                                {review.rating >= 4.5 ? 'Excellent' : 
-                                 review.rating >= 4 ? 'Very Good' : 
-                                 review.rating >= 3 ? 'Good' :
-                                 review.rating >= 2 ? 'Fair' : 'Poor'}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          
-                          <Divider sx={{ my: 2 }} />
-                          
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
-                              lineHeight: 1.6,
-                              color: 'text.primary',
-                              fontSize: '1rem',
-                              fontStyle: 'italic',
-                              '&::before': { 
-                                content: '""',
-                                display: 'inline-block',
-                                verticalAlign: 'middle',
-                                mr: 1,
-                                width: 3,
-                                height: 20,
-                                backgroundColor: 'primary.main',
-                                borderRadius: 1
-                              }
-                            }}
-                          >
-                            {review.reviewText}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </List>
-                ) : (
-                  <Box 
-                    sx={{ 
-                      textAlign: 'center', 
-                      py: 6, 
-                      borderRadius: 2, 
-                      backgroundColor: (theme) => alpha(theme.palette.primary.light, 0.05),
-                      border: '1px dashed',
-                      borderColor: 'divider'
-                    }}
-                  >
-                    <Typography variant="body1" color="text.secondary">
-                      No reviews available for this company yet.
-                    </Typography>
-                  </Box>
-                )}
+                            
+                            <Divider sx={{ my: 2 }} />
+                            
+                            <Typography 
+                              variant="body1" 
+                              sx={{ 
+                                lineHeight: 1.6,
+                                color: 'text.primary',
+                                fontSize: '1rem',
+                                fontStyle: 'italic',
+                                '&::before': { 
+                                  content: '""',
+                                  display: 'inline-block',
+                                  verticalAlign: 'middle',
+                                  mr: 1,
+                                  width: 3,
+                                  height: 20,
+                                  backgroundColor: 'primary.main',
+                                  borderRadius: 1
+                                }
+                              }}
+                            >
+                              {review.reviewText}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </List>
+                  ) : (
+                    <Box 
+                      sx={{ 
+                        textAlign: 'center', 
+                        py: 6, 
+                        borderRadius: 2, 
+                        backgroundColor: (theme) => alpha(theme.palette.primary.light, 0.05),
+                        border: '1px dashed',
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Typography variant="body1" color="text.secondary">
+                        No reviews available for this company yet.
+                      </Typography>
+                    </Box>
+                  )}
+                </Grid>
               </Grid>
-            </Grid>
-          )}
+            )}
 
-          {activeTab === (isCompanyOwner 
-            ? (hasReviews ? 3 : 2) 
-            : (hasReviews ? 4 : 3)) && (
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={8}>
-               
-                <Typography variant="body1" paragraph>
-                  For inquiries or to request a quote, please contact {company.name} directly.
-                </Typography>
-                
-                <List disablePadding>
-                  <ListItem disableGutters>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <Globe size={18} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="Website" 
-                      secondary={
-                        <Typography 
-                          component="a" 
-                          href={company.website?.startsWith('http') ? company.website : `https://${company.website}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          color="primary"
-                        >
-                          {company.website}
-                        </Typography>
-                      } 
-                    />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <Mail size={18} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary="Email" 
-                      secondary={
-                        <Typography 
-                          component="a" 
-                          href={`mailto:${company.email}`} 
-                          color="primary"
-                        >
-                          {company.email}
-                        </Typography>
-                      } 
-                    />
-                  </ListItem>
-                  <ListItem disableGutters>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <Phone size={18} />
-                    </ListItemIcon>
-                    <ListItemText primary="Phone" secondary={company.phone} />
-                  </ListItem>
-                </List>
+            {activeTab === (isCompanyOwner 
+              ? (hasReviews ? 3 : 2) 
+              : (hasReviews ? 4 : 3)) && (
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={8}>
+                 
+                  <Typography variant="body1" paragraph>
+                    For inquiries or to request a quote, please contact {company.name} directly.
+                  </Typography>
+                  
+                  <List disablePadding>
+                    <ListItem disableGutters>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Globe size={18} />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Website" 
+                        secondary={
+                          <Typography 
+                            component="a" 
+                            href={company.website?.startsWith('http') ? company.website : `https://${company.website}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            color="primary"
+                          >
+                            {company.website}
+                          </Typography>
+                        } 
+                      />
+                    </ListItem>
+                    <ListItem disableGutters>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Mail size={18} />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Email" 
+                        secondary={
+                          <Typography 
+                            component="a" 
+                            href={`mailto:${company.email}`} 
+                            color="primary"
+                          >
+                            {company.email}
+                          </Typography>
+                        } 
+                      />
+                    </ListItem>
+                    <ListItem disableGutters>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Phone size={18} />
+                      </ListItemIcon>
+                      <ListItemText primary="Phone" secondary={company.phone} />
+                    </ListItem>
+                  </List>
+                </Grid>
               </Grid>
-            </Grid>
-          )}
-          
-        </Box>
-      </Container>
-    </Box>
+            )}
+            
+          </Box>
+        </Container>
+      </Box>
+    </>
   );
 };
 

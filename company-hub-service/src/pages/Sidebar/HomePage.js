@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.js';
 import debounce from 'lodash/debounce';
 import { last } from 'lodash';
+import OnboardingTour from '../../components/OnboardingTour'; // Import the OnboardingTour component
 
 // Location Search Component
 const LocationSearch = React.memo(({ selectedLocations, selectedLocationIds, setSelectedLocations, setSelectedLocationIds }) => {
@@ -57,6 +58,7 @@ const LocationSearch = React.memo(({ selectedLocations, selectedLocationIds, set
   };
 
   return (
+    
     <CardContent sx={{ pt: 3, pb: 3 }}>
       <Typography variant="subtitle1" fontWeight={600} gutterBottom color="text.primary">Where?</Typography>
       <TextField
@@ -516,6 +518,9 @@ const FilterSearchPage = () => {
   const { user, token } = useAuth();
   const isAdmin = user?.email === "admin@admin.com";
   
+  // Onboarding tour state
+  const [showOnboardingTour, setShowOnboardingTour] = useState(false);
+  
   // Search state
   const [searchText, setSearchText] = useState('');
   const [selectedLocations, setSelectedLocations] = useState([]);
@@ -530,6 +535,19 @@ const FilterSearchPage = () => {
   const [userCompanies, setUserCompanies] = useState([]);
   const [similarCompanies, setSimilarCompanies] = useState({});
   const [loadingStates, setLoadingStates] = useState({});
+
+  // Show the onboarding tour when the component mounts
+  useEffect(() => {
+    // Only show the tour if the user is logged in
+    if (user?.id) {
+      setShowOnboardingTour(true);
+    }
+  }, [user?.id]);
+
+  // Handler to close the onboarding tour
+  const handleCloseOnboardingTour = () => {
+    setShowOnboardingTour(false);
+  };
 
   const CACHE_KEY = 'similar_companies_cache';
   const FETCH_STATUS_KEY = 'similar_companies_fetch_status';
@@ -905,8 +923,15 @@ const FilterSearchPage = () => {
       px: { xs: 2, sm: 3, md: 4 }, 
       py: 4, 
       position: 'relative',
-      zIndex: 1 // Ensure this container is above the video
+      zIndex: 1 
     }}>
+      {/* Onboarding Tour */}
+      <OnboardingTour 
+        isOpen={showOnboardingTour} 
+        onClose={handleCloseOnboardingTour} 
+        userId={user?.id} 
+      />
+
       <VideoBackground videoUrl="/videos/bg.mp4" />
       
       /* Main Content Container - Remove background to show video directly */
