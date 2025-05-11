@@ -616,11 +616,27 @@ export default function FakeHomepage() {
             <Box sx={{ flexGrow: 1 }} />
 
             
-            <Button
-              variant="contained"
+            <Button 
+              variant="contained" 
               color="primary"
+              className="login-button"
               onClick={redirectToLogin}
-              sx={{ ml: 2 }}
+              sx={{ 
+                ml: 2,
+                // Update responsive styling to make button even smaller
+                '@media (max-width: 768px)': {
+                  fontSize: '8px',
+                  py: 0.15,
+                  px: 0.5,
+                  minWidth: 'auto',
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  lineHeight: 1,
+                  height: '20px',
+                  maxHeight: '20px'
+                }
+              }}
             >
               Login / Sign up
             </Button>
