@@ -360,12 +360,10 @@ const SimilarCompanyCard = React.memo(({ company, navigateToCompanyProfile }) =>
   );
 });
 
-// First, let's update the SimilarCompaniesSection component to handle incremental loading
-
+// Similar Companies Section Component
 const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, loadingStates, navigateToCompanyProfile }) => {
   return (
     <Box sx={{ mt: 4, width: '100%', px: 2 }}>
-
       <Typography 
         variant="h5" 
         fontWeight={700} 
@@ -387,7 +385,6 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
           }
         }}
       >
-
         Possible Competitors
       </Typography>
 
@@ -399,11 +396,10 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
             </Typography>
           </Box>
 
-          {loadingStates ? (
+          {loadingStates[company.id] ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
               <CircularProgress sx={{ color: 'white' }} />
             </Box>
-
           ) : similarCompanies[company.id]?.length > 0 ? (
             <Box sx={{ position: 'relative', width: '100%' }}>
               {/* Left Scroll Button */}
@@ -431,7 +427,7 @@ const SimilarCompaniesSection = React.memo(({ userCompanies, similarCompanies, l
                   msOverflowStyle: 'none', scrollSnapType: 'x mandatory',
                 }}
               >
-                {similarCompanies[company.id].map((similarCompany) => (
+                {similarCompanies[company.id] && similarCompanies[company.id].map((similarCompany) => (
                   <SimilarCompanyCard 
                     key={similarCompany.id} 
                     company={similarCompany}
